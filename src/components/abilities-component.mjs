@@ -1,0 +1,26 @@
+const { loadModule } = mod.getContext(import.meta);
+
+const { SkillingBossesUIComponent } = await loadModule(
+  "src/components/skilling-bosses-ui-component.mjs"
+);
+
+export class SkillingBossesAbilitiesComponent extends SkillingBossesUIComponent {
+  constructor(manager, game) {
+    super(manager, game, "skilling-bosses-abilities-component");
+  }
+  initialize() {
+    console.log("Initializing Skilling Bosses Abilities Component");
+    this.initializeEventListeners();
+  }
+
+  initializeEventListeners() {}
+
+  show() {
+    super.show();
+  }
+
+  mount(parent) {
+    super.mount(parent);
+    this.initialize(); // Call initialize after mounting
+  }
+}

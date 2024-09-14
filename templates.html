@@ -1,0 +1,240 @@
+<template id="skilling-bosses-page-component">
+  <div class="skilling-bosses-container" id="skilling-bosses-info">
+    <div id="skilling-bosses-overview" class="skilling-bosses-nav">
+      <button class="skilling-bosses-nav-btn" data-section="bosses">
+        <img
+          src="https://cdn2-main.melvor.net/assets/media/skills/combat/combat.png"
+          alt="Bosses"
+          class="skilling-bosses-nav-icon"
+        />
+        <span>Battle</span>
+      </button>
+      <button class="skilling-bosses-nav-btn" data-section="quests">
+        <img
+          src="https://www.svgrepo.com/show/398268/scroll.svg"
+          alt="Quests"
+          class="skilling-bosses-nav-icon"
+        />
+        <span>Quests</span>
+      </button>
+      <button class="skilling-bosses-nav-btn" data-section="abilities">
+        <img
+          src="https://www.svgrepo.com/show/513272/book-closed.svg"
+          alt="Abilities"
+          class="skilling-bosses-nav-icon"
+        />
+        <span>Abilities</span>
+      </button>
+      <button class="skilling-bosses-nav-btn" data-section="talents">
+        <img
+          src="https://www.svgrepo.com/show/475009/tree-structure.svg"
+          alt="Talents"
+          class="skilling-bosses-nav-icon"
+        />
+        <span>Talents</span>
+      </button>
+    </div>
+    <div id="skilling-bosses-content" class="skilling-bosses-content">
+      <div id="bosses-content" class="skilling-bosses-section d-none">
+      </div>
+      <div id="abilities-content" class="skilling-bosses-section d-none">
+      </div>
+      <div id="talents-content" class="skilling-bosses-section d-none">
+      </div>
+      <div id="quests-content" class="skilling-bosses-section">
+        <!-- Quests Content -->
+      </div>
+    </div>
+  </div>
+</template>
+
+<template id="skilling-bosses-quests-component">
+  <div class="quest-categories">
+    <button class="quest-category-btn active" data-category="main">
+      Main Quest
+    </button>
+    <button class="quest-category-btn d-none" data-category="casual">Casual</button>
+    <button class="quest-category-btn d-none" data-category="beginner">
+      Beginner
+    </button>
+    <button class="quest-category-btn d-none" data-category="intermediate">
+      Intermediate
+    </button>
+    <button class="quest-category-btn d-none" data-category="advanced">
+      Advanced
+    </button>
+  </div>
+
+  <div class="quest-list">
+    <div class="quest-category" id="main-quests">
+      <h2 class="quest-category-title">Main Quest</h2>       
+        <!-- quests will be dynamically inserted here -->
+      </div>
+    </div>
+
+    <div class="quest-category d-none" id="casual-quests">
+      <h2 class="quest-category-title">Casual Quests</h2>
+      
+      <!-- More casual quests... -->
+    </div>
+
+    <div class="quest-category d-none" id="beginner-quests">
+      <h2 class="quest-category-title">Beginner Quests</h2>
+      
+      <!-- More beginner quests... -->
+    </div>
+
+    <div class="quest-category d-none" id="intermediate-quests">
+      <h2 class="quest-category-title">Intermediate Quests</h2>
+      
+      <!-- More intermediate quests... -->
+    </div>
+
+    <div class="quest-category d-none" id="advanced-quests">
+      <h2 class="quest-category-title">Advanced Quests</h2>
+      
+      <!-- More advanced quests... -->
+    </div>
+  </div>
+</template>
+
+<template id="skilling-bosses-abilities-component">
+  <div class="abilities-container">
+    <div class="mini-slots-container">
+      <div class="mini-slot">
+        <div class="mini-slot-icon">
+          <img src="https://via.placeholder.com/50" alt="Slot 1">
+        </div>
+        <span class="mini-slot-name">Slot 1</span>
+      </div>
+      <div class="mini-slot">
+        <div class="mini-slot-icon">
+          <img src="https://via.placeholder.com/50" alt="Slot 2">
+        </div>
+        <span class="mini-slot-name">Slot 2</span>
+      </div>
+      <div class="mini-slot">
+        <div class="mini-slot-icon">
+          <img src="https://via.placeholder.com/50" alt="Slot 3">
+        </div>
+        <span class="mini-slot-name">Slot 3</span>
+      </div>
+    </div>
+
+    <h2 class="abilities-title">Abilities</h2>
+    <p class="content-description">Click on an ability to equip it to a slot. You can only equip one ability per slot.</p>
+    <p class="content-description">Cooldowns are in 'skill-ticks', 
+      1 skill-tick is applied every time you gain XP in any skill.
+      2 skill-ticks are applied if that skill is the same as the ability's skill.</p>
+
+    <div class="abilities-list" id="abilities-list">
+      <!-- Abilities will be dynamically inserted here -->
+    </div>
+  </div>
+</template>
+
+<template id="skilling-bosses-battles-component">
+  <div class="skilling-bosses-battles-container">
+    <div class="battle-arena block block-rounded-double bg-combat-inner-dark">
+      <div class="block-header block-header-default">
+        <h3 class="block-title">Battle Arena</h3>
+      </div>
+      <div class="block-content">
+        <div class="battle-container">
+          <div class="boss-section">
+            <div class="boss-offensive-stats">
+              <h4>Offensive Stats</h4>
+              <div class="next-attack">
+                <span>Next Attack: </span>
+                <span id="boss-next-attack">Slam</span>
+              </div>
+              <div class="attack-timer">
+                <span>Ticks until attack: </span>
+                <span id="boss-attack-timer">5</span>
+              </div>
+              </div>
+            <div class="boss-image">
+              <h2 id="boss-name">Boss Name</h2>
+              <img src="https://via.placeholder.com/200" alt="Boss Image" id="boss-image">
+            </div>
+            <div class="boss-defensive-stats">
+              <h4>Defensive Stats</h4>
+              <div class="boss-health">
+                <span>HP: </span>
+                <span id="boss-current-hp">1000</span>/<span id="boss-max-hp">1000</span>
+              </div>
+              </div>
+          </div>
+          
+          <div class="player-section">
+            <div class="skill-loop-container">
+              <div class="skill-loop-item">
+                <div class="skill-loop-item-icon">
+                  <img src="https://via.placeholder.com/50" alt="Skill Icon">
+                </div>
+                <div class="skill-loop-item-progress">
+                  <div class="skill-loop-item-progress-bar"></div>
+                </div>
+                <div class="skill-loop-item-name">Skill Name</div>
+              </div>
+              <div class="skill-loop-item">
+                <div class="skill-loop-item-icon">
+                  <img src="https://via.placeholder.com/50" alt="Skill Icon">
+                </div>
+                <div class="skill-loop-item-progress">
+                  <div class="skill-loop-item-progress-bar"></div>
+                </div>
+                <div class="skill-loop-item-name">Skill Name</div>
+              </div>
+              <div class="skill-loop-item">
+                <div class="skill-loop-item-icon">
+                  <img src="https://via.placeholder.com/50" alt="Skill Icon">
+                </div>
+                <div class="skill-loop-item-progress">
+                  <div class="skill-loop-item-progress-bar"></div>
+                </div>
+                <div class="skill-loop-item-name">Skill Name</div>
+              </div>
+            </div>
+            <div class="player-core">
+              <h4>Player's Core</h4>
+              <span class="text-warning">Defend your core at all costs!</span>
+              <div class="player-health">
+                <span>HP: </span>
+                <span id="player-current-hp">100</span>/<span id="player-max-hp">100</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-12 col-lg-6">
+        <div class="block block-rounded-double bg-combat-inner-dark">
+          <div class="block-header block-header-default">
+            <h3 class="block-title">Select Boss</h3>
+          </div>
+          <div class="block-content">
+            <div class="list-group" id="boss-selection-list">
+              </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="col-12 col-lg-6">
+        <div class="block block-rounded-double bg-combat-inner-dark">
+          <div class="block-header block-header-default">
+            <h3 class="block-title">Player Inventory</h3>
+          </div>
+          <div class="block-content">
+            <div id="player-inventory">
+              </div>
+            <h4>Equipped Gems</h4>
+            <div id="equipped-gems">
+              </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>

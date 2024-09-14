@@ -1,0 +1,6 @@
+{
+  "namespace": "smattyBosses",
+  "icon": "assets/icon.png",
+  "setup": "setup.mjs",
+  "load": ["assets/my-styles.css"]
+}
