@@ -137,7 +137,8 @@ function buildMainQuestItem(ctx, quest) {
   return questItem;
 }
 
-function questUpdatePatches(ctx) {
+async function questUpdatePatches(ctx) {
+  const abilitiesUIModule = await ctx.loadModule("src/ui/abilities.mjs");
   ctx.patch(Skill, "levelUp").after(function () {
     console.log("Skill XP added");
     buildMainQuestSection(ctx);

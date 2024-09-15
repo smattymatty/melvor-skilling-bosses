@@ -1,5 +1,6 @@
+const { loadModule } = mod.getContext(import.meta);
 
-const { characterStorage } = mod.getContext(import.meta);
+const battlesUIModule = await loadModule("src/ui/battle.mjs");
 
 export class SkillingBosses {
   constructor(game) {
@@ -19,7 +20,13 @@ export class SkillingBosses {
     this.equippedAbilities = new Array(3).fill(null);
     // Battle-related properties
     this.playerCoreHP = 100;
+    this.playerCoreMaxHP = 100;
     this.activeBoss = null;
+    this.bossCurrHP = null;
+    this.bossMaxHP = null;
+    this.bossAttackTimer = null;
+    this.bossNextAttackIndex = null;
+
     this.battleCurrency = 0;
     this.currentBattleTicks = null;
   }
@@ -30,9 +37,13 @@ export class SkillingBosses {
   }
 
   setActiveBoss(bossId) {
-    console.log("Setting active boss to", bossId);
     this.activeBoss = this.bosses.get(bossId);
-    console.log(this);
+    this.bossCurrHP = this.activeBoss.currentHP;
+    this.bossMaxHP = this.activeBoss.maxHP;
+  }
+
+  getBossById(bossId) {
+    return this.bosses.get(bossId);
   }
 
   // Methods for managing quests
@@ -51,7 +62,6 @@ export class SkillingBosses {
         if (this.currentMainQuest === null) {
           this.currentMainQuest = quest.mainQuestNumber;
         } else {
-          console.log("Cannot start a new main quest while one is active");
           return;
         }
       } else {
@@ -68,7 +78,6 @@ export class SkillingBosses {
         this.completedQuests.add(quest.name);
         this.grantQuestRewards(quest);
         this.currentMainQuest = null;
-        console.log(`Completed main quest: ${quest.name}`);
         this.startNextMainQuest();
       } else if (this.activeQuests.has(questName)) {
         this.activeQuests.delete(questName);
@@ -83,7 +92,6 @@ export class SkillingBosses {
     const nextQuest = this.mainQuests.get(nextQuestNumber);
     if (nextQuest) {
       this.currentMainQuest = nextQuestNumber;
-      console.log(`Started next main quest: ${nextQuest.name}`);
     } else {
       console.log("No more main quests available");
     }
@@ -93,9 +101,8 @@ export class SkillingBosses {
     // Check if the quest requirements are met
     return quest.requirements.every((req) => this.checkRequirement(req));
   }
-
+  // Methods for managing abilities
   addAbility(ability) {
-    console.log("Adding ability", ability);
     this.abilities.set(ability.name, ability);
   }
 
@@ -106,97 +113,254 @@ export class SkillingBosses {
       }
     }
     return null;
-    
   }
-
   setActiveAbilitySlot(slot) {
     this.activeAbilitySlot = slot;
-    characterStorage.setItem("ASlt", this.activeAbilitySlot);
-    console.log(this);
   }
-  tickBattle() {
-    if (this.currentBattleTicks === null) {
-      return;
-    }
-    this.currentBattleTicks++;
-    // TODO: implement ability tickdown
-    // TODO: implement boss tickdown
-  }
-
-  useAbility(abilityId) {
-    const ability = this.getAbility(abilityId);
-    if (ability && this.currentBattle) {
-      if (ability.activate(this.currentBattle)) {
-        console.log(`Used ability: ${ability.name}`);
-      } else {
-        console.log(`${ability.name} is on cooldown`);
-      }
-    }
+  // Methods for managing battles
+  useAbility(slotIndex) {
+    const ability = this.equippedAbilities[slotIndex];
+    // TODO: implement ability activation
   }
   startBattle() {
-    const boss = this.activeBoss;
-    if (boss && this.playerCoreHP > 0) {
-      this.currentBattleTicks = 0;
-      console.log(`Battle started against ${boss.name}`);
-      characterStorage.setItem("Crbt", this.currentBattleTicks);
-    } else {
-      console.log(
-        "Cannot start battle. Boss not found or player core HP not greater than 0."
-      );
+    try {
+      const boss = this.activeBoss;
+      if (boss && this.playerCoreHP > 0) {
+        this.currentBattleTicks = 0;
+        console.log(`Battle started against ${boss.name}`);
+
+        // Initialize ability activation
+        for (let i = 0; i < this.equippedAbilities.length; i++) {
+          const ability = this.equippedAbilities[i];
+          if (ability) {
+            this.activeAbilitySlot = i;
+            console.log("setting active ability timer to", ability);
+            this.activeAbilityTimer = ability.cooldown;
+            break;
+          }
+        }
+
+        // Initialize boss HP
+        this.bossCurrHP = boss.stats.maxHP;
+        this.bossMaxHP = boss.stats.maxHP;
+        // Initialize boss attack timer and index
+        this.bossAttackTimer = boss.attacks[0].cooldown;
+        this.bossNextAttackIndex = 0;
+      } else {
+        console.log(
+          "Cannot start battle. Boss not found or player core HP not greater than 0."
+        );
+      }
+    } catch (error) {
+      console.error("Error starting battle:", error);
     }
+  }
+
+  tickBattle() {
+    try {
+      if (this.currentBattleTicks === null) {
+        return;
+      }
+      this.currentBattleTicks++;
+      // Decrease active ability timer
+      if (this.activeAbilityTimer !== null) {
+        this.tickAbility();
+      }
+
+      // Handle boss attacks
+      //this.bossAttackTimer--;
+      //characterStorage.setItem("Bcat", this.bossAttackTimer);
+      //if (this.bossAttackTimer <= 0) {
+      //  this.executeBossAttack();
+      //  this.updateBossAttack();
+      //}
+
+      // Check for win/loss conditions
+      if (this.playerCoreHP <= 0) {
+        this.endBattle("loss");
+        return;
+      } else if (this.bossCurrHP <= 0) {
+        this.endBattle("win");
+        return;
+      }
+
+      // Any additional per-tick logic...
+    } catch (error) {
+      console.error("Error ticking battle:", error);
+    }
+  }
+  activateCurrentAbility() {
+    const ability = this.equippedAbilities[this.activeAbilitySlot];
+    if (ability) {
+      console.log(`Activating ability: ${ability.name}`);
+      ability.activate(game); // Pass the game context if needed
+    } else {
+      console.log(`No ability equipped in slot ${this.activeAbilitySlot}`);
+    }
+  }
+
+  tickAbility() {
+    this.activeAbilityTimer--;
+
+    if (this.activeAbilityTimer <= 0) {
+      // Activate the ability
+      this.activateCurrentAbility();
+
+      // Move to the next ability slot
+      this.advanceAbilitySlot();
+    }
+  }
+  advanceAbilitySlot() {
+    // Move to the next slot
+    this.activeAbilitySlot++;
+
+    // If we've reached the end, reset to 0
+    if (this.activeAbilitySlot >= this.equippedAbilities.length) {
+      this.activeAbilitySlot = 0;
+    }
+
+    // Get the ability in the new slot
+    const nextAbility = this.equippedAbilities[this.activeAbilitySlot];
+
+    if (nextAbility) {
+      // Set the active ability timer to the cooldown of the new ability
+      this.activeAbilityTimer = nextAbility.cooldown;
+      console.log(
+        `Next ability: ${nextAbility.name}, cooldown: ${this.activeAbilityTimer}`
+      );
+    } else {
+      // No ability in this slot, set timer to null or skip to the next slot
+      this.activeAbilityTimer = null;
+      console.log(`No ability equipped in slot ${this.activeAbilitySlot}`);
+      // Optionally, immediately advance to the next slot
+      this.advanceAbilitySlot();
+    }
+  }
+  executeBossAttack() {
+    const currentAttack = this.activeBoss.attacks[this.bossNextAttackIndex];
+    const damage = currentAttack.damage;
+    this.takeDamage(damage, "player");
+    console.log(
+      `${this.activeBoss.name} uses ${currentAttack.name}, dealing ${damage} damage.`
+    );
+  }
+
+  updateBossAttack() {
+    // Move to the next attack in the sequence
+    this.bossNextAttackIndex =
+      (this.bossNextAttackIndex + 1) % this.activeBoss.attacks.length;
+    const nextAttack = this.activeBoss.attacks[this.bossNextAttackIndex];
+    this.bossAttackTimer = nextAttack.cooldown;
+    console.log(
+      `${this.activeBoss.name}'s next attack: ${nextAttack.name}, in ${this.bossAttackTimer} ticks.`
+    );
+  }
+
+  takeDamage(amount, target) {
+    amount = Math.max(0, amount);
+    amount = Math.floor(amount);
+    if (target === "player") {
+      this.playerCoreHP -= amount;
+      if (this.playerCoreHP <= 0) {
+        this.playerCoreHP = 0;
+        this.endBattle("loss");
+      }
+    } else if (target === "boss") {
+      this.bossCurrHP -= amount;
+      const bossHPContainer = document.querySelector(".boss-hp-bar");
+      console.log(bossHPContainer);
+      if (bossHPContainer) {
+        const classOptions = [
+          "boss-damage-indicator",
+          "boss-damage-indicator-2",
+          "boss-damage-indicator-3",
+        ];
+        console.log(classOptions);
+        const chosenClass =
+          classOptions[Math.floor(Math.random() * classOptions.length)];
+        const damageIndicator = document.createElement("div");
+        damageIndicator.classList.add(chosenClass);
+        damageIndicator.classList.add("animate-damage-indicator");
+        damageIndicator.textContent = `-${amount}`;
+        console.log(damageIndicator);
+        bossHPContainer.appendChild(damageIndicator);
+        // remove the damage indicator after a few seconds
+        setTimeout(() => {
+          damageIndicator.remove();
+        }, 3000);
+      }
+      if (this.bossCurrHP <= 0) {
+        this.bossCurrHP = 0;
+        this.endBattle("win");
+      }
+    }
+    battlesUIModule.updateBattleStatsUI();
+  }
+
+  healTarget(amount, target) {
+    amount = Math.max(0, amount);
+    amount = Math.floor(amount);
+    if (target === "player") {
+      this.playerCoreHP += amount;
+    } else if (target === "boss") {
+      this.bossCurrHP += amount;
+    }
+  }
+
+  getBossAttack() {
+    return this.currentBattle.boss.attacks[this.bossNextAttackIndex];
+  }
+
+  updateBossAttack() {
+    // TODO implement boss attack update
   }
 
   endBattle(result) {
     if (result === "win") {
-      this.battleCurrency += this.currentBattle.boss.currencyReward;
+      this.battleCurrency += 1;
+      this.activeBoss.kills++;
+      this.activeBoss.tickRecord = this.currentBattleTicks;
+      this.updatePlayerBossStats();
       // Grant other rewards, update quests, etc.
+      // restart the battle
+      this.startBattle();
     } else if (result === "loss") {
       this.currentBattleTicks = null;
       this.activeBoss = null;
       return;
     }
     this.currentBattleTicks = 0;
-    
   }
 
-  tickBattle() {
-    if (this.currentBattle) {
-      const result = this.currentBattle.tick();
-      if (result === "ongoing") {
-        // Update UI, allow player actions, etc.
-      } else {
-        console.log(result === "win" ? "Victory!" : "Defeat!");
-        this.endBattle(result);
-      }
-    }
-  }
-
-  endBattle(result) {
-    if (result === "win") {
-      this.battleCurrency += this.currentBattle.boss.currencyReward;
-      // Grant other rewards, update quests, etc.
-    }
-    this.currentBattle = null;
-    this.activeBoss = null;
-  }
-
-  repairCore(amount) {
-    if (this.playerCore && this.battleCurrency >= amount * 10) {
-      this.battleCurrency -= amount * 10;
-      this.playerCore.heal(amount);
-      console.log(
-        `Core repaired for ${amount} HP. Remaining currency: ${this.battleCurrency}`
+  updatePlayerBossStats() {
+    try {
+      console.log("Updating player boss stats");
+      const bossStatsElements = document.querySelectorAll(
+        "#boss-player-tick-info"
       );
-    } else {
-      console.log("Not enough currency to repair core.");
-    }
-  }
+      if (bossStatsElements && this.activeBoss !== null) {
+        console.log("Found boss stats eleme nts");
+        for (const element of bossStatsElements) {
+          console.log("Checking element", element);
+          console.log("element.dataset.bossId:", element.dataset.bossId);
+          console.log("this.activeBoss.id:", this.activeBoss.id);
 
-  useAbility(abilityId) {
-    const ability = this.getAbility(abilityId);
-    if (ability && this.currentBattle) {
-      ability.activate(this.currentBattle);
-      console.log(`Used ability: ${ability.name}`);
+          // Convert element.dataset.bossId to a number
+          const bossId = Number(element.dataset.bossId);
+          const boss = this.getBossById(bossId);
+          console.log("Retrieved boss from Map:", boss);
+
+          if (boss) {
+            element.innerHTML = `<div>Total Kills: ${boss.kills}</div>
+            <div>Fastest Kill: ${boss.tickRecord} ticks</div>`;
+            console.log("Updated element:", element);
+          } else {
+            console.log(`Boss with ID ${bossId} not found.`);
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Error updating player boss stats:", error);
     }
   }
 }

@@ -14,7 +14,7 @@ export async function setup(ctx) {
   const bossPatchesModule = await ctx.loadModule("src/bosses/patches.mjs");
   ctx.onModsLoaded(async () => {
     // Define a global variable for the Skilling Bosses class
-    game.skillingBosses = new skillingBossesModule.SkillingBosses(game);
+    game.skillingBosses = new skillingBossesModule.SkillingBosses(ctx, game);
     // bosses
     await addBossesModule.init(ctx);
     await bossPatchesModule.init(ctx);

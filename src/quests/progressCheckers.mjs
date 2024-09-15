@@ -1,21 +1,15 @@
 export function checkSkillLevel(game, skillID, requiredLevel) {
   try {
-    console.log(
-      `checking skill level for ${skillID} , required level ${requiredLevel}`
-    );
     const skillRegistry = game.skills.registeredObjects; // a map of skill IDs to skill objects
     const skill = skillRegistry.get(skillID);
     if (!skill) {
       throw new Error(`Skill ${skillID} not found in registry`);
     }
     const skillLevel = skill.level;
-    console.log("skill level is", skillLevel);
     if (skillLevel < requiredLevel) {
       // return a float between 0 and 1 indicating the progress of the skill
-      console.log("skill level is less than required level");
       return skillLevel / requiredLevel;
     } else {
-      console.log("skill level is greater than or equal to required level");
       return 1;
     }
   } catch (error) {
@@ -28,11 +22,9 @@ export function checkSkillLevel(game, skillID, requiredLevel) {
  * Only needs one skill to be at the required level to succeed. */
 export function checkSkillLevelsOr(game, skillIDs, requiredLevel) {
   try {
-    console.log("checking skill levels or");
     let highestProgress = 0;
     skillIDs.forEach((skillID) => {
       const progress = checkSkillLevel(game, skillID, requiredLevel);
-      console.log("progress is", progress);
       if (progress === 1) {
         highestProgress = 1;
       } else {
@@ -60,19 +52,20 @@ export function hasPlayerKilledAmountOfBosses(game, amount) {
     console.error("Error checking player killed bosses:", error);
   }
 }
-
 export function playerHasAnyAbilityEquipped(game) {
   try {
-    console.log("checking player ability equipped");
+    console.log("Checking if player has any ability equipped");
     for (const ability of game.skillingBosses.equippedAbilities) {
       if (ability) {
-        return 1;
+        console.log(`Ability found: ${ability.name}`);
+        return 1.0; // Objective complete
       }
     }
     console.log("No equipped ability found");
-    return 0;
+    return 0.0; // Objective not started
   } catch (error) {
     console.error("Error checking player ability equipped:", error);
+    return 0.0; // Return 0 in case of error
   }
 }
 

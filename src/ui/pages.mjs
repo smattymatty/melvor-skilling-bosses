@@ -103,19 +103,26 @@ export async function openSkillingBossesScreen(ctx, component) {
     // Show our component
     component.mount(bossContainer);
     component.show();
+
+    // Fill the Content
+    try {
+      const questsUIModule = await ctx.loadModule("src/ui/quest.mjs");
+      await questsUIModule.init(ctx);
+      const battleUIModule = await ctx.loadModule("src/ui/battle.mjs");
+      await battleUIModule.init(ctx);
+      game.skillingBosses.updatePlayerBossStats();
+      const abilitiesUIModule = await ctx.loadModule("src/ui/abilities.mjs");
+      await abilitiesUIModule.init(ctx);
+    } catch (error) {
+      console.error("Error initializing Skilling Bosses screen:", error);
+      throw error;
+    }
+    checkButtons();
     if (game.skillingBosses.currentMainQuest < 2) {
       component.showSection("quests");
     } else {
       component.showSection("bosses");
     }
-    // Fill the Content
-    const questsUIModule = await ctx.loadModule("src/ui/quest.mjs");
-    await questsUIModule.init(ctx);
-    const battleUIModule = await ctx.loadModule("src/ui/battle.mjs");
-    await battleUIModule.init(ctx);
-    const abilitiesUIModule = await ctx.loadModule("src/ui/abilities.mjs");
-    await abilitiesUIModule.init(ctx);
-    checkButtons();
 
     console.log("Skilling Bosses screen opened successfully.");
   } catch (error) {

@@ -1,10 +1,18 @@
-
-
 .seperator {
+  display: block;
   border-top: 1px solid #e0e0e080;
   width: 100%;
   min-height: 1px;
   margin-bottom: 1rem;
+  margin-top: 1rem;
+}
+
+.mb-1 {
+  margin-bottom: 12px;
+}
+
+mt-2 {
+  margin-top: 24px;
 }
 
 .skilling-bosses-container {
@@ -20,6 +28,14 @@
   justify-content: space-between;
   background-color: #e0e0e0;
   padding: 10px;
+}
+
+.flex-grow {
+  flex-grow: 1;
+}
+
+.flex-shrink {
+  flex-shrink: 1;
 }
 
 .skilling-bosses-nav-btn {
@@ -207,18 +223,34 @@ body.darkMode .skilling-bosses-content {
 }
 
 .skill-loop-item-progress {
+  position: relative;
   width: 100%;
-  height: 1.5rem;
-  background: rgba(117, 117, 117, 0.3);
-  border-radius: 2.5px;
-  overflow: hidden;
+  height: 20px;
+  background-color: #ccc;
+  margin: 5px 0;
 }
 
 .skill-loop-item-progress-bar {
-  width: 0;
+  position: relative;
   height: 100%;
-  background: #4caf50;
-  transition: width 0.3s ease;
+  width: 0%;
+  background-color: #4caf86ea;
+  text-align: center; /* Center the text horizontally */
+  overflow: hidden; /* Hide any overflow */
+  transition: width 0.1s linear; /* Smooth width transition */
+  z-index: 1; /* Place the progress bar below the text */
+}
+
+.progress-bar-text {
+  position: absolute;
+  width: 100%;
+  top: 0;
+  left: 0;
+  line-height: 20px; /* Vertically center the text */
+  color: #29292998;
+  font-weight: bold;
+  font-size: 12px;
+  z-index: 4;
 }
 
 .skill-loop-item-name {
@@ -919,6 +951,21 @@ body.darkMode .ability-equip-area {
   gap: 15px;
 }
 
+.player-skill-tick-info {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  font-size: 0.8em;
+  color: #7f8c8d;
+  margin-top: 1rem;
+}
+
+.player-skill-tick-info div {
+  flex: auto;
+  flex-direction: column;
+}
+
 /* Dark mode styles */
 body.darkMode .mini-slot-icon {
   background-color: rgba(255, 255, 255, 0.2);
@@ -964,6 +1011,7 @@ body.darkMode .mini-slot-name {
   padding: 1rem;
   background-color: rgba(0, 0, 0, 0.1);
   border-radius: 0.5rem;
+  margin-bottom: 1rem;
 }
 
 .boss-details {
@@ -994,6 +1042,132 @@ body.darkMode .mini-slot-name {
   border-radius: 0.5rem;
 }
 
+/* Positioning and styling the boss image container */
+.boss-image-container {
+  position: relative;
+  display: inline-block;
+}
+
+/* Styling the boss image */
+.boss-image-container img {
+  display: block;
+  width: 200px; /* Adjust as needed */
+  height: auto;
+}
+
+.boss-damage-indicator {
+  position: absolute;
+  top: -66%;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  text-shadow: 0 0 10px #000;
+  color: #df0606c4;
+  font-size: 2rem;
+  text-align: center;
+  line-height: 30px;
+  z-index: 5;
+}
+
+.boss-damage-indicator-2 {
+  position: absolute;
+  top: -66%;
+  left: -30%;
+  width: 100%;
+  height: 100%;
+  text-shadow: 0 0 10px #000;
+  color: #df0606c4;
+  font-size: 2rem;
+  font-weight: bold;
+  text-align: center;
+  line-height: 30px;
+  z-index: 5;
+}
+
+.animate-damage-indicator {
+  animation: damage-indicator-animation 3s ease-in-out infinite;
+}
+
+@keyframes damage-indicator-animation {
+  0% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  50% {
+    opacity: 0.5;
+    transform: translateY(-10px);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-15px);
+  }
+}
+
+.boss-damage-indicator-3 {
+  position: absolute;
+  top: -66%;
+  left: 30%;
+  width: 100%;
+  height: 100%;
+  text-shadow: 0 0 10px #000;
+  color: #df0606c4;
+  font-size: 2rem;
+  text-align: center;
+  line-height: 30px;
+  z-index: 5;
+}
+
+/* Positioning the HP bar over the image */
+.boss-hp-bar {
+  position: relative;
+  width: 80%;
+  height: 30px; /* Adjust height as needed */
+  background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: auto;
+  border-radius: 11%;
+  z-index: 1;
+  margin-bottom: 1rem;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
+/* The inner HP bar indicating the HP percentage */
+.boss-hp-bar-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  --hp-percentage: 100%; /* Initialize the CSS variable */
+  z-index: 1;
+}
+
+/* Adjust the width of the inner HP bar using the CSS variable */
+.boss-hp-bar-inner::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  background-color: #0bc00bcb; /* Green color for remaining HP */
+  width: var(--hp-percentage, 100%);
+  transition: width 0.5s ease-out; /* Smooth transition */
+  z-index: 1; /* Place the inner HP bar below the text */
+}
+
+/* Displaying the HP text */
+.boss-hp-bar span {
+  position: absolute;
+  text-align: center;
+  color: #ffffffc4;
+  font-weight: bold;
+  line-height: 30px; /* Match the height of the HP bar */
+  font-size: 16px;
+  text-shadow: 1px 1px 2px #000;
+  z-index: 4; /* Place the text above the HP bar */
+}
+
 /* Player section styles */
 .player-section {
   display: flex;
@@ -1010,7 +1184,6 @@ body.darkMode .mini-slot-name {
   background-color: rgba(0, 0, 0, 0.1);
   border-radius: 0.5rem;
 }
-
 
 .skill-loop-item-icon {
   width: 50px;

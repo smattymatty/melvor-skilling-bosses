@@ -155,7 +155,16 @@
               </div>
             <div class="boss-image">
               <h2 id="boss-name">Boss Name</h2>
-              <img src="https://via.placeholder.com/200" alt="Boss Image" id="boss-image">
+              <div class="boss-hp-bar">
+                <div class="boss-damage-indicator" id="boss-damage-indicator"></div>
+                <span id="boss-hp-text">1000 / 1000</span>
+                  <div class="boss-hp-bar-inner">
+                    
+                  </div>
+              </div>
+              <div class="boss-image-container">
+                <img src="https://via.placeholder.com/200" alt="Boss Image" id="boss-image">
+              </div>
             </div>
             <div class="boss-defensive-stats">
               <h4>Defensive Stats</h4>
@@ -163,17 +172,32 @@
                 <span>HP: </span>
                 <span id="boss-current-hp">1000</span>/<span id="boss-max-hp">1000</span>
               </div>
+              <div class="boss-physical-defense">
+                <span>Physical Defense: </span>
+                <span id="boss-physical-defense">50</span>
               </div>
+              <div class="boss-magic-defense">
+                <span>Magic Defense: </span>
+                <span id="boss-magic-defense">30</span>
+              </div>
+              <div class="boss-regen">
+                <span>Regen: </span>
+                <span id="boss-regen">10</span>
+              </div>
+            </div>
+
           </div>
-          
           <div class="player-section">
+            
             <div class="skill-loop-container">
               <div class="skill-loop-item">
                 <div class="skill-loop-item-icon">
                   <img src="https://via.placeholder.com/50" alt="Skill Icon">
                 </div>
                 <div class="skill-loop-item-progress">
-                  <div class="skill-loop-item-progress-bar"></div>
+                  <span class="progress-bar-text"></span>
+                  <div class="skill-loop-item-progress-bar">
+                  </div>
                 </div>
                 <div class="skill-loop-item-name">Skill Name</div>
               </div>
@@ -182,7 +206,10 @@
                   <img src="https://via.placeholder.com/50" alt="Skill Icon">
                 </div>
                 <div class="skill-loop-item-progress">
-                  <div class="skill-loop-item-progress-bar"></div>
+                  <span class="progress-bar-text"></span>
+                  <div class="skill-loop-item-progress-bar">
+                    
+                  </div>
                 </div>
                 <div class="skill-loop-item-name">Skill Name</div>
               </div>
@@ -191,7 +218,10 @@
                   <img src="https://via.placeholder.com/50" alt="Skill Icon">
                 </div>
                 <div class="skill-loop-item-progress">
-                  <div class="skill-loop-item-progress-bar"></div>
+                  <span class="progress-bar-text"></span>
+                  <div class="skill-loop-item-progress-bar">
+                  
+                  </div>
                 </div>
                 <div class="skill-loop-item-name">Skill Name</div>
               </div>
@@ -206,6 +236,11 @@
             </div>
           </div>
         </div>
+        <div class="row">
+            <div class="col-6 player-skill-tick-info" id="player-skill-tick-info">Train a skill to progress through the battle!</div>
+            <div class="col-6 player-skill-tick-info">hey howru</div>
+          </div>
+
       </div>
     </div>
     <div class="row">
