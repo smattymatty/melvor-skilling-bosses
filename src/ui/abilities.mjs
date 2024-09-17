@@ -1,6 +1,5 @@
 export async function init(ctx) {
   try {
-    console.log("Initializing abilities ui module...");
     const { SkillingBossesAbilitiesComponent } = await ctx.loadModule(
       "src/components/abilities-component.mjs"
     );
@@ -12,18 +11,9 @@ export async function init(ctx) {
     if (!abilitiesContainer) {
       throw new Error("Abilities container not found in DOM!");
     }
-    console.log(
-      "skillBossesAbilitiesComponent",
-      skillingBossesAbilitiesComponent
-    );
     if (!document.querySelector(".abilities-list")) {
-      console.log("mounting abilities container");
       skillingBossesAbilitiesComponent.mount(abilitiesContainer);
       skillingBossesAbilitiesComponent.show();
-      console.log(
-        "mounted abilities container",
-        document.querySelector(".abilities-list")
-      );
     }
     buildAbilitiesList(ctx);
     updateEquippedAbilitiesDisplay();
@@ -35,15 +25,12 @@ export async function init(ctx) {
 
 export async function buildAbilitiesList(ctx) {
   try {
-    console.log("Building abilities list...");
     const container = document.getElementById("abilities-list");
     // Clear existing content
     container.innerHTML = "";
-    console.log("container", container);
 
     // Get abilities from the game object
     const abilities = game.skillingBosses.abilities;
-    console.log("container", container);
     // Use Promise.all to wait for all ability items to be created
     const abilityItems = await Promise.all(
       Array.from(abilities.values()).map((ability) =>
@@ -177,7 +164,6 @@ export async function buildAbilitiesList(ctx) {
 }
 
 async function equipAbility(ctx, ability, slot) {
-  console.log("Equipping ability", ability);
   // Unequip any ability currently in the slot
   game.skillingBosses.equippedAbilities[slot - 1] = null;
 
@@ -195,13 +181,10 @@ async function equipAbility(ctx, ability, slot) {
   if (
     progressCheckers.checkSkillLevel(game, ability.skill, ability.level) !== 1
   ) {
-    console.log("Not enough level for ability");
     return;
   }
   // Equip the new ability
   game.skillingBosses.equippedAbilities[slot - 1] = ability;
-
-  console.log(`Equipped ${ability.name} to slot ${slot}`);
 
   // Save equipped abilities by IDs
   const arrayOfAbilityIDs = game.skillingBosses.equippedAbilities.map(
@@ -213,8 +196,6 @@ async function equipAbility(ctx, ability, slot) {
   // Update UI
   updateEquippedAbilitiesDisplay();
   closeAllEquipAreas();
-  console.log("Equipped abilities saved to storage");
-  console.log(game.skillingBosses);
 }
 
 function updateEquippedAbilitiesDisplay() {

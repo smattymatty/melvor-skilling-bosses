@@ -1,5 +1,14 @@
 export class Boss {
-  constructor(id, name, skill, image, stats, attacks) {
+  constructor(
+    id,
+    name,
+    skill,
+    image,
+    stats,
+    attacks,
+    rewards,
+    rewardProbabilities
+  ) {
     this.id = id;
     this.name = name;
     this.skill = skill;
@@ -15,6 +24,60 @@ export class Boss {
     this.kills = 0;
     this.deaths = 0;
     this.tickRecord = 0;
+    // Reward tiers
+    this.alwaysRewardTier = rewards.always;
+    this.commonRewardTier = rewards.common;
+    this.uncommonRewardTier = rewards.uncommon;
+    this.rareRewardTier = rewards.rare;
+    this.legendaryRewardTier = rewards.legendary;
+    this.rewardProbabilities = rewardProbabilities || {
+      common: 0.5,
+      uncommon: 0.3,
+      rare: 0.15,
+      legendary: 0.05,
+    };
+  }
+
+  determineRewardTier() {
+    const roll = Math.random();
+    let cumulativeProbability = 0;
+
+    for (const [tier, probability] of Object.entries(
+      this.rewardProbabilities
+    )) {
+      cumulativeProbability += probability;
+      if (roll < cumulativeProbability) {
+        return tier;
+      }
+    }
+
+    // If we somehow didn't hit any tier (shouldn't happen if probabilities sum to 1)
+    return "common";
+  }
+
+  getRewards() {
+    const rewards = [...this.alwaysRewardTier.items]; // Always give the "always" rewards
+
+    const tier = this.determineRewardTier();
+    switch (tier) {
+      case "common":
+        rewards.push(...this.commonRewardTier.items);
+        break;
+      case "uncommon":
+        rewards.push(...this.uncommonRewardTier.items);
+        break;
+      case "rare":
+        rewards.push(...this.rareRewardTier.items);
+        break;
+      case "legendary":
+        rewards.push(...this.legendaryRewardTier.items);
+        break;
+    }
+
+    return rewards.map(([itemId, min, max]) => {
+      const quantity = Math.floor(Math.random() * (max - min + 1)) + min;
+      return [itemId, quantity];
+    });
   }
 }
 export class BossStats {
@@ -40,5 +103,12 @@ export class BossAttack {
     this.name = name;
     this.damage = damage;
     this.cooldown = cooldown;
+  }
+}
+
+export class BossRewards {
+  constructor(items, currencies, xp) {
+    this.items = items; // [id, min, max]
+    // [["melvorD:itemName", 1, 20], ["melvorD:itemName", 2, 40]]
   }
 }

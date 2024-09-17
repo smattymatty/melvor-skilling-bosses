@@ -25,14 +25,12 @@ export async function init(ctx) {
 }
 
 export async function buildMainQuestSection(ctx) {
-  console.log("Building main quest section...");
   const mainQuestContainer = document.getElementById("main-quests");
   if (!mainQuestContainer) {
     throw new Error("Main quests container not found in DOM!");
   }
   mainQuestContainer.innerHTML = "";
   const currentMainQuestNum = game.skillingBosses.currentMainQuest;
-  console.log(currentMainQuestNum);
   game.skillingBosses.mainQuests.forEach((quest, questNumber) => {
     if (questNumber === currentMainQuestNum) {
       const questItem = buildMainQuestItem(ctx, quest);
@@ -50,8 +48,6 @@ export async function buildMainQuestSection(ctx) {
 function buildMainQuestItem(ctx, quest) {
   const questItem = document.createElement("div");
   questItem.classList.add("quest-item", "main-quest");
-  console.log("building main quest item");
-  console.log(quest);
 
   // Build the quest item
   questItem.innerHTML = `
@@ -138,9 +134,9 @@ function buildMainQuestItem(ctx, quest) {
 }
 
 async function questUpdatePatches(ctx) {
-  const abilitiesUIModule = await ctx.loadModule("src/ui/abilities.mjs");
   ctx.patch(Skill, "levelUp").after(function () {
-    console.log("Skill XP added");
-    buildMainQuestSection(ctx);
+    if (game.skillingBosses.currentMainQuest === 0) {
+      buildMainQuestSection(ctx);
+    }
   });
 }

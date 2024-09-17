@@ -12,9 +12,27 @@ export async function setup(ctx) {
   // bosses
   const addBossesModule = await ctx.loadModule("src/bosses/addBosses.mjs");
   const bossPatchesModule = await ctx.loadModule("src/bosses/patches.mjs");
+  // items
+  const bagsModule = await ctx.loadModule("src/items/bags/masterTokenBags.mjs");
+  const coinsModule = await ctx.loadModule("src/items/currencies/bossCoin.mjs");
+  const bossSoulsModule = await ctx.loadModule("src/items/souls/bossSouls.mjs");
+  const bossHeartsModule = await ctx.loadModule(
+    "src/items/hearts/bossHearts.mjs"
+  );
+  // shop
+  const shopPurchasesModule = await ctx.loadModule("src/shop/purchases.mjs");
+  const shopOrderingModule = await ctx.loadModule("src/shop/ordering.mjs");
   ctx.onModsLoaded(async () => {
+    // add new items to the game
+    bagsModule.init(ctx);
+    coinsModule.init(ctx);
+    bossSoulsModule.init(ctx);
+    bossHeartsModule.init(ctx);
+    // create shop purchases and ordering
+    await shopPurchasesModule.init(ctx);
+    await shopOrderingModule.init(ctx);
     // Define a global variable for the Skilling Bosses class
-    game.skillingBosses = new skillingBossesModule.SkillingBosses(ctx, game);
+    game.skillingBosses = new skillingBossesModule.SkillingBosses(game, ctx);
     // bosses
     await addBossesModule.init(ctx);
     await bossPatchesModule.init(ctx);

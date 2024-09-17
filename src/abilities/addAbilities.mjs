@@ -1,3 +1,5 @@
+const BASE_COOLDOWN = 24;
+
 export async function init(ctx) {
   const activationFuncs = await ctx.loadModule(
     "src/abilities/activationFuncs.mjs"
@@ -8,9 +10,6 @@ export async function init(ctx) {
 
 function initializeAbilities(ctx, models, activationFuncs) {
   try {
-    console.log("Initializing abilities...");
-    console.log(game);
-
     // Define your abilities here
     const ability1 = new models.Ability(
       1,
@@ -19,7 +18,7 @@ function initializeAbilities(ctx, models, activationFuncs) {
       "https://cdn2-main.melvor.net/assets/media/skills/woodcutting/woodcutting.png",
       "melvorD:Woodcutting",
       ["Basic Attack", "Physical"],
-      15,
+      BASE_COOLDOWN,
       20,
       [(ability, game) => activationFuncs.dealSkillLevelAsDamage(ability, game)]
     );
@@ -27,12 +26,12 @@ function initializeAbilities(ctx, models, activationFuncs) {
     const ability2 = new models.Ability(
       2,
       "Splinter",
-      "Reduce the target's physical defense by your Woodcutting level / 10",
+      "Deal half your Woodcutting level as physical damage to the target.",
       "https://cdn2-main.melvor.net/assets/media/skills/woodcutting/woodcutting.png",
       "melvorD:Woodcutting",
-      ["Debuff", "Physical"],
+      ["Quick Attack", "Physical"],
+      BASE_COOLDOWN / 2,
       20,
-      40,
       [
         (ability, game) =>
           activationFuncs.dealSkillLevelAsDamage(ability, game, 0.5),
@@ -42,12 +41,12 @@ function initializeAbilities(ctx, models, activationFuncs) {
     const ability3 = new models.Ability(
       3,
       "Timber",
-      "Deal your Woodcutting level * 2 as physical damage to the target. Target is stunned for 10 skill-ticks.",
+      "Deal double your Woodcutting level as physical damage to the target.",
       "https://cdn2-main.melvor.net/assets/media/skills/woodcutting/woodcutting.png",
       "melvorD:Woodcutting",
-      ["Strong Attack", "Physical", "Stun"],
-      30,
-      60,
+      ["Strong Attack", "Physical"],
+      BASE_COOLDOWN * 2,
+      20,
       [
         (ability, game) =>
           activationFuncs.dealSkillLevelAsDamage(ability, game, 2),
@@ -57,11 +56,11 @@ function initializeAbilities(ctx, models, activationFuncs) {
     const ability4 = new models.Ability(
       4,
       "Strike",
-      "Deal your Mining level as physical damage to the target.",
+      "Deal your Mining level as Physical damage to the target.",
       "https://cdn2-main.melvor.net/assets/media/skills/mining/mining.png",
       "melvorD:Mining",
       ["Basic Attack", "Physical"],
-      15, // Cooldown in ticks
+      BASE_COOLDOWN, // Cooldown in ticks
       20, // Required level
       [(ability, game) => activationFuncs.dealSkillLevelAsDamage(ability, game)]
     );
@@ -69,12 +68,12 @@ function initializeAbilities(ctx, models, activationFuncs) {
     const ability5 = new models.Ability(
       5,
       "Shatter",
-      "Reduce the target's physical defense by your Mining level divided by 10.",
+      "Deal half your Mining level as Physical damage to the target.",
       "https://cdn2-main.melvor.net/assets/media/skills/mining/mining.png",
       "melvorD:Mining",
-      ["Debuff", "Physical"],
-      20, // Cooldown in ticks
-      40, // Required level
+      ["Quick Attack", "Physical"],
+      BASE_COOLDOWN / 2, // Cooldown in ticks
+      20, // Required level
       [
         (ability, game) =>
           activationFuncs.dealSkillLevelAsDamage(ability, game, 0.5),
@@ -84,18 +83,58 @@ function initializeAbilities(ctx, models, activationFuncs) {
     const ability6 = new models.Ability(
       6,
       "Earthquake",
-      "Deal your Mining level multiplied by 2 as physical damage to the target and stun it for 10 skill-ticks.",
+      "Deal double your Mining level as Physical damage to the target.",
       "https://cdn2-main.melvor.net/assets/media/skills/mining/mining.png",
       "melvorD:Mining",
-      ["Strong Attack", "Physical", "Stun"],
-      30, // Cooldown in ticks
-      60, // Required level
+      ["Strong Attack", "Physical"],
+      BASE_COOLDOWN * 2, // Cooldown in ticks
+      20, // Required level
       [
         (ability, game) =>
           activationFuncs.dealSkillLevelAsDamage(ability, game, 2),
       ]
     );
 
+    const ability7 = new models.Ability(
+      7,
+      "Hook",
+      "Deal your Fishing level as Physical damage to the target.",
+      "https://cdn2-main.melvor.net/assets/media/skills/fishing/fishing.png",
+      "melvorD:Fishing",
+      ["Basic Attack", "Physical"],
+      BASE_COOLDOWN, // Cooldown in ticks
+      20, // Required level
+      [(ability, game) => activationFuncs.dealSkillLevelAsDamage(ability, game)]
+    );
+    const ability8 = new models.Ability(
+      8,
+      "Line",
+      "Deal half your Fishing level as Physical damage to the target.",
+      "https://cdn2-main.melvor.net/assets/media/skills/fishing/fishing.png",
+      "melvorD:Fishing",
+      ["Quick Attack", "Physical"],
+      BASE_COOLDOWN / 2, // Cooldown in ticks
+      20, // Required level
+      [
+        (ability, game) =>
+          activationFuncs.dealSkillLevelAsDamage(ability, game, 0.5),
+      ]
+    );
+
+    const ability9 = new models.Ability(
+      9,
+      "Sinker",
+      "Deal double your Fishing level as Physical damage to the target.",
+      "https://cdn2-main.melvor.net/assets/media/skills/fishing/fishing.png",
+      "melvorD:Fishing",
+      ["Strong Attack", "Physical"],
+      BASE_COOLDOWN * 2, // Cooldown in ticks
+      20, // Required level
+      [
+        (ability, game) =>
+          activationFuncs.dealSkillLevelAsDamage(ability, game, 2),
+      ]
+    );
     // Add the abilities to the SkillingBosses instance
     game.skillingBosses.addAbility(ability1);
     game.skillingBosses.addAbility(ability2);
@@ -103,9 +142,9 @@ function initializeAbilities(ctx, models, activationFuncs) {
     game.skillingBosses.addAbility(ability4);
     game.skillingBosses.addAbility(ability5);
     game.skillingBosses.addAbility(ability6);
-
-    console.log("Abilities initialized");
-    console.log(game.skillingBosses);
+    game.skillingBosses.addAbility(ability7);
+    game.skillingBosses.addAbility(ability8);
+    game.skillingBosses.addAbility(ability9);
   } catch (error) {
     console.error("Error initializing abilities:", error);
   }

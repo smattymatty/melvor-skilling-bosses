@@ -3,6 +3,8 @@ export function init(ctx) {
   fillAbilitySlots(ctx);
   fillCurrentBoss(ctx);
   fillBattleInfo(ctx);
+  fillBossKillsArray(ctx);
+  fillPlayerLoot(ctx);
   console.log("Storage initialized");
   console.log(ctx.characterStorage);
 }
@@ -66,6 +68,11 @@ function fillBattleInfo(ctx) {
   const bossCurrHP = ctx.characterStorage.getItem("BcHP");
   const bossAttackTimer = ctx.characterStorage.getItem("Bcat");
   const activeAbilityTimer = ctx.characterStorage.getItem("Acat");
+  const currentBattleAbilitiesUsed = ctx.characterStorage.getItem("Cabu");
+  const currentBattleDamageDealt = ctx.characterStorage.getItem("Cdd");
+  const currentBattleBossHealed = ctx.characterStorage.getItem("BctH");
+  const currentBattleBossDamageDealt = ctx.characterStorage.getItem("BctD");
+  const currentBattleBossDamageReduced = ctx.characterStorage.getItem("BctB");
   if (currentBattleTicks) {
     game.skillingBosses.currentBattleTicks = currentBattleTicks;
     console.log(
@@ -107,5 +114,110 @@ function fillBattleInfo(ctx) {
     );
   } else {
     console.log("No active ability timer found in storage");
+  }
+  if (currentBattleAbilitiesUsed) {
+    game.skillingBosses.currentBattleAbilitiesUsed = currentBattleAbilitiesUsed;
+    console.log(
+      "Current battle abilities used loaded from storage:",
+      currentBattleAbilitiesUsed
+    );
+  } else {
+    console.log("No current battle abilities used found in storage");
+  }
+  if (currentBattleDamageDealt) {
+    game.skillingBosses.currentBattleDamageDealt = currentBattleDamageDealt;
+    console.log(
+      "Current battle damage dealt loaded from storage:",
+      currentBattleDamageDealt
+    );
+  } else {
+    console.log("No current battle damage dealt found in storage");
+  }
+  if (currentBattleBossHealed) {
+    game.skillingBosses.currentBattleBossHealed = currentBattleBossHealed;
+    console.log(
+      "Current battle boss healed loaded from storage:",
+      currentBattleBossHealed
+    );
+  } else {
+    console.log("No current battle boss healed found in storage");
+  }
+  if (currentBattleBossDamageDealt) {
+    game.skillingBosses.currentBattleBossDamageDealt =
+      currentBattleBossDamageDealt;
+    console.log(
+      "Current battle boss damage dealt loaded from storage:",
+      currentBattleBossDamageDealt
+    );
+  } else {
+    console.log("No current battle boss damage dealt found in storage");
+  }
+  if (currentBattleBossDamageReduced) {
+    game.skillingBosses.currentBattleBossDamageReduced =
+      currentBattleBossDamageReduced;
+    console.log(
+      "Current battle boss damage reduced loaded from storage:",
+      currentBattleBossDamageReduced
+    );
+  } else {
+    console.log("No current battle boss damage reduced found in storage");
+  }
+}
+
+function fillBossKillsArray(ctx) {
+  try {
+    const bossKillsArray = ctx.characterStorage.getItem("BctR");
+    console.log("Filling boss kills array from storage");
+    console.log(bossKillsArray);
+    if (bossKillsArray) {
+      // Assuming bossKillsArray is an array of arrays where each sub-array contains [totalKills, fastestKill]
+
+      // Loop through each entry in the bossKillsArray and map it to the respective boss
+      bossKillsArray.forEach((bossData, index) => {
+        const boss = game.skillingBosses.getBossById(index); // Get boss by its index (ID)
+        console.log("boss,", boss);
+        console.log("bossData,", bossData);
+        console.log("index,", index);
+        if (boss) {
+          const [totalKills, fastestKill] = bossData;
+
+          // Apply the loaded data to the boss
+          boss.kills = totalKills || 0;
+          boss.tickRecord = fastestKill || 0;
+
+          console.log(
+            `Boss ID ${boss.id} - Kills: ${boss.kills}, Fastest Kill: ${boss.tickRecord}`
+          );
+        } else {
+          console.warn(`No boss found for ID ${index}`);
+        }
+      });
+
+      // Update game state with the filled array
+      game.skillingBosses.bossKillsArray = bossKillsArray;
+      console.log("Boss kills array loaded from storage:", bossKillsArray);
+    } else {
+      console.log("No boss kills array found in storage");
+    }
+  } catch (error) {
+    console.error("Error filling boss kills array from storage:", error);
+  }
+}
+
+function fillPlayerLoot(ctx) {
+  try {
+    const playerLoot = ctx.characterStorage.getItem("Plt");
+    console.log("Filling player loot from storage");
+    console.log(playerLoot);
+    if (playerLoot) {
+      // Assuming playerLoot is an array of arrays where each sub-array contains [itemId, quantity]
+
+      game.skillingBosses.playerLoot = playerLoot;
+      console.log("Player loot loaded from storage:", playerLoot);
+    } else {
+      console.log("No player loot found in storage");
+    }
+  } catch (error) {
+    console.error("Error filling player loot from storage:", error);
   }
 }

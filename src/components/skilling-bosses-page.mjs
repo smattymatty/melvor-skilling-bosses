@@ -6,6 +6,7 @@ const { SkillingBossesUIComponent } = await loadModule(
 
 const battleUiModule = await loadModule("src/ui/battle.mjs");
 const abilitiesUiModule = await loadModule("src/ui/abilities.mjs");
+const questsUiModule = await loadModule("src/ui/quest.mjs");
 
 export class SkillingBossesPageUIComponent extends SkillingBossesUIComponent {
   constructor(manager, game) {
@@ -37,9 +38,10 @@ export class SkillingBossesPageUIComponent extends SkillingBossesUIComponent {
           battleUiModule.updateAbilityProgressUI();
           battleUiModule.updateBattleStatsUI();
           game.skillingBosses.updatePlayerBossStats();
-        }
-        if (sectionName === "abilities") {
+        } else if (sectionName === "abilities") {
           //abilitiesUiModule.buildAbilitiesList(this.manager);
+        } else if (sectionName === "quests") {
+          questsUiModule.buildMainQuestSection(this.manager);
         }
 
         section.classList.remove("active");

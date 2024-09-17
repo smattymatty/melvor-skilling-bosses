@@ -40,7 +40,6 @@ export function checkSkillLevelsOr(game, skillIDs, requiredLevel) {
 }
 export function hasPlayerKilledAmountOfBosses(game, amount) {
   try {
-    console.log("checking player killed bosses");
     let killedBosses = 0;
     // TODO: CHECK
     if (killedBosses >= amount) {
@@ -54,14 +53,15 @@ export function hasPlayerKilledAmountOfBosses(game, amount) {
 }
 export function playerHasAnyAbilityEquipped(game) {
   try {
-    console.log("Checking if player has any ability equipped");
+    let total = 0;
     for (const ability of game.skillingBosses.equippedAbilities) {
       if (ability) {
-        console.log(`Ability found: ${ability.name}`);
-        return 1.0; // Objective complete
+        total++;
+      }
+      if (total >= 3) {
+        return 1; // Objective complete
       }
     }
-    console.log("No equipped ability found");
     return 0.0; // Objective not started
   } catch (error) {
     console.error("Error checking player ability equipped:", error);
@@ -69,17 +69,78 @@ export function playerHasAnyAbilityEquipped(game) {
   }
 }
 
-export function checkTotalBossKills(game, amount) {
+/** Check for total different killed bosses */
+export function checkTotalTypesOfBossesKilled(game, amount) {
   try {
-    console.log("checking total boss kills");
     let killedBosses = 0;
-    // TODO: CHECK FOR KILLS
+    for (const boss of game.skillingBosses.bosses.values()) {
+      if (boss.kills > 0) {
+        killedBosses++;
+      }
+    }
     if (killedBosses >= amount) {
       return 1;
     } else {
       return killedBosses / amount;
     }
   } catch (error) {
-    console.error("Error checking total boss kills:", error);
+    console.error("Error checking total bosses killed:", error);
+  }
+}
+
+export function checkAnyBossKills(game, requiredKills) {
+  try {
+    let highestKills = 0;
+
+    for (const boss of game.skillingBosses.bosses.values()) {
+      if (boss.kills >= requiredKills) {
+        return 1; // Objective complete
+      }
+      if (boss.kills > highestKills) {
+        highestKills = boss.kills;
+      }
+    }
+
+    // If we haven't found a boss with required kills, return the progress based on the highest kill count
+    return Math.min(highestKills / requiredKills, 0.99); // Cap at 0.99 to ensure it's not marked complete
+  } catch (error) {
+    console.error(
+      `Error checking for boss with ${requiredKills} kills:`,
+      error
+    );
+    return 0; // Return 0 in case of error
+  }
+}
+
+export function checkMultipleBossesWithKills(
+  game,
+  requiredBosses,
+  requiredKills
+) {
+  try {
+    let bossesWithRequiredKills = 0;
+    let totalProgress = 0;
+
+    for (const boss of game.skillingBosses.bosses.values()) {
+      if (boss.kills >= requiredKills) {
+        bossesWithRequiredKills++;
+        totalProgress += 1;
+      } else {
+        totalProgress += boss.kills / requiredKills;
+      }
+
+      if (bossesWithRequiredKills >= requiredBosses) {
+        return 1; // Objective complete
+      }
+    }
+
+    // If we haven't found enough bosses with required kills, return the progress
+    return Math.min(totalProgress / requiredBosses, 0.99); // Cap at 0.99 to ensure it's not marked complete
+  } catch (error) {
+    console.error(
+      `Error checking for ${requiredBosses} bosses with ${requiredKills} kills:`,
+      error
+    );
+    return 0; // Return 0 in case of error
   }
 }

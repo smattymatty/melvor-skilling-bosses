@@ -16,7 +16,7 @@ export class Ability {
     this.icon = icon;
     this.skill = skill;
     this.tags = tags;
-    this.cooldown = cooldown; // Cooldown duration
+    this.cooldown = Math.floor(cooldown); // Cooldown duration
     this.level = level;
     this.activationFuncs = activationFuncs; // Array of functions
     // No current cooldown here

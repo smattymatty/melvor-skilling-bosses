@@ -32,8 +32,6 @@ export async function init(ctx) {
 }
 
 function createPage(ctx, id, name, icon, containerID, openFunction) {
-  console.log(`Creating page: ${id}`);
-
   try {
     const pageData = {
       id: `SkillingBosses`,
@@ -58,7 +56,6 @@ function createPage(ctx, id, name, icon, containerID, openFunction) {
 
     // Create the container if it doesn't exist
     if (!document.getElementById(containerID)) {
-      console.log(`Creating container: ${containerID}`);
       const container = document.createElement("div");
       container.id = containerID;
       container.className = "content d-none";
@@ -68,7 +65,6 @@ function createPage(ctx, id, name, icon, containerID, openFunction) {
       }
       mainContainer.appendChild(container);
     } else {
-      console.log(`Container ${containerID} already exists.`);
     }
 
     return newPage;
@@ -78,8 +74,6 @@ function createPage(ctx, id, name, icon, containerID, openFunction) {
   }
 }
 export async function openSkillingBossesScreen(ctx, component) {
-  console.log("Opening Skilling Bosses screen...");
-
   try {
     const container = document.getElementById("main-container");
     if (!container) {
@@ -113,6 +107,8 @@ export async function openSkillingBossesScreen(ctx, component) {
       game.skillingBosses.updatePlayerBossStats();
       const abilitiesUIModule = await ctx.loadModule("src/ui/abilities.mjs");
       await abilitiesUIModule.init(ctx);
+      const inventoryUIModule = await ctx.loadModule("src/ui/inventory.mjs");
+      await inventoryUIModule.init(ctx);
     } catch (error) {
       console.error("Error initializing Skilling Bosses screen:", error);
       throw error;
@@ -123,8 +119,6 @@ export async function openSkillingBossesScreen(ctx, component) {
     } else {
       component.showSection("bosses");
     }
-
-    console.log("Skilling Bosses screen opened successfully.");
   } catch (error) {
     console.error("Error opening Skilling Bosses screen:", error);
   }
@@ -140,21 +134,14 @@ export function checkButtons() {
   const abilityButton = document.querySelector(
     ".skilling-bosses-nav-btn[data-section='abilities']"
   );
-  const talentButton = document.querySelector(
-    ".skilling-bosses-nav-btn[data-section='talents']"
-  );
   if (game.skillingBosses.currentMainQuest === 0) {
     battleButton.classList.add("d-none");
     abilityButton.classList.add("d-none");
-    talentButton.classList.add("d-none");
   } else if (game.skillingBosses.currentMainQuest === 1) {
     abilityButton.classList.remove("d-none");
     battleButton.classList.add("d-none");
-    talentButton.classList.add("d-none");
   } else if (game.skillingBosses.currentMainQuest === 2) {
     battleButton.classList.remove("d-none");
-    talentButton.classList.add("d-none");
   } else {
-    console.log("all buttons unlocked");
   }
 }

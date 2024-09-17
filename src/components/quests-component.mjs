@@ -9,7 +9,6 @@ export class SkillingBossesQuestComponent extends SkillingBossesUIComponent {
     super(manager, game, "skilling-bosses-quests-component");
   }
   initialize() {
-    console.log("Initializing Skilling Bosses Quests Component");
     this.navButtons = document.querySelectorAll(".quest-category-btn");
     this.contentSections = document.querySelectorAll(".quest-category");
     this.initializeEventListeners();

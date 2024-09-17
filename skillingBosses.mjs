@@ -1,12 +1,15 @@
 const { loadModule } = mod.getContext(import.meta);
 
 const battlesUIModule = await loadModule("src/ui/battle.mjs");
+const inventoryUIModule = await loadModule("src/ui/inventory.mjs");
 
 export class SkillingBosses {
-  constructor(game) {
+  constructor(game, ctx) {
     this.game = game;
+    this.ctx = ctx;
     // Bosses
     this.bosses = new Map();
+    this.bossKillsArray = [];
     // Quests
     this.quests = new Map();
     this.mainQuests = new Map();
@@ -29,6 +32,15 @@ export class SkillingBosses {
 
     this.battleCurrency = 0;
     this.currentBattleTicks = null;
+    this.currentBattleAbilitiesUsed = 0;
+    this.currentBattleDamageDealt = 0;
+    this.currentBattleBossHealed = 0;
+    this.currentBattleBossDamageReduced = 0;
+    // inventory
+    this.playerLoot = []; // [["melvorD:itemName", quantity], ...]
+    // player loot is an array of arrays, where each inner array is a pair of [itemName, quantity]
+    this.maximumPlayerLoot = 32;
+    this.lastLootDrop = null;
   }
 
   // Methods for managing skilling bosses
@@ -127,14 +139,16 @@ export class SkillingBosses {
       const boss = this.activeBoss;
       if (boss && this.playerCoreHP > 0) {
         this.currentBattleTicks = 0;
-        console.log(`Battle started against ${boss.name}`);
+        this.currentBattleAbilitiesUsed = 0;
+        this.currentBattleDamageDealt = 0;
+        this.currentBattleBossHealed = 0;
+        this.currentBattleBossDamageReduced = 0;
 
         // Initialize ability activation
         for (let i = 0; i < this.equippedAbilities.length; i++) {
           const ability = this.equippedAbilities[i];
           if (ability) {
             this.activeAbilitySlot = i;
-            console.log("setting active ability timer to", ability);
             this.activeAbilityTimer = ability.cooldown;
             break;
           }
@@ -146,6 +160,7 @@ export class SkillingBosses {
         // Initialize boss attack timer and index
         this.bossAttackTimer = boss.attacks[0].cooldown;
         this.bossNextAttackIndex = 0;
+        battlesUIModule.updateCurrentCombatStatsUI();
       } else {
         console.log(
           "Cannot start battle. Boss not found or player core HP not greater than 0."
@@ -174,7 +189,8 @@ export class SkillingBosses {
       //  this.executeBossAttack();
       //  this.updateBossAttack();
       //}
-
+      this.checkforRegen("boss");
+      battlesUIModule.updateCurrentCombatStatsUI();
       // Check for win/loss conditions
       if (this.playerCoreHP <= 0) {
         this.endBattle("loss");
@@ -183,8 +199,6 @@ export class SkillingBosses {
         this.endBattle("win");
         return;
       }
-
-      // Any additional per-tick logic...
     } catch (error) {
       console.error("Error ticking battle:", error);
     }
@@ -192,8 +206,8 @@ export class SkillingBosses {
   activateCurrentAbility() {
     const ability = this.equippedAbilities[this.activeAbilitySlot];
     if (ability) {
-      console.log(`Activating ability: ${ability.name}`);
       ability.activate(game); // Pass the game context if needed
+      battlesUIModule.updateCurrentCombatStatsUI();
     } else {
       console.log(`No ability equipped in slot ${this.activeAbilitySlot}`);
     }
@@ -205,11 +219,14 @@ export class SkillingBosses {
     if (this.activeAbilityTimer <= 0) {
       // Activate the ability
       this.activateCurrentAbility();
+      this.currentBattleAbilitiesUsed++;
 
       // Move to the next ability slot
       this.advanceAbilitySlot();
     }
+    battlesUIModule.updateAbilityProgressUI();
   }
+
   advanceAbilitySlot() {
     // Move to the next slot
     this.activeAbilitySlot++;
@@ -225,9 +242,6 @@ export class SkillingBosses {
     if (nextAbility) {
       // Set the active ability timer to the cooldown of the new ability
       this.activeAbilityTimer = nextAbility.cooldown;
-      console.log(
-        `Next ability: ${nextAbility.name}, cooldown: ${this.activeAbilityTimer}`
-      );
     } else {
       // No ability in this slot, set timer to null or skip to the next slot
       this.activeAbilityTimer = null;
@@ -268,22 +282,20 @@ export class SkillingBosses {
     } else if (target === "boss") {
       this.bossCurrHP -= amount;
       const bossHPContainer = document.querySelector(".boss-hp-bar");
-      console.log(bossHPContainer);
       if (bossHPContainer) {
         const classOptions = [
           "boss-damage-indicator",
           "boss-damage-indicator-2",
           "boss-damage-indicator-3",
         ];
-        console.log(classOptions);
         const chosenClass =
           classOptions[Math.floor(Math.random() * classOptions.length)];
         const damageIndicator = document.createElement("div");
         damageIndicator.classList.add(chosenClass);
         damageIndicator.classList.add("animate-damage-indicator");
         damageIndicator.textContent = `-${amount}`;
-        console.log(damageIndicator);
         bossHPContainer.appendChild(damageIndicator);
+        this.currentBattleDamageDealt += amount;
         // remove the damage indicator after a few seconds
         setTimeout(() => {
           damageIndicator.remove();
@@ -297,6 +309,18 @@ export class SkillingBosses {
     battlesUIModule.updateBattleStatsUI();
   }
 
+  checkforRegen(target) {
+    if (target === "player") {
+      // TODO: implement player regen
+    } else if (target === "boss") {
+      let chanceToRegen = this.activeBoss.regenChance;
+      let roll = Math.random();
+      if (roll <= chanceToRegen) {
+        this.healTarget(this.activeBoss.regen, target);
+      }
+    }
+  }
+
   healTarget(amount, target) {
     amount = Math.max(0, amount);
     amount = Math.floor(amount);
@@ -304,6 +328,29 @@ export class SkillingBosses {
       this.playerCoreHP += amount;
     } else if (target === "boss") {
       this.bossCurrHP += amount;
+      if (this.bossCurrHP >= this.activeBoss.maxHP) {
+        this.bossCurrHP = this.activeBoss.maxHP;
+      }
+      const classOptions = [
+        "boss-heal-indicator",
+        "boss-heal-indicator-2",
+        "boss-heal-indicator-3",
+      ];
+      const chosenClass =
+        classOptions[Math.floor(Math.random() * classOptions.length)];
+      const healIndicator = document.createElement("div");
+      healIndicator.classList.add(chosenClass);
+      healIndicator.classList.add("animate-damage-indicator");
+      healIndicator.textContent = `+${amount}`;
+      const parentContainer = document.querySelector("#boss-heal-indicator");
+      if (parentContainer) {
+        parentContainer.appendChild(healIndicator);
+      }
+      this.currentBattleBossHealed += amount;
+      battlesUIModule.updateBattleStatsUI();
+      setTimeout(() => {
+        healIndicator.remove();
+      }, 3000);
     }
   }
 
@@ -316,44 +363,53 @@ export class SkillingBosses {
   }
 
   endBattle(result) {
+    console.log("Ending battle with result", result);
     if (result === "win") {
+      // if the current ticks are lower than the boss tick record, update the tick record
+      console.log("Current ticks:", this.currentBattleTicks);
+      console.log("Boss tick record:", this.activeBoss.tickRecord);
+      if (this.activeBoss.tickRecord === 0) {
+        this.activeBoss.tickRecord = this.currentBattleTicks;
+      } else if (this.currentBattleTicks < this.activeBoss.tickRecord) {
+        this.activeBoss.tickRecord = this.currentBattleTicks;
+      }
       this.battleCurrency += 1;
       this.activeBoss.kills++;
-      this.activeBoss.tickRecord = this.currentBattleTicks;
+      this.bossKillsArray = battlesUIModule.createBossKillArrayAndSave();
       this.updatePlayerBossStats();
-      // Grant other rewards, update quests, etc.
+      console.log("Boss kills array:", this.bossKillsArray);
+      console.log(game.skillingBosses);
+      // Grant rewards
+      this.grantBossRewards(this.activeBoss);
+
       // restart the battle
       this.startBattle();
     } else if (result === "loss") {
       this.currentBattleTicks = null;
       this.activeBoss = null;
-      return;
+      battlesUIModule.updateCurrentCombatStatsUI();
+      battlesUIModule.actuallyUpdateBossDisplay();
     }
     this.currentBattleTicks = 0;
+    this.currentBattleBossHealed = 0;
+    this.currentBattleDamageDealt = 0;
+    this.currentBattleBossDamageReduced = 0;
   }
 
   updatePlayerBossStats() {
     try {
-      console.log("Updating player boss stats");
       const bossStatsElements = document.querySelectorAll(
         "#boss-player-tick-info"
       );
       if (bossStatsElements && this.activeBoss !== null) {
-        console.log("Found boss stats eleme nts");
         for (const element of bossStatsElements) {
-          console.log("Checking element", element);
-          console.log("element.dataset.bossId:", element.dataset.bossId);
-          console.log("this.activeBoss.id:", this.activeBoss.id);
-
           // Convert element.dataset.bossId to a number
           const bossId = Number(element.dataset.bossId);
           const boss = this.getBossById(bossId);
-          console.log("Retrieved boss from Map:", boss);
 
           if (boss) {
             element.innerHTML = `<div>Total Kills: ${boss.kills}</div>
             <div>Fastest Kill: ${boss.tickRecord} ticks</div>`;
-            console.log("Updated element:", element);
           } else {
             console.log(`Boss with ID ${bossId} not found.`);
           }
@@ -362,5 +418,99 @@ export class SkillingBosses {
     } catch (error) {
       console.error("Error updating player boss stats:", error);
     }
+  }
+  addItemToInventory(itemId, quantity) {
+    // Check if the item already exists in the inventory
+    const existingItemIndex = this.playerLoot.findIndex(
+      (item) => item[0] === itemId
+    );
+
+    if (existingItemIndex !== -1) {
+      // Item exists, update quantity
+      this.playerLoot[existingItemIndex][1] += quantity;
+    } else if (this.playerLoot.length < this.maximumPlayerLoot) {
+      // Item doesn't exist and there's space, add new item
+      this.playerLoot.push([itemId, quantity]);
+    } else {
+      console.log("Inventory is full!");
+      // Here you could implement logic for what happens when inventory is full
+    }
+
+    // Update the inventory display
+    inventoryUIModule.updateInventoryDisplay(this.ctx);
+  }
+  grantBossRewards(boss) {
+    console.log("Granting rewards for defeating", boss.name);
+
+    const rewards = [];
+
+    // Always grant the items from the alwaysRewardTier
+    if (boss.alwaysRewardTier && boss.alwaysRewardTier.items) {
+      boss.alwaysRewardTier.items.forEach((item) => {
+        const [itemId, minQuantity, maxQuantity] = item;
+        const quantity =
+          Math.floor(Math.random() * (maxQuantity - minQuantity + 1)) +
+          minQuantity;
+        this.addItemToInventory(itemId, quantity);
+        rewards.push([itemId, quantity]);
+        console.log(
+          `Added ${quantity} of ${itemId} to inventory (Always reward)`
+        );
+      });
+    }
+
+    // Determine the reward tier
+    const rewardTier = boss.determineRewardTier();
+
+    // Grant a single random reward from the determined tier
+    const tierReward = this.grantSingleRewardFromTier(boss, rewardTier);
+    if (tierReward) {
+      const [itemId, quantity] = tierReward;
+      this.addItemToInventory(itemId, quantity);
+      rewards.push(tierReward);
+    }
+
+    // Set the last loot drop
+    this.setLastLootDrop(boss, rewardTier, rewards);
+
+    // Update the inventory display
+    inventoryUIModule.updateInventoryDisplay(this.ctx);
+    inventoryUIModule.updateLastLootDropDisplay(this.ctx);
+  }
+
+  grantSingleRewardFromTier(boss, tier) {
+    let rewardItems;
+    switch (tier) {
+      case "common":
+        rewardItems = boss.commonRewardTier.items;
+        break;
+      case "uncommon":
+        rewardItems = boss.uncommonRewardTier.items;
+        break;
+      case "rare":
+        rewardItems = boss.rareRewardTier.items;
+        break;
+      case "legendary":
+        rewardItems = boss.legendaryRewardTier.items;
+        break;
+      default:
+        console.log(`Unknown reward tier: ${tier}`);
+        return null;
+    }
+
+    if (rewardItems && rewardItems.length > 0) {
+      const randomIndex = Math.floor(Math.random() * rewardItems.length);
+      const [itemId, minQuantity, maxQuantity] = rewardItems[randomIndex];
+      const quantity =
+        Math.floor(Math.random() * (maxQuantity - minQuantity + 1)) +
+        minQuantity;
+      return [itemId, quantity];
+    } else {
+      console.log(`No rewards available for tier: ${tier}`);
+      return null;
+    }
+  }
+  setLastLootDrop(boss, tier, loot) {
+    this.lastLootDrop = { boss, tier, loot };
   }
 }

@@ -9,7 +9,6 @@ export class SkillingBossesBattleComponent extends SkillingBossesUIComponent {
     super(manager, game, "skilling-bosses-battles-component");
   }
   initialize() {
-    console.log("Initializing Skilling Bosses Battles Component");
     this.initializeEventListeners();
   }
   initializeEventListeners() {

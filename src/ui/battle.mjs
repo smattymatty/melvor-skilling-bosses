@@ -13,22 +13,60 @@ export async function init(ctx) {
     if (!battlesContainer) {
       throw new Error("Battles container not found in DOM!");
     }
-    if (!document.querySelector(".battle-category")) {
+    if (!document.querySelector(".battle-container")) {
       skillingBossesBattleComponent.mount(battlesContainer);
       skillingBossesBattleComponent.show();
     }
     buildBossSelectionList(ctx);
     updateBossDisplay(ctx);
     game.skillingBosses.updatePlayerBossStats();
+    if (game.skillingBosses.currentBattleTicks > 0) {
+      updateCurrentCombatStatsUI();
+    }
   } catch (error) {
     console.error("Error initializing battles:", error);
     throw error;
   }
-  console.log("Battles initialized");
+  if (game.skillingBosses.currentBattleTicks > 0) {
+    createRunAwayButton(ctx);
+  }
+}
+
+export function createBossKillArrayAndSave() {
+  const bossKillArray = [];
+  for (const boss of game.skillingBosses.bosses.values()) {
+    bossKillArray.push([boss.kills, boss.tickRecord]);
+  }
+  return bossKillArray;
+}
+
+function createRunAwayButton(ctx) {
+  const runAwayButton = document.createElement("button");
+  runAwayButton.classList.add("btn", "btn-primary", "z-4");
+  runAwayButton.id = "boss-run-away-btn";
+  runAwayButton.innerHTML = "Run Away";
+  runAwayButton.addEventListener("mousedown", (event) => {
+    game.skillingBosses.activeBoss = null;
+    game.skillingBosses.currentBattleTicks = null;
+    document.getElementById("current-combat-stats").innerHTML =
+      "Begin a Battle to track stats";
+    actuallyUpdateBossDisplay();
+    ctx.characterStorage.setItem("AcBss", null);
+    ctx.characterStorage.setItem("Crbt", null);
+    // remove the run away button
+    runAwayButton.remove();
+  });
+
+  const bossImageDiv = document.querySelector("#run-away-btn-container");
+  if (bossImageDiv) {
+    // clear the container
+    bossImageDiv.innerHTML = "";
+    bossImageDiv.appendChild(runAwayButton);
+  }
+  return runAwayButton;
 }
 
 function buildBossSelectionList(ctx) {
-  console.log("Building boss selection list...");
   const container = document.getElementById("boss-selection-list");
   // Clear existing content
   container.innerHTML = "";
@@ -38,11 +76,10 @@ function buildBossSelectionList(ctx) {
 
   // Create a boss item for each boss
   bosses.forEach((boss) => {
-    console.log("Creating boss item for", boss);
     const bossItem = createBossItem(ctx, boss);
     container.appendChild(bossItem);
+    fillBossRewards(ctx, boss);
   });
-  console.log("Boss selection list built");
 }
 
 function createBossItem(ctx, boss) {
@@ -68,10 +105,10 @@ function createBossItem(ctx, boss) {
   <img src="${boss.image}" alt="${
       boss.name
     }" class="img-fluid rounded-start" style="max-width: 100px;">
-  <button class="btn btn-primary mt-2">Fight Boss</button>
     <div class="boss-details d-none mt-3">
-        <p class="mb-1">Physical Defense: ${boss.stats.physicalDefense}</p>
-    <p class="mb-1">Magic Defense: ${boss.stats.magicDefense}</p>
+    <button class="btn btn-primary mt-2 mb-2 w-100">Fight Boss</button>
+        <p class="mb-1">Physical Reduction: ${boss.stats.physicalDefense}%</p>
+    <p class="mb-1">Magic Reduction: ${boss.stats.magicDefense}%</p>
     <p class="mb-1">Regen: ${boss.stats.regen}</p>
       <h6>Boss Attacks:</h6>
       <ul>
@@ -79,6 +116,7 @@ function createBossItem(ctx, boss) {
           .map((attack) => `<li>${attack.name}: ${attack.damage} damage</li>`)
           .join("")}
       </ul>
+      <div class="boss-rewards" id="boss-rewards-${boss.id}">yoooo</div>
     </div>
     `;
 
@@ -114,12 +152,9 @@ function closeAllDetails() {
 }
 
 function startBossFight(ctx, boss) {
-  console.log(`Starting fight with ${boss.name}`);
-
   // Set the active boss
   game.skillingBosses.setActiveBoss(boss.id);
   ctx.characterStorage.setItem("AcBss", game.skillingBosses.activeBoss.id);
-  console.log("storing active boss id", ctx.characterStorage.getItem("AcBss"));
   // Start the battle to initialize battle-related properties
   game.skillingBosses.startBattle();
 
@@ -127,6 +162,9 @@ function startBossFight(ctx, boss) {
   initializeAbilitySlots();
   updateBossDisplay(ctx);
   updateBattleStatsUI();
+  if (!document.querySelector("#boss-run-away-btn")) {
+    createRunAwayButton(ctx);
+  }
 }
 
 function updateBossDisplay(ctx) {
@@ -134,11 +172,22 @@ function updateBossDisplay(ctx) {
     return;
   }
   ctx.characterStorage.setItem("AcBss", game.skillingBosses.activeBoss.id);
-  console.log("storing active boss id", ctx.characterStorage.getItem("AcBss"));
+  actuallyUpdateBossDisplay();
+}
+
+export function actuallyUpdateBossDisplay() {
   const bossImage = document.getElementById("boss-image");
-  bossImage.src = game.skillingBosses.activeBoss.image;
+  if (game.skillingBosses.activeBoss) {
+    bossImage.src = game.skillingBosses.activeBoss.image;
+  } else {
+    bossImage.src = "https://via.placeholder.com/200";
+  }
   const bossName = document.getElementById("boss-name");
-  bossName.textContent = game.skillingBosses.activeBoss.name;
+  if (game.skillingBosses.activeBoss) {
+    bossName.textContent = game.skillingBosses.activeBoss.name;
+  } else {
+    bossName.textContent = "Select A Boss";
+  }
 }
 
 export function updateAbilityProgressUI() {
@@ -231,6 +280,9 @@ export function updateBattleStatsUI() {
   if (!document.querySelector(".boss-hp-bar-inner")) {
     return;
   }
+  if (game.skillingBosses.currentBattleTicks > 0) {
+    updateCurrentCombatStatsUI();
+  }
 
   // Update Boss HP
   const bossCurrHP = game.skillingBosses.bossCurrHP;
@@ -286,5 +338,128 @@ export function updateBattleStatsUI() {
     game.skillingBosses.activeBoss.stats.magicDefense;
   document.getElementById("boss-regen").textContent = `${
     game.skillingBosses.activeBoss.regenChance * 100
-  }% chance to regen ${game.skillingBosses.activeBoss.regen} HP`;
+  }% /${game.skillingBosses.activeBoss.regen} HP`;
+
+  const bossDefensiveStatsInfo = document.getElementById(
+    "boss-defensive-stats-info"
+  );
+  if (bossDefensiveStatsInfo) {
+    let HTMLContent = `
+    <div>Healed ${game.skillingBosses.currentBattleBossHealed} HP</div>
+    <div>Reduced ${game.skillingBosses.currentBattleBossDamageReduced} Damage</div>
+    `;
+    bossDefensiveStatsInfo.innerHTML = HTMLContent;
+  }
+}
+
+export function updateCurrentCombatStatsUI() {
+  const currentCombatStats = document.getElementById("current-combat-stats");
+  let avgDamagePerAbility =
+    game.skillingBosses.currentBattleDamageDealt /
+    game.skillingBosses.currentBattleAbilitiesUsed;
+  let HTMLContent = `
+    <div>Current Combat's Ticks: ${game.skillingBosses.currentBattleTicks}</div>
+    <div>Total Damage Dealt: ${game.skillingBosses.currentBattleDamageDealt}</div>
+    <div>Total Abilities Used: ${game.skillingBosses.currentBattleAbilitiesUsed}</div>
+    `;
+  if (game.skillingBosses.currentBattleAbilitiesUsed > 0) {
+    avgDamagePerAbility =
+      game.skillingBosses.currentBattleDamageDealt /
+      game.skillingBosses.currentBattleAbilitiesUsed;
+    HTMLContent += `<div>Avg. Damage/Ability: ${Math.floor(
+      avgDamagePerAbility
+    )}</div>`;
+  }
+  if (currentCombatStats) {
+    currentCombatStats.innerHTML = HTMLContent;
+  }
+}
+
+async function fillBossRewards(ctx, boss) {
+  try {
+    const itemImagesHelper = await ctx.loadModule("src/helpers/itemImages.mjs");
+    const rewardsContainer = document.getElementById(`boss-rewards-${boss.id}`);
+    if (rewardsContainer) {
+      let htmlContent = "";
+
+      const tiers = [
+        {
+          name: "Always",
+          rewards: boss.alwaysRewardTier,
+          color: "#111111AA",
+          chance: 100,
+        },
+        {
+          name: "Common",
+          rewards: boss.commonRewardTier,
+          color: "#2196F3AA",
+          chance: boss.rewardProbabilities.common * 100,
+        },
+        {
+          name: "Uncommon",
+          rewards: boss.uncommonRewardTier,
+          color: "#4CAF50AA",
+          chance: boss.rewardProbabilities.uncommon * 100,
+        },
+        {
+          name: "Rare",
+          rewards: boss.rareRewardTier,
+          color: "#FF5722AA",
+          chance: boss.rewardProbabilities.rare * 100,
+        },
+        {
+          name: "Legendary",
+          rewards: boss.legendaryRewardTier,
+          color: "#9C27B0AA",
+          chance: boss.rewardProbabilities.legendary * 100,
+        },
+      ];
+
+      tiers.forEach((tier) => {
+        if (tier.rewards && tier.rewards.items.length > 0) {
+          htmlContent += `
+            <div class="reward-tier" style="border-color: ${tier.color};">
+              <h6 class="reward-tier-title" style="background-color: ${
+                tier.color
+              };">
+                ${tier.name} <span class="reward-tier-chance">${
+            tier.chance
+          }%</span>
+              </h6>
+              <div class="reward-items">
+                ${tier.rewards.items
+                  .map((item) => {
+                    const itemObj = game.items.getObjectByID(item[0]);
+                    const imageUrl = itemImagesHelper.getImageUrlByItemID(
+                      ctx,
+                      item[0]
+                    );
+                    return `
+                      <div class="reward-item">
+                        <img src="${imageUrl}" alt="${
+                      itemObj?.name || "Unknown Item"
+                    }" class="reward-item-image">
+                        <div class="reward-item-details">
+                          <span class="reward-item-name">${
+                            itemObj?.name || "Unknown Item"
+                          }</span>
+                          <span class="reward-item-quantity">${item[1]}-${
+                      item[2]
+                    }</span>
+                        </div>
+                      </div>
+                    `;
+                  })
+                  .join("")}
+              </div>
+            </div>
+          `;
+        }
+      });
+
+      rewardsContainer.innerHTML = htmlContent;
+    }
+  } catch (error) {
+    console.error("Error filling boss rewards:", error);
+  }
 }

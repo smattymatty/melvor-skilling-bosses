@@ -25,21 +25,13 @@
         />
         <span>Abilities</span>
       </button>
-      <button class="skilling-bosses-nav-btn" data-section="talents">
-        <img
-          src="https://www.svgrepo.com/show/475009/tree-structure.svg"
-          alt="Talents"
-          class="skilling-bosses-nav-icon"
-        />
-        <span>Talents</span>
-      </button>
     </div>
     <div id="skilling-bosses-content" class="skilling-bosses-content">
       <div id="bosses-content" class="skilling-bosses-section d-none">
+      <!-- Bosses Content -->
       </div>
       <div id="abilities-content" class="skilling-bosses-section d-none">
-      </div>
-      <div id="talents-content" class="skilling-bosses-section d-none">
+        <!-- Abilities Content -->
       </div>
       <div id="quests-content" class="skilling-bosses-section">
         <!-- Quests Content -->
@@ -152,9 +144,10 @@
                 <span>Ticks until attack: </span>
                 <span id="boss-attack-timer">5</span>
               </div>
+              <div class="player-skill-tick-info" id="boss-offensive-stats-info">Boss Fights Back - Coming Soon!</div>
               </div>
             <div class="boss-image">
-              <h2 id="boss-name">Boss Name</h2>
+              <h2 id="boss-name">Select A Boss</h2>
               <div class="boss-hp-bar">
                 <div class="boss-damage-indicator" id="boss-damage-indicator"></div>
                 <span id="boss-hp-text">1000 / 1000</span>
@@ -165,9 +158,11 @@
               <div class="boss-image-container">
                 <img src="https://via.placeholder.com/200" alt="Boss Image" id="boss-image">
               </div>
+              <div id="run-away-btn-container"></div>
             </div>
             <div class="boss-defensive-stats">
               <h4>Defensive Stats</h4>
+              <div class="boss-heal-indicator" id="boss-heal-indicator"></div>
               <div class="boss-health">
                 <span>HP: </span>
                 <span id="boss-current-hp">1000</span>/<span id="boss-max-hp">1000</span>
@@ -184,9 +179,11 @@
                 <span>Regen: </span>
                 <span id="boss-regen">10</span>
               </div>
+                <div class="player-skill-tick-info" id="boss-defensive-stats-info"></div>
             </div>
 
           </div>
+          
           <div class="player-section">
             
             <div class="skill-loop-container">
@@ -238,7 +235,7 @@
         </div>
         <div class="row">
             <div class="col-6 player-skill-tick-info" id="player-skill-tick-info">Train a skill to progress through the battle!</div>
-            <div class="col-6 player-skill-tick-info">hey howru</div>
+            <div class="col-6 player-skill-tick-info" id="current-combat-stats">Begin a Battle to track stats</div>
           </div>
 
       </div>
@@ -263,8 +260,8 @@
           </div>
           <div class="block-content">
             <div id="player-inventory">
+              <div class="player-loot-container" id="player-loot-container"></div>
               </div>
-            <h4>Equipped Gems</h4>
             <div id="equipped-gems">
               </div>
           </div>

@@ -5,7 +5,7 @@ export async function init(ctx) {
 async function patchSkillTicks(ctx) {
   const battlesUIModule = await ctx.loadModule("src/ui/battle.mjs");
   const abilitiesUIModule = await ctx.loadModule("src/ui/abilities.mjs");
-  // In patchSkillTicks
+
   ctx.patch(Skill, "addXP").before(function (amount, masteryAction) {
     try {
       const combatAbilities = [
@@ -17,19 +17,78 @@ async function patchSkillTicks(ctx) {
         "Ranged",
       ];
       let totalSkillTicks = 0;
-      // Only tick the battle if there is an active boss
+      let needToUpdateUI = false;
+      let needToSaveState = false;
+
+      // Only proceed if there is an active boss
       if (game.skillingBosses.activeBoss !== null) {
-        // check if the skill is a combat ability
+        // Check if the skill is not a combat ability
+        if (combatAbilities.includes(this.name)) {
+          return;
+        }
         if (!combatAbilities.includes(this.name)) {
           game.skillingBosses.tickBattle();
           totalSkillTicks++;
+          needToUpdateUI = true;
+          needToSaveState = true;
+        }
+
+        const currentAbility =
+          game.skillingBosses.equippedAbilities[
+            game.skillingBosses.activeAbilitySlot
+          ];
+        let skillMatchesAbility = false;
+
+        if (currentAbility && currentAbility.skill === this.id) {
+          skillMatchesAbility = true;
+          game.skillingBosses.tickAbility();
+          totalSkillTicks++;
+          needToUpdateUI = true;
+          needToSaveState = true;
+        }
+
+        let skillMatchesBoss = false;
+        if (
+          game.skillingBosses.activeBoss &&
+          game.skillingBosses.activeBoss.skill === this.name
+        ) {
+          skillMatchesBoss = true;
+          game.skillingBosses.tickAbility();
+          totalSkillTicks++;
+          needToUpdateUI = true;
+          needToSaveState = true;
+        }
+
+        let xpBonus = Math.floor(amount / 20);
+        if (xpBonus > 7) {
+          xpBonus = 7;
+        }
+        if (xpBonus > 0) {
+          for (let i = 0; i < xpBonus; i++) {
+            game.skillingBosses.tickAbility();
+            totalSkillTicks++;
+          }
+          needToUpdateUI = true;
+        }
+
+        if (needToUpdateUI) {
           battlesUIModule.updateAbilityProgressUI();
           battlesUIModule.updateBattleStatsUI();
-
-          // Save battle state after ticking
-          saveBattleState(ctx);
-          updatePlayerSkillTickInfo(ctx, this, totalSkillTicks, amount);
         }
+
+        if (needToSaveState) {
+          saveBattleState(ctx);
+        }
+
+        updatePlayerSkillTickInfo(
+          ctx,
+          this,
+          totalSkillTicks,
+          amount,
+          skillMatchesAbility,
+          skillMatchesBoss,
+          xpBonus
+        );
       }
     } catch (error) {
       console.error("Error ticking skill XP:", error);
@@ -41,6 +100,14 @@ async function patchSkillTicks(ctx) {
       "Crbt",
       game.skillingBosses.currentBattleTicks
     );
+    ctx.characterStorage.setItem(
+      "Cabu",
+      game.skillingBosses.currentBattleAbilitiesUsed
+    );
+    ctx.characterStorage.setItem(
+      "Cdd",
+      game.skillingBosses.currentBattleDamageDealt
+    );
     ctx.characterStorage.setItem("ASlt", game.skillingBosses.activeAbilitySlot);
     ctx.characterStorage.setItem(
       "Acat",
@@ -49,74 +116,64 @@ async function patchSkillTicks(ctx) {
     ctx.characterStorage.setItem("Bcat", game.skillingBosses.bossAttackTimer);
     ctx.characterStorage.setItem("BcHP", game.skillingBosses.bossCurrHP);
     ctx.characterStorage.setItem("PcHP", game.skillingBosses.playerCoreHP);
+    ctx.characterStorage.setItem("BctR", game.skillingBosses.bossKillsArray);
+    ctx.characterStorage.setItem(
+      "BctH",
+      game.skillingBosses.currentBattleBossHealed
+    );
+    ctx.characterStorage.setItem(
+      "BctD",
+      game.skillingBosses.currentBattleDamageDealt
+    );
+    ctx.characterStorage.setItem(
+      "BctB",
+      game.skillingBosses.currentBattleBossDamageReduced
+    );
+    // loot
+    ctx.characterStorage.setItem("Plt", game.skillingBosses.playerLoot);
   }
 
-  function updatePlayerSkillTickInfo(ctx, skill, totalSkillTicks, amount) {
+  function updatePlayerSkillTickInfo(
+    ctx,
+    skill,
+    totalSkillTicks,
+    amount,
+    skillMatchesAbility,
+    skillMatchesBoss,
+    xpBonus
+  ) {
     const playerSkillTickInfo = document.getElementById(
       "player-skill-tick-info"
     );
+    if (!playerSkillTickInfo) return;
+
     const currentAbility =
       game.skillingBosses.equippedAbilities[
         game.skillingBosses.activeAbilitySlot
       ];
-    let skillMatchesAbility = false;
-    console.log(currentAbility);
-    if (currentAbility.skill === skill.id) {
-      skillMatchesAbility = true;
-      // Only tick the battle if there is an active boss
-      if (game.skillingBosses.activeBoss !== null) {
-        game.skillingBosses.tickAbility();
-        totalSkillTicks++;
-        battlesUIModule.updateAbilityProgressUI();
-        battlesUIModule.updateBattleStatsUI();
 
-        // Save battle state after ticking
-        saveBattleState(ctx);
-      }
-    }
-    let skillMatchesBoss = false;
-    if (game.skillingBosses.activeBoss) {
-      if (game.skillingBosses.activeBoss.skill === skill.name) {
-        skillMatchesBoss = true;
-        // Only tick the battle if there is an active boss
-        if (game.skillingBosses.activeBoss !== null) {
-          game.skillingBosses.tickAbility();
-          totalSkillTicks++;
-          battlesUIModule.updateAbilityProgressUI();
-          battlesUIModule.updateBattleStatsUI();
+    let htmlContent = `<div>Training Skill: ${skill.name}</div>`;
 
-          // Save battle state after ticking
-          saveBattleState(ctx);
-        }
-      }
+    if (skillMatchesAbility) {
+      htmlContent += `<div class="text-success">${currentAbility.name} Matches Skill! +1 skill-tick</div>`;
+    } else {
+      htmlContent += `<div class="text-warning">${currentAbility.name} Doesn't Match Skill! +0 skill-ticks</div>`;
     }
-    const xpBonus = Math.floor(amount / 20);
-    for (let i = 0; i < xpBonus; i++) {
-      game.skillingBosses.tickAbility();
-      totalSkillTicks++;
+
+    if (skillMatchesBoss) {
+      htmlContent += `<div class="text-success">${game.skillingBosses.activeBoss.name} Matches Skill! +1 skill-tick</div>`;
+    } else {
+      htmlContent += `<div class="text-warning">${game.skillingBosses.activeBoss.name} Doesn't Match Skill! +0 skill-ticks</div>`;
     }
-    if (playerSkillTickInfo) {
-      playerSkillTickInfo.innerHTML = `<div>Training Skill: ${skill.name}</div>`;
-      if (skillMatchesAbility) {
-        playerSkillTickInfo.innerHTML += `<div class="text-success">${currentAbility.name} Matches Skill! +1 skill-tick</div>`;
-      } else {
-        playerSkillTickInfo.innerHTML += `
-        <div class="text-warning">${currentAbility.name} Doesn't Match Skill! +0 skill-ticks</div>`;
-      }
-      if (skillMatchesBoss) {
-        playerSkillTickInfo.innerHTML += `<div class="text-success">${game.skillingBosses.activeBoss.name} Matches Skill! +1 skill-tick</div>`;
-      } else {
-        playerSkillTickInfo.innerHTML += `<div class="text-warning">${game.skillingBosses.activeBoss.name} Doesn't Match Skill! +0 skill-ticks</div>`;
-      }
-      if (xpBonus === 0) {
-        playerSkillTickInfo.innerHTML += `<div class="text-warning">Gained <span class="text-muted">${amount}</span> XP from Skilling Action! +0 skill-ticks</div>`;
-      } else if (xpBonus === 1) {
-        playerSkillTickInfo.innerHTML += `<div class="text-success">Gained <span class="text-muted">${amount}</span> XP from Skilling Action! +1 skill-tick</div>`;
-      } else if (xpBonus > 1) {
-        playerSkillTickInfo.innerHTML += `<div class="text-success">Gained <span class="text-muted">${amount}</span> XP from Skilling Action! +${xpBonus} skill-ticks</div>`;
-      }
-      playerSkillTickInfo.innerHTML += `
-      <div>skill-ticks from Skilling Action: ${totalSkillTicks}</div>`;
+
+    if (xpBonus === 0) {
+      htmlContent += `<div class="text-warning">Gained <span class="text-muted">${amount}</span> XP from Skilling Action! +0 skill-ticks</div>`;
+    } else {
+      htmlContent += `<div class="text-success">Gained <span class="text-muted">${amount}</span> XP from Skilling Action! +${xpBonus} skill-ticks</div>`;
     }
+
+    htmlContent += `<div>Skill-ticks from Skilling Action: ${totalSkillTicks}</div>`;
+
+    playerSkillTickInfo.innerHTML = htmlContent;
   }
 }

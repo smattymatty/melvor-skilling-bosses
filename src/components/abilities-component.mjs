@@ -9,7 +9,6 @@ export class SkillingBossesAbilitiesComponent extends SkillingBossesUIComponent 
     super(manager, game, "skilling-bosses-abilities-component");
   }
   initialize() {
-    console.log("Initializing Skilling Bosses Abilities Component");
     this.initializeEventListeners();
   }
 
