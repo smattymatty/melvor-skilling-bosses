@@ -61,6 +61,108 @@ function addBossHearts(ctx) {
       });
     });
     stoneHeart.add();
+    const chefHeart = ctx.gameData.buildPackage((p) => {
+      p.items.add({
+        itemType: "Item",
+        id: "chefHeart",
+        name: "Chef Heart",
+        category: "Hearts",
+        type: "Item",
+        media: "assets/items/hearts/chef-heart.svg",
+        customDescription:
+          "Used to purchase upgrades in the <span class='text-warning'>'Skilling Bosses'</span> shop tab.",
+        ignoreCompletion: false,
+        obtainFromItemLog: false,
+        goblinRaidExclusive: false,
+        sellsFor: 30000,
+      });
+    });
+    chefHeart.add();
+    const plagueHeart = ctx.gameData.buildPackage((p) => {
+      p.items.add({
+        itemType: "Item",
+        id: "plagueHeart",
+        name: "Plague Heart",
+        category: "Hearts",
+        type: "Item",
+        media: "assets/items/hearts/plague-heart.svg",
+        customDescription:
+          "Used to purchase upgrades in the <span class='text-warning'>'Skilling Bosses'</span> shop tab.",
+        ignoreCompletion: false,
+        obtainFromItemLog: false,
+        goblinRaidExclusive: false,
+        sellsFor: 30000,
+      });
+    });
+    plagueHeart.add();
+    const blazingHeart = ctx.gameData.buildPackage((p) => {
+      p.items.add({
+        itemType: "Item",
+        id: "blazingHeart",
+        name: "Blazing Heart",
+        category: "Hearts",
+        type: "Item",
+        media: "assets/items/hearts/blazing-heart.svg",
+        customDescription:
+          "Used to purchase upgrades in the <span class='text-warning'>'Skilling Bosses'</span> shop tab.",
+        ignoreCompletion: false,
+        obtainFromItemLog: false,
+        goblinRaidExclusive: false,
+        sellsFor: 30000,
+      });
+    });
+    blazingHeart.add();
+    const leatherHeart = ctx.gameData.buildPackage((p) => {
+      p.items.add({
+        itemType: "Item",
+        id: "leatherHeart",
+        name: "Leather Heart",
+        category: "Hearts",
+        type: "Item",
+        media: "assets/items/hearts/leather-heart.svg",
+        customDescription:
+          "Used to purchase upgrades in the <span class='text-warning'>'Skilling Bosses'</span> shop tab.",
+        ignoreCompletion: false,
+        obtainFromItemLog: false,
+        goblinRaidExclusive: false,
+        sellsFor: 30000,
+      });
+    });
+    leatherHeart.add();
+    const arrowHeart = ctx.gameData.buildPackage((p) => {
+      p.items.add({
+        itemType: "Item",
+        id: "arrowHeart",
+        name: "Arrow Heart",
+        category: "Hearts",
+        type: "Item",
+        media: "assets/items/hearts/arrow-heart.svg",
+        customDescription:
+          "Used to purchase upgrades in the <span class='text-warning'>'Skilling Bosses'</span> shop tab.",
+        ignoreCompletion: false,
+        obtainFromItemLog: false,
+        goblinRaidExclusive: false,
+        sellsFor: 30000,
+      });
+    });
+    arrowHeart.add();
+    const forgeHeart = ctx.gameData.buildPackage((p) => {
+      p.items.add({
+        itemType: "Item",
+        id: "forgeHeart",
+        name: "Forge Heart",
+        category: "Hearts",
+        type: "Item",
+        media: "assets/items/hearts/forge-heart.svg",
+        customDescription:
+          "Used to purchase upgrades in the <span class='text-warning'>'Skilling Bosses'</span> shop tab.",
+        ignoreCompletion: false,
+        obtainFromItemLog: false,
+        goblinRaidExclusive: false,
+        sellsFor: 30000,
+      });
+    });
+    forgeHeart.add();
   } catch (error) {
     console.error("Error adding boss hearts:", error);
   }

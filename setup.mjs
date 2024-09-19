@@ -9,30 +9,58 @@ export async function setup(ctx) {
   const abilitiesModule = await ctx.loadModule(
     "src/abilities/addAbilities.mjs"
   );
+  // modifiers
+  const gathererModifiersModule = await ctx.loadModule(
+    "src/modifiers/gathererModifiers.mjs"
+  );
+  const genericModifiersModule = await ctx.loadModule(
+    "src/modifiers/genericModifiers.mjs"
+  );
+  const refinerModifiersModule = await ctx.loadModule(
+    "src/modifiers/refinerModifiers.mjs"
+  );
+  // battle effects
+  const effectsModule = await ctx.loadModule("src/effects/addEffects.mjs");
   // bosses
   const addBossesModule = await ctx.loadModule("src/bosses/addBosses.mjs");
   const bossPatchesModule = await ctx.loadModule("src/bosses/patches.mjs");
   // items
   const bagsModule = await ctx.loadModule("src/items/bags/masterTokenBags.mjs");
+  const bagsBossModule = await ctx.loadModule(
+    "src/items/bags/bossTokenBags.mjs"
+  );
   const coinsModule = await ctx.loadModule("src/items/currencies/bossCoin.mjs");
   const bossSoulsModule = await ctx.loadModule("src/items/souls/bossSouls.mjs");
   const bossHeartsModule = await ctx.loadModule(
     "src/items/hearts/bossHearts.mjs"
   );
+  const miscItemsModule = await ctx.loadModule("src/items/miscItems.mjs");
   // shop
   const shopPurchasesModule = await ctx.loadModule("src/shop/purchases.mjs");
+  const shopRefinerPurchasesModule = await ctx.loadModule(
+    "src/shop/refinerPurchases.mjs"
+  );
   const shopOrderingModule = await ctx.loadModule("src/shop/ordering.mjs");
   ctx.onModsLoaded(async () => {
+    // add bew modifiers to the game
+    genericModifiersModule.init(ctx);
+    gathererModifiersModule.init(ctx);
+    refinerModifiersModule.init(ctx);
     // add new items to the game
     bagsModule.init(ctx);
+    bagsBossModule.init(ctx);
     coinsModule.init(ctx);
     bossSoulsModule.init(ctx);
     bossHeartsModule.init(ctx);
+    miscItemsModule.init(ctx);
     // create shop purchases and ordering
     await shopPurchasesModule.init(ctx);
+    await shopRefinerPurchasesModule.init(ctx);
     await shopOrderingModule.init(ctx);
     // Define a global variable for the Skilling Bosses class
     game.skillingBosses = new skillingBossesModule.SkillingBosses(game, ctx);
+    // effects
+    await effectsModule.init(ctx);
     // bosses
     await addBossesModule.init(ctx);
     await bossPatchesModule.init(ctx);
@@ -50,6 +78,12 @@ export async function setup(ctx) {
     // fill the game.skillingBosses object from storage
     const storageModule = await ctx.loadModule("storage.mjs");
     storageModule.init(ctx);
+    // update the modifier cache
+    const activationFuncs = await ctx.loadModule(
+      "src/abilities/activationFuncs.mjs"
+    );
+    activationFuncs.updateModifierCache(game);
+    console.log("Mod Cache Updated", game.skillingBosses.modCache);
   });
 
   ctx.onInterfaceReady(async () => {

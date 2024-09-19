@@ -1,3 +1,7 @@
+const { loadModule } = mod.getContext(import.meta);
+
+const activationFuncs = await loadModule("src/abilities/activationFuncs.mjs");
+
 export function checkSkillLevel(game, skillID, requiredLevel) {
   try {
     const skillRegistry = game.skills.registeredObjects; // a map of skill IDs to skill objects
@@ -142,5 +146,28 @@ export function checkMultipleBossesWithKills(
       error
     );
     return 0; // Return 0 in case of error
+  }
+}
+
+export function checkForGenericUpgrades(game, amount) {
+  try {
+    let totalProgress = 0;
+    const genericUpgrades = ["duckDefence", "duckDefence", "luckyLevels"];
+    for (const upgrade of genericUpgrades) {
+      const value = activationFuncs.getModifierValue(
+        game,
+        `smattyBosses:${upgrade}`
+      );
+      if (value > 0) {
+        totalProgress++;
+      }
+    }
+    if (totalProgress >= amount) {
+      return 1; // Objective complete
+    } else {
+      return totalProgress / amount;
+    }
+  } catch (error) {
+    console.error("Error checking for generic upgrade:", error);
   }
 }

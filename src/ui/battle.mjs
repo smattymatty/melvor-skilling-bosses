@@ -102,7 +102,9 @@ function createBossItem(ctx, boss) {
     }"></div>
     <small>${boss.stats.maxHP} HP / ${boss.stats.attackPower} ATK</small>
   </div>
-  <img src="${boss.image}" alt="${
+  <img src="https://cdn2-main.melvor.net/assets/media/skills/${boss.skill}/${
+      boss.skill
+    }.png" alt="${
       boss.name
     }" class="img-fluid rounded-start" style="max-width: 100px;">
     <div class="boss-details d-none mt-3">
@@ -191,10 +193,29 @@ export function actuallyUpdateBossDisplay() {
 }
 
 export function updateAbilityProgressUI() {
+  // Early return if UI is not visible
+  const bossesContent = document.getElementById("skilling-bosses-container");
+  if (!bossesContent || bossesContent.classList.contains("d-none")) {
+    // UI is not visible, no need to update
+    return;
+  }
+
   const skillLoopItems = document.querySelectorAll(".skill-loop-item");
+  if (skillLoopItems.length === 0) {
+    // No skill loop items to update
+    return;
+  }
+
+  // Cache game data to avoid multiple property accesses
+  const skillingBosses = game.skillingBosses;
+  const equippedAbilities = skillingBosses.equippedAbilities;
+  const activeAbilitySlot = skillingBosses.activeAbilitySlot;
+  const activeAbilityTimer = skillingBosses.activeAbilityTimer;
 
   skillLoopItems.forEach((itemElement, index) => {
-    const ability = game.skillingBosses.equippedAbilities[index];
+    const ability = equippedAbilities[index];
+
+    // Cache DOM elements to minimize queries
     const progressBar = itemElement.querySelector(
       ".skill-loop-item-progress-bar"
     );
@@ -207,41 +228,71 @@ export function updateAbilityProgressUI() {
     );
 
     if (ability) {
-      abilityNameElement.textContent = ability.name;
-      abilityIconElement.src = ability.icon;
-      abilityIconElement.alt = ability.name;
+      // Update ability name if changed
+      if (abilityNameElement.textContent !== ability.name) {
+        abilityNameElement.textContent = ability.name;
+      }
 
-      if (index < game.skillingBosses.activeAbilitySlot) {
+      // Update ability icon if changed
+      if (abilityIconElement.getAttribute("src") !== ability.icon) {
+        abilityIconElement.src = ability.icon;
+        abilityIconElement.alt = ability.name;
+      }
+
+      if (index < activeAbilitySlot) {
         // Abilities before the current slot are completed
-        progressBar.style.width = "100%";
-        progressBarText.textContent = `${ability.cooldown} / ${ability.cooldown}`;
-      } else if (index === game.skillingBosses.activeAbilitySlot) {
+        if (progressBar.style.width !== "100%") {
+          progressBar.style.width = "100%";
+        }
+        const progressText = `${ability.cooldown} / ${ability.cooldown}`;
+        if (progressBarText.textContent !== progressText) {
+          progressBarText.textContent = progressText;
+        }
+      } else if (index === activeAbilitySlot) {
         // Current ability slot
         const abilityCooldown = ability.cooldown;
-        const timeElapsed =
-          abilityCooldown - game.skillingBosses.activeAbilityTimer;
+        const timeElapsed = abilityCooldown - activeAbilityTimer;
         const progressPercentage = (timeElapsed / abilityCooldown) * 100;
 
-        progressBar.style.width = `${progressPercentage}%`;
+        const progressWidth = `${progressPercentage}%`;
+        if (progressBar.style.width !== progressWidth) {
+          progressBar.style.width = progressWidth;
+        }
 
-        // Update the progress bar text with time elapsed and total cooldown
-        progressBarText.textContent = `${Math.floor(
-          timeElapsed
-        )} / ${abilityCooldown}`;
+        const progressText = `${Math.floor(timeElapsed)} / ${abilityCooldown}`;
+        if (progressBarText.textContent !== progressText) {
+          progressBarText.textContent = progressText;
+        }
       } else {
         // Abilities after the current slot are yet to activate
-        progressBar.style.width = "0%";
-        progressBarText.textContent = `0 / ${ability.cooldown}`;
+        if (progressBar.style.width !== "0%") {
+          progressBar.style.width = "0%";
+        }
+        const progressText = `0 / ${ability.cooldown}`;
+        if (progressBarText.textContent !== progressText) {
+          progressBarText.textContent = progressText;
+        }
       }
     } else {
       // No ability equipped in this slot
-      abilityNameElement.textContent = "No Ability";
-      abilityIconElement.src = ""; // Or a default image
-      abilityIconElement.alt = "No Ability";
+      if (abilityNameElement.textContent !== "No Ability") {
+        abilityNameElement.textContent = "No Ability";
+      }
+
+      // Set default icon if not already set
+      const defaultIconSrc = ""; // Replace with default image path if available
+      if (abilityIconElement.getAttribute("src") !== defaultIconSrc) {
+        abilityIconElement.src = defaultIconSrc;
+        abilityIconElement.alt = "No Ability";
+      }
 
       // Progress bar is empty
-      progressBar.style.width = "0%";
-      progressBarText.textContent = ""; // Clear text
+      if (progressBar.style.width !== "0%") {
+        progressBar.style.width = "0%";
+      }
+      if (progressBarText.textContent !== "") {
+        progressBarText.textContent = "";
+      }
     }
   });
 }
@@ -277,78 +328,141 @@ export function initializeAbilitySlots() {
 }
 
 export function updateBattleStatsUI() {
-  if (!document.querySelector(".boss-hp-bar-inner")) {
+  // Early return if the boss HP bar is not present
+  const bossHPBarInner = document.querySelector(".boss-hp-bar-inner");
+  if (!bossHPBarInner) {
     return;
   }
-  if (game.skillingBosses.currentBattleTicks > 0) {
+
+  // Early return if the UI is not visible
+  const bossesContent = document.getElementById("skilling-bosses-container");
+  if (!bossesContent || bossesContent.classList.contains("d-none")) {
+    return;
+  }
+
+  const skillingBosses = game.skillingBosses;
+
+  // Update current combat stats UI only if there are battle ticks
+  if (skillingBosses.currentBattleTicks > 0) {
     updateCurrentCombatStatsUI();
   }
 
-  // Update Boss HP
-  const bossCurrHP = game.skillingBosses.bossCurrHP;
-  const bossMaxHP = game.skillingBosses.bossMaxHP;
-  document.getElementById("boss-current-hp").textContent = `${bossCurrHP} `;
-  document.getElementById("boss-max-hp").textContent = ` ${bossMaxHP}`;
-
-  // Update Boss HP Bar
-  const bossHPPercentage = (bossCurrHP / bossMaxHP) * 100;
-  const bossHPBarInner = document.querySelector(".boss-hp-bar-inner");
-  bossHPBarInner.style.setProperty("--hp-percentage", `${bossHPPercentage}%`);
-  document.getElementById(
-    "boss-hp-text"
-  ).textContent = `${bossCurrHP} / ${bossMaxHP}`;
-
-  // Update Player Core HP
-  document.getElementById(
-    "player-current-hp"
-  ).textContent = `${game.skillingBosses.playerCoreHP} `;
-  document.getElementById(
-    "player-max-hp"
-  ).textContent = ` ${game.skillingBosses.playerCoreMaxHP}`;
-
-  // Update Boss Next Attack
-  if (
-    game.skillingBosses.activeBoss &&
-    game.skillingBosses.activeBoss.attacks &&
-    game.skillingBosses.bossNextAttackIndex !== null &&
-    game.skillingBosses.bossNextAttackIndex !== undefined
-  ) {
-    const nextAttack =
-      game.skillingBosses.activeBoss.attacks[
-        game.skillingBosses.bossNextAttackIndex
-      ];
-
-    if (nextAttack) {
-      document.getElementById("boss-next-attack").textContent = nextAttack.name;
-      document.getElementById("boss-attack-timer").textContent =
-        game.skillingBosses.bossAttackTimer;
-    } else {
-      document.getElementById("boss-next-attack").textContent = "N/A";
-      document.getElementById("boss-attack-timer").textContent = "N/A";
-    }
-  } else {
-    document.getElementById("boss-next-attack").textContent = "N/A";
-    document.getElementById("boss-attack-timer").textContent = "N/A";
-  }
-
-  // Update Boss Defensive Stats
-  document.getElementById("boss-physical-defense").textContent =
-    game.skillingBosses.activeBoss.stats.physicalDefense;
-  document.getElementById("boss-magic-defense").textContent =
-    game.skillingBosses.activeBoss.stats.magicDefense;
-  document.getElementById("boss-regen").textContent = `${
-    game.skillingBosses.activeBoss.regenChance * 100
-  }% /${game.skillingBosses.activeBoss.regen} HP`;
-
+  // Cache DOM elements
+  const bossCurrentHPElement = document.getElementById("boss-current-hp");
+  const bossMaxHPElement = document.getElementById("boss-max-hp");
+  const bossHPTextElement = document.getElementById("boss-hp-text");
+  const playerCurrentHPElement = document.getElementById("player-current-hp");
+  const playerMaxHPElement = document.getElementById("player-max-hp");
+  const bossNextAttackElement = document.getElementById("boss-next-attack");
+  const bossAttackTimerElement = document.getElementById("boss-attack-timer");
+  const bossPhysicalDefenseElement = document.getElementById(
+    "boss-physical-defense"
+  );
+  const bossMagicDefenseElement = document.getElementById("boss-magic-defense");
+  const bossRegenElement = document.getElementById("boss-regen");
   const bossDefensiveStatsInfo = document.getElementById(
     "boss-defensive-stats-info"
   );
+
+  // Store boss and player stats in variables
+  const bossCurrHP = skillingBosses.bossCurrHP;
+  const bossMaxHP = skillingBosses.bossMaxHP;
+  const bossHPPercentage = (bossCurrHP / bossMaxHP) * 100;
+  const playerCurrHP = skillingBosses.playerCoreHP;
+  const playerMaxHP = skillingBosses.playerCoreMaxHP;
+
+  // Update Boss HP if changed
+  const bossCurrentHPText = `${bossCurrHP} `;
+  if (bossCurrentHPElement.textContent !== bossCurrentHPText) {
+    bossCurrentHPElement.textContent = bossCurrentHPText;
+  }
+
+  const bossMaxHPText = ` ${bossMaxHP}`;
+  if (bossMaxHPElement.textContent !== bossMaxHPText) {
+    bossMaxHPElement.textContent = bossMaxHPText;
+  }
+
+  // Update Boss HP Bar if changed
+  const bossHPBarWidth = `${bossHPPercentage}%`;
+  if (
+    bossHPBarInner.style.getPropertyValue("--hp-percentage") !== bossHPBarWidth
+  ) {
+    bossHPBarInner.style.setProperty("--hp-percentage", bossHPBarWidth);
+  }
+
+  const bossHPText = `${bossCurrHP} / ${bossMaxHP}`;
+  if (bossHPTextElement.textContent !== bossHPText) {
+    bossHPTextElement.textContent = bossHPText;
+  }
+
+  // Update Player Core HP if changed
+  const playerCurrentHPText = `${playerCurrHP} `;
+  if (playerCurrentHPElement.textContent !== playerCurrentHPText) {
+    playerCurrentHPElement.textContent = playerCurrentHPText;
+  }
+
+  const playerMaxHPText = ` ${playerMaxHP}`;
+  if (playerMaxHPElement.textContent !== playerMaxHPText) {
+    playerMaxHPElement.textContent = playerMaxHPText;
+  }
+
+  // Update Boss Next Attack
+  let nextAttackName = "N/A";
+  let bossAttackTimer = "N/A";
+
+  if (
+    skillingBosses.activeBoss &&
+    skillingBosses.activeBoss.attacks &&
+    skillingBosses.bossNextAttackIndex !== null &&
+    skillingBosses.bossNextAttackIndex !== undefined
+  ) {
+    const nextAttack =
+      skillingBosses.activeBoss.attacks[skillingBosses.bossNextAttackIndex];
+
+    if (nextAttack) {
+      nextAttackName = nextAttack.name;
+      bossAttackTimer = skillingBosses.bossAttackTimer;
+    }
+  }
+
+  // Update Boss Next Attack if changed
+  if (bossNextAttackElement.textContent !== nextAttackName) {
+    bossNextAttackElement.textContent = nextAttackName;
+  }
+
+  if (bossAttackTimerElement.textContent !== String(bossAttackTimer)) {
+    bossAttackTimerElement.textContent = String(bossAttackTimer);
+  }
+
+  // Update Boss Defensive Stats
+  if (skillingBosses.activeBoss) {
+    const physicalDefenseText = `${skillingBosses.activeBoss.physicalDefense}%`;
+    if (bossPhysicalDefenseElement.textContent !== physicalDefenseText) {
+      bossPhysicalDefenseElement.textContent = physicalDefenseText;
+    }
+
+    const magicDefenseText = `${skillingBosses.activeBoss.magicDefense}%`;
+    if (bossMagicDefenseElement.textContent !== magicDefenseText) {
+      bossMagicDefenseElement.textContent = magicDefenseText;
+    }
+
+    const regenText = `${skillingBosses.activeBoss.regenChance * 100}% / ${
+      skillingBosses.activeBoss.regen
+    } HP`;
+    if (bossRegenElement.textContent !== regenText) {
+      bossRegenElement.textContent = regenText;
+    }
+  }
+
+  // Update Boss Defensive Stats Info
   if (bossDefensiveStatsInfo) {
-    let HTMLContent = `
-    <div>Healed ${game.skillingBosses.currentBattleBossHealed} HP</div>
-    <div>Reduced ${game.skillingBosses.currentBattleBossDamageReduced} Damage</div>
+    const HTMLContent = `
+      <div>Healed ${skillingBosses.currentBattleBossHealed} HP</div>
+      <div>Reduced ${skillingBosses.currentBattleBossDamageReduced} Damage</div>
     `;
-    bossDefensiveStatsInfo.innerHTML = HTMLContent;
+    if (bossDefensiveStatsInfo.innerHTML !== HTMLContent) {
+      bossDefensiveStatsInfo.innerHTML = HTMLContent;
+    }
   }
 }
 
@@ -461,5 +575,66 @@ async function fillBossRewards(ctx, boss) {
     }
   } catch (error) {
     console.error("Error filling boss rewards:", error);
+  }
+}
+
+export function updateBossEffects() {
+  const bossEffectsContainer = document.querySelector(
+    ".boss-effects-container"
+  );
+  if (!bossEffectsContainer) return;
+
+  const bossBuffList = bossEffectsContainer.querySelector(".boss-buff-list");
+  const bossDebuffList =
+    bossEffectsContainer.querySelector(".boss-debuff-list");
+
+  // Clear existing effects
+  bossBuffList.innerHTML = "";
+  bossDebuffList.innerHTML = "";
+
+  if (!game.skillingBosses.activeBoss) return;
+
+  // Update buffs
+  game.skillingBosses.bossCurrentBuffs.forEach((buff) => {
+    const buffElement = createEffectElement(buff, "buff");
+    bossBuffList.appendChild(buffElement);
+  });
+
+  // Update debuffs
+  game.skillingBosses.bossCurrentDebuffs.forEach((debuff) => {
+    const debuffElement = createEffectElement(debuff, "debuff");
+    bossDebuffList.appendChild(debuffElement);
+  });
+}
+
+function createEffectElement(effect, type) {
+  const effectElement = document.createElement("div");
+  effectElement.className = `boss-${type}`;
+
+  effectElement.innerHTML = `
+    <div class="boss-${type}-details">
+      <span class="boss-${type}-name">${effect[0]}</span>
+      <span class="boss-${type}-description">${getEffectDescription(
+    effect
+  )}</span>
+      <span class="boss-${type}-progress-text">
+        Removed in ${effect[1]} battle ticks
+      </span>
+    </div>
+  `;
+
+  return effectElement;
+}
+
+function getEffectDescription(effect) {
+  switch (effect[0]) {
+    case "burn":
+      return `Deals ${effect[2]} damage per tick`;
+    case "spice":
+      return `Deals ${effect[2]} damage per tick`;
+    case "toxin":
+      return `Deals ${effect[2]} damage per tick`;
+    default:
+      return "Unknown effect";
   }
 }

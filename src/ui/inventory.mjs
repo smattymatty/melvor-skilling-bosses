@@ -89,7 +89,7 @@ function handleTransferToBank(ctx) {
       setTimeout(() => {
         transferWarning.innerHTML = "";
       }, 3000);
-      console.log("Bank is full, can't add more items");
+      console.warn("Bank is full, can't add more items");
       // If bank is full, keep the remaining items in the inventory
       remainingLoot.push([itemId, quantity]);
     }

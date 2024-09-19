@@ -2,6 +2,7 @@ const { loadModule } = mod.getContext(import.meta);
 
 const battlesUIModule = await loadModule("src/ui/battle.mjs");
 const inventoryUIModule = await loadModule("src/ui/inventory.mjs");
+const activationFuncs = await loadModule("src/abilities/activationFuncs.mjs");
 
 export class SkillingBosses {
   constructor(game, ctx) {
@@ -29,8 +30,6 @@ export class SkillingBosses {
     this.bossMaxHP = null;
     this.bossAttackTimer = null;
     this.bossNextAttackIndex = null;
-
-    this.battleCurrency = 0;
     this.currentBattleTicks = null;
     this.currentBattleAbilitiesUsed = 0;
     this.currentBattleDamageDealt = 0;
@@ -41,6 +40,17 @@ export class SkillingBosses {
     // player loot is an array of arrays, where each inner array is a pair of [itemName, quantity]
     this.maximumPlayerLoot = 32;
     this.lastLootDrop = null;
+    // effects
+    this.effects = new Map();
+    // Format: [effectId, remainingDuration, damagePerTick, totalDamage]
+    this.bossCurrentBuffs = new Array(); // [[id, duration, damage, totalDamage], [id, duration, damage, totalDamage], ...]
+    this.bossCurrentDebuffs = new Array(); // [[id, duration, stacks, damage, totalDamage], [id, duration, stacks, damage, totalDamage], ...]
+  }
+  addEffect(effect) {
+    this.effects.set(effect.id, effect);
+  }
+  getEffectById(effectId) {
+    return this.effects.get(effectId);
   }
 
   // Methods for managing skilling bosses
@@ -52,12 +62,61 @@ export class SkillingBosses {
     this.activeBoss = this.bosses.get(bossId);
     this.bossCurrHP = this.activeBoss.currentHP;
     this.bossMaxHP = this.activeBoss.maxHP;
+    // check modifiers for stat changes
+    const duckDefence = activationFuncs.getModifierValue(
+      this.game,
+      "smattyBosses:duckDefence"
+    );
+    if (duckDefence > 0) {
+      this.activeBoss.physicalDefense = Math.max(
+        0,
+        this.activeBoss.stats.physicalDefense - duckDefence
+      );
+      this.activeBoss.magicDefense = Math.max(
+        0,
+        this.activeBoss.stats.magicDefense - duckDefence
+      );
+    }
   }
 
   getBossById(bossId) {
     return this.bosses.get(bossId);
   }
 
+  // Methods for managing effects
+  applyEffectToBoss(effectId, duration, damagePerTick = 0, totalDamage = 0) {
+    console.log("Applying effect", effectId);
+    const effect = this.getEffectById(effectId);
+    console.log(effect);
+    if (effect) {
+      const effectData = [effectId, duration, damagePerTick, totalDamage];
+      this.bossCurrentDebuffs.push(effectData);
+      effect.activationFunc(this.activeBoss, effectData);
+    }
+    this.needsBossEffectsUIUpdate = true;
+    this.updateUIIfNeeded();
+    console.log("Effects applied", this);
+  }
+
+  tickEffects() {
+    for (let i = this.bossCurrentDebuffs.length - 1; i >= 0; i--) {
+      const [effectId, duration, damagePerTick, totalDamage] =
+        this.bossCurrentDebuffs[i];
+      const effect = this.effects.get(effectId);
+
+      if (effect) {
+        effect.tickFunc(this.activeBoss, this.bossCurrentDebuffs[i]);
+        this.bossCurrentDebuffs[i][1]--; // Decrease duration
+        this.needsBossEffectsUIUpdate = true; // Effect tick may affect combat stats
+
+        if (this.bossCurrentDebuffs[i][1] <= 0) {
+          effect.clearFunc(this.activeBoss, this.bossCurrentDebuffs[i]);
+          this.bossCurrentDebuffs.splice(i, 1);
+        }
+      }
+    }
+    this.updateUIIfNeeded();
+  }
   // Methods for managing quests
   addQuest(quest) {
     if (quest.isMainQuest) {
@@ -105,7 +164,7 @@ export class SkillingBosses {
     if (nextQuest) {
       this.currentMainQuest = nextQuestNumber;
     } else {
-      console.log("No more main quests available");
+      console.warn("No more main quests available");
     }
   }
 
@@ -128,6 +187,7 @@ export class SkillingBosses {
   }
   setActiveAbilitySlot(slot) {
     this.activeAbilitySlot = slot;
+    this.ctx.characterStorage.setItem("ASlt", this.activeAbilitySlot);
   }
   // Methods for managing battles
   useAbility(slotIndex) {
@@ -160,9 +220,11 @@ export class SkillingBosses {
         // Initialize boss attack timer and index
         this.bossAttackTimer = boss.attacks[0].cooldown;
         this.bossNextAttackIndex = 0;
+        // cache players modifiers
+        activationFuncs.updateModifierCache(this.game);
         battlesUIModule.updateCurrentCombatStatsUI();
       } else {
-        console.log(
+        console.warn(
           "Cannot start battle. Boss not found or player core HP not greater than 0."
         );
       }
@@ -172,44 +234,32 @@ export class SkillingBosses {
   }
 
   tickBattle() {
-    try {
-      if (this.currentBattleTicks === null) {
-        return;
-      }
-      this.currentBattleTicks++;
-      // Decrease active ability timer
-      if (this.activeAbilityTimer !== null) {
-        this.tickAbility();
-      }
-
-      // Handle boss attacks
-      //this.bossAttackTimer--;
-      //characterStorage.setItem("Bcat", this.bossAttackTimer);
-      //if (this.bossAttackTimer <= 0) {
-      //  this.executeBossAttack();
-      //  this.updateBossAttack();
-      //}
-      this.checkforRegen("boss");
-      battlesUIModule.updateCurrentCombatStatsUI();
-      // Check for win/loss conditions
-      if (this.playerCoreHP <= 0) {
-        this.endBattle("loss");
-        return;
-      } else if (this.bossCurrHP <= 0) {
-        this.endBattle("win");
-        return;
-      }
-    } catch (error) {
-      console.error("Error ticking battle:", error);
+    if (this.currentBattleTicks === null) return;
+    this.currentBattleTicks++;
+    // Decrease active ability timer
+    if (this.activeAbilityTimer !== null) {
+      this.tickAbility();
+    }
+    // Check for regen
+    if (this.checkforRegen("boss")) {
+      this.needsCombatStatsUIUpdate = true;
+    }
+    this.tickEffects();
+    // Check for win/loss conditions
+    if (this.playerCoreHP <= 0) {
+      this.endBattle("loss");
+    } else if (this.bossCurrHP <= 0) {
+      this.endBattle("win");
     }
   }
+
   activateCurrentAbility() {
     const ability = this.equippedAbilities[this.activeAbilitySlot];
     if (ability) {
       ability.activate(game); // Pass the game context if needed
       battlesUIModule.updateCurrentCombatStatsUI();
     } else {
-      console.log(`No ability equipped in slot ${this.activeAbilitySlot}`);
+      console.warn(`No ability equipped in slot ${this.activeAbilitySlot}`);
     }
   }
 
@@ -220,11 +270,28 @@ export class SkillingBosses {
       // Activate the ability
       this.activateCurrentAbility();
       this.currentBattleAbilitiesUsed++;
+      this.needsCombatStatsUIUpdate = true; // Ability activation may affect combat stats
 
       // Move to the next ability slot
       this.advanceAbilitySlot();
     }
-    battlesUIModule.updateAbilityProgressUI();
+    // Set a flag instead of updating UI directly
+    this.needsAbilityUIUpdate = true;
+  }
+
+  updateUIIfNeeded() {
+    if (this.needsAbilityUIUpdate) {
+      battlesUIModule.updateAbilityProgressUI();
+      this.needsAbilityUIUpdate = false;
+    }
+    if (this.needsCombatStatsUIUpdate) {
+      battlesUIModule.updateCurrentCombatStatsUI();
+      this.needsCombatStatsUIUpdate = false;
+    }
+    if (this.needsBossEffectsUIUpdate) {
+      battlesUIModule.updateBossEffects();
+      this.needsBossEffectsUIUpdate = false;
+    }
   }
 
   advanceAbilitySlot() {
@@ -245,7 +312,7 @@ export class SkillingBosses {
     } else {
       // No ability in this slot, set timer to null or skip to the next slot
       this.activeAbilityTimer = null;
-      console.log(`No ability equipped in slot ${this.activeAbilitySlot}`);
+      console.warn(`No ability equipped in slot ${this.activeAbilitySlot}`);
       // Optionally, immediately advance to the next slot
       this.advanceAbilitySlot();
     }
@@ -254,9 +321,6 @@ export class SkillingBosses {
     const currentAttack = this.activeBoss.attacks[this.bossNextAttackIndex];
     const damage = currentAttack.damage;
     this.takeDamage(damage, "player");
-    console.log(
-      `${this.activeBoss.name} uses ${currentAttack.name}, dealing ${damage} damage.`
-    );
   }
 
   updateBossAttack() {
@@ -265,9 +329,6 @@ export class SkillingBosses {
       (this.bossNextAttackIndex + 1) % this.activeBoss.attacks.length;
     const nextAttack = this.activeBoss.attacks[this.bossNextAttackIndex];
     this.bossAttackTimer = nextAttack.cooldown;
-    console.log(
-      `${this.activeBoss.name}'s next attack: ${nextAttack.name}, in ${this.bossAttackTimer} ticks.`
-    );
   }
 
   takeDamage(amount, target) {
@@ -317,6 +378,7 @@ export class SkillingBosses {
       let roll = Math.random();
       if (roll <= chanceToRegen) {
         this.healTarget(this.activeBoss.regen, target);
+        return true;
       }
     }
   }
@@ -363,22 +425,17 @@ export class SkillingBosses {
   }
 
   endBattle(result) {
-    console.log("Ending battle with result", result);
     if (result === "win") {
       // if the current ticks are lower than the boss tick record, update the tick record
-      console.log("Current ticks:", this.currentBattleTicks);
-      console.log("Boss tick record:", this.activeBoss.tickRecord);
       if (this.activeBoss.tickRecord === 0) {
         this.activeBoss.tickRecord = this.currentBattleTicks;
       } else if (this.currentBattleTicks < this.activeBoss.tickRecord) {
         this.activeBoss.tickRecord = this.currentBattleTicks;
       }
-      this.battleCurrency += 1;
       this.activeBoss.kills++;
       this.bossKillsArray = battlesUIModule.createBossKillArrayAndSave();
+      this.ctx.characterStorage.setItem("BctR", this.bossKillsArray);
       this.updatePlayerBossStats();
-      console.log("Boss kills array:", this.bossKillsArray);
-      console.log(game.skillingBosses);
       // Grant rewards
       this.grantBossRewards(this.activeBoss);
 
@@ -411,7 +468,7 @@ export class SkillingBosses {
             element.innerHTML = `<div>Total Kills: ${boss.kills}</div>
             <div>Fastest Kill: ${boss.tickRecord} ticks</div>`;
           } else {
-            console.log(`Boss with ID ${bossId} not found.`);
+            console.warn(`Boss with ID ${bossId} not found.`);
           }
         }
       }
@@ -432,16 +489,14 @@ export class SkillingBosses {
       // Item doesn't exist and there's space, add new item
       this.playerLoot.push([itemId, quantity]);
     } else {
-      console.log("Inventory is full!");
-      // Here you could implement logic for what happens when inventory is full
+      console.warn("Inventory is full!");
     }
-
+    // save the updated loot
+    this.ctx.characterStorage.setItem("Plt", this.playerLoot);
     // Update the inventory display
     inventoryUIModule.updateInventoryDisplay(this.ctx);
   }
   grantBossRewards(boss) {
-    console.log("Granting rewards for defeating", boss.name);
-
     const rewards = [];
 
     // Always grant the items from the alwaysRewardTier
@@ -453,9 +508,6 @@ export class SkillingBosses {
           minQuantity;
         this.addItemToInventory(itemId, quantity);
         rewards.push([itemId, quantity]);
-        console.log(
-          `Added ${quantity} of ${itemId} to inventory (Always reward)`
-        );
       });
     }
 
@@ -494,7 +546,7 @@ export class SkillingBosses {
         rewardItems = boss.legendaryRewardTier.items;
         break;
       default:
-        console.log(`Unknown reward tier: ${tier}`);
+        console.warn(`Unknown reward tier: ${tier}`);
         return null;
     }
 
@@ -506,7 +558,7 @@ export class SkillingBosses {
         minQuantity;
       return [itemId, quantity];
     } else {
-      console.log(`No rewards available for tier: ${tier}`);
+      console.warn(`No rewards available for tier: ${tier}`);
       return null;
     }
   }

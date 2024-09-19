@@ -23,52 +23,142 @@ export async function init(ctx) {
   }
 }
 
-export async function buildAbilitiesList(ctx) {
+export async function buildAbilitiesList(ctx, filteredSkill = "all") {
   try {
+    console.log("Building abilities list for", filteredSkill);
     const container = document.getElementById("abilities-list");
-    // Clear existing content
-    container.innerHTML = "";
+    container.innerHTML = `
+      <div class="abilities-filter-container">
+        <button class="ability-filter-btn ${
+          filteredSkill === "all" ? "active" : ""
+        }" data-filter="all">
+          <img src="https://cdn2-main.melvor.net/assets/media/main/lore.png" alt="All">
+        </button>
+        <button class="ability-filter-btn ${
+          filteredSkill === "melvorD:Woodcutting" ? "active" : ""
+        }" data-filter="melvorD:Woodcutting">
+          <img src="https://cdn2-main.melvor.net/assets/media/skills/woodcutting/woodcutting.png" alt="Woodcutting">
+        </button>
+        <button class="ability-filter-btn ${
+          filteredSkill === "melvorD:Fishing" ? "active" : ""
+        }" data-filter="melvorD:Fishing">
+          <img src="https://cdn2-main.melvor.net/assets/media/skills/fishing/fishing.png" alt="Fishing">
+        </button>
+        <button class="ability-filter-btn ${
+          filteredSkill === "melvorD:Mining" ? "active" : ""
+        }" data-filter="melvorD:Mining">
+          <img src="https://cdn2-main.melvor.net/assets/media/skills/mining/mining.png" alt="Mining">
+        </button>
+        <button class="ability-filter-btn ${
+          filteredSkill === "melvorD:Cooking" ? "active" : ""
+        }" data-filter="melvorD:Cooking">
+          <img src="https://cdn2-main.melvor.net/assets/media/skills/cooking/cooking.png" alt="Cooking">
+        </button>
+        <button class="ability-filter-btn ${
+          filteredSkill === "melvorD:Herblore" ? "active" : ""
+        }" data-filter="melvorD:Herblore">
+          <img src="https://cdn2-main.melvor.net/assets/media/skills/herblore/herblore.png" alt="Herblore">
+        </button>
+        <button class="ability-filter-btn ${
+          filteredSkill === "melvorD:Firemaking" ? "active" : ""
+        }" data-filter="melvorD:Firemaking">
+          <img src="https://cdn2-main.melvor.net/assets/media/skills/firemaking/firemaking.png" alt="Firemaking">
+        </button>
+        <button class="ability-filter-btn ${
+          filteredSkill === "melvorD:Crafting" ? "active" : ""
+        }" data-filter="melvorD:Crafting">
+          <img src="https://cdn2-main.melvor.net/assets/media/skills/crafting/crafting.png" alt="Crafting">
+        </button>
+        <button class="ability-filter-btn ${
+          filteredSkill === "melvorD:Smithing" ? "active" : ""
+        }" data-filter="melvorD:Smithing">
+          <img src="https://cdn2-main.melvor.net/assets/media/skills/smithing/smithing.png" alt="Smithing">
+        </button>
+        <button class="ability-filter-btn ${
+          filteredSkill === "melvorD:Fletching" ? "active" : ""
+        }" data-filter="melvorD:Fletching">
+          <img src="https://cdn2-main.melvor.net/assets/media/skills/fletching/fletching.png" alt="Fletching">
+        </button>
+        <button class="ability-filter-btn ${
+          filteredSkill === "melvorD:Agility" ? "active" : ""
+        }" data-filter="melvorD:Agility">
+          <img src="https://cdn2-main.melvor.net/assets/media/skills/agility/agility.png" alt="Agility">
+        </button>
+        <button class="ability-filter-btn ${
+          filteredSkill === "melvorD:Thieving" ? "active" : ""
+        }" data-filter="melvorD:Thieving">
+          <img src="https://cdn2-main.melvor.net/assets/media/skills/thieving/thieving.png" alt="Thieving">
+        </button>
+        <button class="ability-filter-btn ${
+          filteredSkill === "melvorD:Summoning" ? "active" : ""
+        }" data-filter="melvorD:Summoning">
+          <img src="https://cdn2-main.melvor.net/assets/media/skills/summoning/summoning.png" alt="Summoning">
+        </button>
+        <button class="ability-filter-btn ${
+          filteredSkill === "melvorD:Astrology" ? "active" : ""
+        }" data-filter="melvorD:Astrology">
+          <img src="https://cdn2-main.melvor.net/assets/media/skills/astrology/astrology.png" alt="Astrology">
+        </button>
+      </div>
+    `;
 
-    // Get abilities from the game object
+    const filterButtons = container.querySelectorAll(".ability-filter-btn");
+    filterButtons.forEach((filterButton) => {
+      filterButton.addEventListener("click", (event) => {
+        filterButtons.forEach((btn) => btn.classList.remove("active"));
+        event.currentTarget.classList.add("active");
+
+        const filter = event.currentTarget.dataset.filter;
+        console.log(`Filtering for ${filter}`);
+        buildAbilitiesList(ctx, filter);
+      });
+    });
+
     const abilities = game.skillingBosses.abilities;
-    // Use Promise.all to wait for all ability items to be created
-    const abilityItems = await Promise.all(
-      Array.from(abilities.values()).map((ability) =>
-        createAbilityItem(ctx, ability)
-      )
+
+    const filteredAbilities = Array.from(abilities.values()).filter(
+      (ability) => filteredSkill === "all" || ability.skill === filteredSkill
     );
 
-    // Now append all created ability items to the container
+    const abilityItems = await Promise.all(
+      filteredAbilities.map((ability) => createAbilityItem(ctx, ability))
+    );
+
+    const abilitiesContainer = document.createElement("div");
+    abilitiesContainer.className = "abilities-list";
+
     abilityItems.forEach((abilityItem) => {
-      container.appendChild(abilityItem);
+      abilitiesContainer.appendChild(abilityItem);
     });
+
+    container.appendChild(abilitiesContainer);
   } catch (error) {
     console.error("Error building abilities list:", error);
   }
+}
 
-  async function createAbilityItem(ctx, ability) {
-    try {
-      const abilityId =
-        ability.id || `ability-${Math.random().toString(36).substr(2, 9)}`;
-      // check if element with the same id already exist
-      const abilityItem = document.createElement("div");
-      abilityItem.className = "ability-item";
-      abilityItem.id = `ability-item-${abilityId}`;
-      const skillRegistry = game.skills.registeredObjects;
-      const progressCheckers = await ctx.loadModule(
-        "src/quests/progressCheckers.mjs"
-      );
-      let levelReqColor = "#ffffff"; // white
-      if (
-        progressCheckers.checkSkillLevel(game, ability.skill, ability.level) !==
-        1
-      ) {
-        levelReqColor = "#ff0000"; // red
-      } else {
-        levelReqColor = "#00ff00"; // green
-      }
+async function createAbilityItem(ctx, ability) {
+  try {
+    const abilityId =
+      ability.id || `ability-${Math.random().toString(36).substr(2, 9)}`;
+    const abilityItem = document.createElement("div");
+    abilityItem.className = "ability-item";
+    abilityItem.id = `ability-item-${abilityId}`;
+    abilityItem.dataset.skill = ability.skill;
+    const skillRegistry = game.skills.registeredObjects;
+    const progressCheckers = await ctx.loadModule(
+      "src/quests/progressCheckers.mjs"
+    );
+    let levelReqColor = "#ffffffdd"; // white
+    if (
+      progressCheckers.checkSkillLevel(game, ability.skill, ability.level) !== 1
+    ) {
+      levelReqColor = "#ff0000dd"; // red
+    } else {
+      levelReqColor = "#00ff00dd"; // green
+    }
 
-      abilityItem.innerHTML = `
+    abilityItem.innerHTML = `
     <div class="ability-icon">
         <img src="${ability.icon}" alt="${ability.name} Icon">
     </div>
@@ -112,54 +202,48 @@ export async function buildAbilitiesList(ctx) {
     </div>
     `;
 
-      // Add click event to toggle equip area
-      abilityItem.addEventListener("mousedown", async (event) => {
-        if (!event.target.closest(".ability-equip-area")) {
-          const progressCheckers = await ctx.loadModule(
-            "src/quests/progressCheckers.mjs"
-          );
-          const hasRequiredLevel =
-            progressCheckers.checkSkillLevel(
-              game,
-              ability.skill,
-              ability.level
-            ) === 1;
+    abilityItem.addEventListener("mousedown", async (event) => {
+      if (!event.target.closest(".ability-equip-area")) {
+        const progressCheckers = await ctx.loadModule(
+          "src/quests/progressCheckers.mjs"
+        );
+        const hasRequiredLevel =
+          progressCheckers.checkSkillLevel(
+            game,
+            ability.skill,
+            ability.level
+          ) === 1;
 
-          if (hasRequiredLevel) {
-            const equipArea = abilityItem.querySelector(".ability-equip-area");
-            if (equipArea.classList.contains("d-none")) {
-              closeAllEquipAreas(); // Close all other equip areas
-              equipArea.classList.remove("d-none"); // Open this equip area
-            } else {
-              equipArea.classList.add("d-none"); // Close this equip area if it's already open
-            }
+        if (hasRequiredLevel) {
+          const equipArea = abilityItem.querySelector(".ability-equip-area");
+          if (equipArea.classList.contains("d-none")) {
+            closeAllEquipAreas();
+            equipArea.classList.remove("d-none");
           } else {
-            console.log(
-              `Player doesn't meet the level requirement for ${ability.name}`
-            );
-            // Optionally, you can show a message to the player
-            // For example:
-            // showTooltip(`You need level ${ability.level} ${game.skills.registeredObjects.get(ability.skill).name} to equip this ability.`);
+            equipArea.classList.add("d-none");
           }
+        } else {
+          console.warn(
+            `Player doesn't meet the level requirement for ${ability.name}`
+          );
         }
-      });
+      }
+    });
 
-      // Add change event for radio buttons, specific to this ability
-      const radioButtons = abilityItem.querySelectorAll(
-        `input[name="equip-${abilityId}"]`
-      );
-      radioButtons.forEach((radio) => {
-        radio.addEventListener("change", (event) => {
-          const slot = event.target.value;
-          equipAbility(ctx, ability, slot);
-        });
+    const radioButtons = abilityItem.querySelectorAll(
+      `input[name="equip-${abilityId}"]`
+    );
+    radioButtons.forEach((radio) => {
+      radio.addEventListener("change", (event) => {
+        const slot = event.target.value;
+        equipAbility(ctx, ability, slot);
       });
+    });
 
-      return abilityItem;
-    } catch (error) {
-      console.error("Error creating ability item:", error);
-      throw error;
-    }
+    return abilityItem;
+  } catch (error) {
+    console.error("Error creating ability item:", error);
+    throw error;
   }
 }
 

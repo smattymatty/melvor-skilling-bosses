@@ -86,6 +86,7 @@ export async function openSkillingBossesScreen(ctx, component) {
         el.classList.add("d-none");
       }
     });
+    game.skillingBosses.updateUIIfNeeded();
 
     const bossContainer = document.getElementById("skilling-bosses-container");
     if (!bossContainer) {

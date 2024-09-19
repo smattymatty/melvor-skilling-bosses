@@ -313,7 +313,6 @@ body.darkMode .skilling-bosses-content {
   padding: 15px;
 }
 
-/* Responsive adjustments */
 @media (max-width: 991px) {
   .battle-arena {
     height: fit-content;
@@ -949,12 +948,6 @@ body.darkMode .ability-equip-area {
   font-size: 0.9em;
 }
 
-.abilities-list {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-}
-
 .player-skill-tick-info {
   display: flex;
   flex-direction: column;
@@ -1002,6 +995,7 @@ body.darkMode .mini-slot-name {
 /* Boss section styles */
 .boss-section {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
   background-color: rgba(0, 0, 0, 0.2);
@@ -1047,16 +1041,14 @@ body.darkMode .mini-slot-name {
   border-radius: 0.5rem;
 }
 
-/* Positioning and styling the boss image container */
 .boss-image-container {
   position: relative;
   display: inline-block;
 }
 
-/* Styling the boss image */
 .boss-image-container img {
   display: block;
-  width: 200px; /* Adjust as needed */
+  width: 300px;
   height: auto;
 }
 
@@ -1169,7 +1161,7 @@ body.darkMode .mini-slot-name {
 .boss-hp-bar {
   position: relative;
   width: 80%;
-  height: 30px; /* Adjust height as needed */
+  height: 30px;
   background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
   display: flex;
   align-items: center;
@@ -1187,11 +1179,10 @@ body.darkMode .mini-slot-name {
   width: 100%;
   height: 100%;
   overflow: hidden;
-  --hp-percentage: 100%; /* Initialize the CSS variable */
+  --hp-percentage: 100%;
   z-index: 1;
 }
 
-/* Adjust the width of the inner HP bar using the CSS variable */
 .boss-hp-bar-inner::before {
   content: "";
   position: absolute;
@@ -1253,7 +1244,6 @@ body.darkMode .mini-slot-name {
   margin-top: 5px;
 }
 
-/* Responsive adjustments */
 @media (max-width: 768px) {
   .boss-section,
   .player-section {
@@ -1451,4 +1441,256 @@ body.darkMode .mini-slot-name {
   .reward-item {
     width: 100%;
   }
+}
+.upgrade-card {
+  background-color: rgba(0, 0, 0, 0.2);
+  min-width: 100%;
+  border-radius: 8px;
+  padding: 8px;
+  color: #fff;
+  font-family: Arial, sans-serif;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  max-width: 300px;
+  margin: 0 auto;
+  margin-bottom: 0.5rem;
+  margin-top: 0.5rem;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.upgrade-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+}
+
+.upgrade-effect {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  padding: 12px;
+  margin-top: 12px;
+}
+
+.effect-title {
+  font-size: 14px;
+  font-weight: bold;
+  color: #faffbae5;
+  margin-bottom: 8px;
+}
+
+.effect-description {
+  font-size: 12px;
+  color: #ddd;
+}
+
+@media (max-width: 768px) {
+  .upgrade-card {
+    max-width: 100%;
+    margin: 0 16px;
+  }
+}
+
+.current-upgrade-level {
+  border-radius: 4px;
+  padding: 12px;
+  max-height: 2rem;
+}
+
+.current-upgrade-level-text {
+  text-align: center;
+  font-size: 12px;
+  color: #ddddddb7;
+  opacity: 0.8;
+  margin-bottom: 0px !important;
+}
+
+.abilities-filter-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 20px;
+  padding: 10px;
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 10px;
+}
+
+.ability-filter-btn {
+  background-color: rgba(255, 255, 255, 0.1);
+  border: none;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  padding: 5px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.ability-filter-btn img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: all 0.3s ease;
+}
+
+.ability-filter-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.ability-filter-btn:hover img {
+  transform: scale(1.1);
+}
+
+.ability-filter-btn.active {
+  background-color: rgba(52, 152, 219, 0.5);
+  box-shadow: 0 0 15px rgba(52, 152, 219, 0.5);
+}
+
+.ability-filter-btn.active::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 6px;
+  height: 6px;
+  background-color: #3498db;
+  border-radius: 50%;
+}
+
+@media (max-width: 768px) {
+  .abilities-filter-container {
+    justify-content: flex-start;
+    overflow-x: auto;
+    padding: 10px 5px;
+  }
+
+  .ability-filter-btn {
+    width: 40px;
+    height: 40px;
+  }
+}
+
+body.darkMode .abilities-filter-container {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+body.darkMode .ability-filter-btn {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+body.darkMode .ability-filter-btn.active {
+  background-color: rgba(52, 152, 219, 0.3);
+}
+
+body.darkMode .abilities-list {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.boss-effects-container {
+  display: flex;
+  width: 100%;
+  margin-top: 15px;
+  min-height: 50px;
+}
+
+.boss-buff-container,
+.boss-debuff-container {
+  flex: 1;
+  padding: 5px;
+  border-radius: 5px;
+  display: flex;
+}
+
+.boss-buff-list,
+.boss-debuff-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  min-width: 100%;
+  justify-content: center;
+}
+
+.boss-buff,
+.boss-debuff {
+  flex: 0 1 calc(33.333% - 10px);
+  min-width: 80px;
+  max-width: 30%;
+  border-radius: 4px;
+  padding: 5px;
+  /* slight shadow to the left */
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.boss-buff {
+  border-left: 2px solid #18ac139a;
+}
+
+.boss-debuff {
+  border-left: 2px solid #e74c3c9a;
+}
+
+.boss-buff-details,
+.boss-debuff-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.boss-buff-name,
+.boss-debuff-name {
+  font-size: 0.8rem;
+  font-weight: bold;
+  margin-bottom: 2px;
+}
+
+.boss-buff-name {
+  color: #2ecc71; /* Green color for buffs */
+}
+
+.boss-debuff-name {
+  color: #e74c3c; /* Red color for debuffs */
+}
+
+.boss-buff-description,
+.boss-debuff-description {
+  font-size: 0.85rem;
+  color: #bdc3c7;
+  margin-bottom: 3px;
+}
+
+.boss-debuff-progress-text,
+.boss-buff-progress-text {
+  color: #bdc3c7;
+  font-size: 0.8rem;
+  opacity: 0.8;
+}
+
+body.darkMode .boss-buff-description,
+body.darkMode .boss-debuff-description,
+body.darkMode .boss-buff-progress-text,
+body.darkMode .boss-debuff-progress-text {
+  color: #95a5a6;
+}
+
+/* Medium screens: 2 items per row */
+@media (min-width: 768px) {
+  .boss-buff,
+  .boss-debuff {
+    flex: 0 1 calc(50% - 10px);
+    max-width: calc(50% - 10px);
+  }
+}
+
+/* Large screens: 3 items per row */
+@media (min-width: 1124px) {
+  .boss-buff,
+  .boss-debuff {
+    flex: 0 1 calc(33.333% - 10px);
+    max-width: calc(33.333% - 10px);
+  }
+}
+
+.block {
+  overflow: visible !important;
 }

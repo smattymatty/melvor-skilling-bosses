@@ -21,7 +21,7 @@ function addBossCoins(ctx) {
         ignoreCompletion: false,
         obtainFromItemLog: false,
         goblinRaidExclusive: false,
-        sellsFor: 3,
+        sellsFor: 5,
       });
     });
     coins.add();
