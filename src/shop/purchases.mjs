@@ -12,7 +12,7 @@ function addShopCategory(ctx) {
   const skillingBossesGeneric = ctx.gameData.buildPackage((p) => {
     p.shopCategories.add({
       id: "SkillingBossesGeneric",
-      name: "Skilling Bosses - Generic",
+      name: "Upgrades - Generic",
       media: "assets/items/souls/generic-soul.svg",
     });
   });
@@ -20,7 +20,7 @@ function addShopCategory(ctx) {
   const skillingBossesGathering = ctx.gameData.buildPackage((p) => {
     p.shopCategories.add({
       id: "SkillingBossesGathering",
-      name: "Skilling Bosses - Gathering",
+      name: "Upgrades - Gathering",
       media: "assets/items/souls/gatherer-soul.svg",
     });
   });

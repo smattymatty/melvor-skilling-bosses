@@ -248,35 +248,63 @@ async function createAbilityItem(ctx, ability) {
 }
 
 async function equipAbility(ctx, ability, slot) {
-  // Unequip any ability currently in the slot
-  game.skillingBosses.equippedAbilities[slot - 1] = null;
+  const slotIndex = parseInt(slot) - 1;
 
-  // Unequip the ability from any other slot
-  game.skillingBosses.equippedAbilities =
-    game.skillingBosses.equippedAbilities.map((equippedAbility) =>
-      equippedAbility && equippedAbility.id === ability.id
-        ? null
-        : equippedAbility
+  // Check if the ability is already equipped
+  const currentlyEquippedIndex =
+    game.skillingBosses.equippedAbilities.findIndex(
+      (equippedAbility) => equippedAbility && equippedAbility.id === ability.id
     );
-  // check if the player has the required level for the ability
+
+  // Level check
   const progressCheckers = await ctx.loadModule(
     "src/quests/progressCheckers.mjs"
   );
   if (
     progressCheckers.checkSkillLevel(game, ability.skill, ability.level) !== 1
   ) {
+    console.log("Player does not meet the level requirement for this ability.");
     return;
   }
-  // Equip the new ability
-  game.skillingBosses.equippedAbilities[slot - 1] = ability;
+
+  // If the ability is already equipped in a different slot, swap it
+  if (currentlyEquippedIndex !== -1 && currentlyEquippedIndex !== slotIndex) {
+    const temp = game.skillingBosses.equippedAbilities[slotIndex];
+    game.skillingBosses.equippedAbilities[slotIndex] =
+      game.skillingBosses.equippedAbilities[currentlyEquippedIndex];
+    game.skillingBosses.equippedAbilities[currentlyEquippedIndex] = temp;
+  }
+  // If the ability is not equipped, place it in the desired slot
+  else if (currentlyEquippedIndex === -1) {
+    game.skillingBosses.equippedAbilities[slotIndex] = ability;
+  }
+  // If trying to equip to the same slot, do nothing
+  else {
+    console.log("Ability is already in this slot.");
+    return;
+  }
+
+  // Ensure we always have 3 abilities equipped
+  for (let i = 0; i < 3; i++) {
+    if (!game.skillingBosses.equippedAbilities[i]) {
+      const availableAbility = Array.from(
+        game.skillingBosses.abilities.values()
+      ).find((a) => !game.skillingBosses.equippedAbilities.includes(a));
+      if (availableAbility) {
+        game.skillingBosses.equippedAbilities[i] = availableAbility;
+      }
+    }
+  }
 
   // Save equipped abilities by IDs
   const arrayOfAbilityIDs = game.skillingBosses.equippedAbilities.map(
     (ability) => (ability ? ability.id : null)
   );
   ctx.characterStorage.setItem("ASlts", JSON.stringify(arrayOfAbilityIDs));
+
   const questsUIModule = await ctx.loadModule("src/ui/quest.mjs");
   questsUIModule.buildMainQuestSection(ctx);
+
   // Update UI
   updateEquippedAbilitiesDisplay();
   closeAllEquipAreas();

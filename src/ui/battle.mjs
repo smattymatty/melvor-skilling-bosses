@@ -23,6 +23,7 @@ export async function init(ctx) {
     if (game.skillingBosses.currentBattleTicks > 0) {
       updateCurrentCombatStatsUI();
     }
+    game.skillingBosses.updateLastAttackInfoUI();
   } catch (error) {
     console.error("Error initializing battles:", error);
     throw error;
@@ -347,7 +348,6 @@ export function updateBattleStatsUI() {
     updateCurrentCombatStatsUI();
   }
 
-  // Cache DOM elements
   const bossCurrentHPElement = document.getElementById("boss-current-hp");
   const bossMaxHPElement = document.getElementById("boss-max-hp");
   const bossHPTextElement = document.getElementById("boss-hp-text");
@@ -406,34 +406,6 @@ export function updateBattleStatsUI() {
     playerMaxHPElement.textContent = playerMaxHPText;
   }
 
-  // Update Boss Next Attack
-  let nextAttackName = "N/A";
-  let bossAttackTimer = "N/A";
-
-  if (
-    skillingBosses.activeBoss &&
-    skillingBosses.activeBoss.attacks &&
-    skillingBosses.bossNextAttackIndex !== null &&
-    skillingBosses.bossNextAttackIndex !== undefined
-  ) {
-    const nextAttack =
-      skillingBosses.activeBoss.attacks[skillingBosses.bossNextAttackIndex];
-
-    if (nextAttack) {
-      nextAttackName = nextAttack.name;
-      bossAttackTimer = skillingBosses.bossAttackTimer;
-    }
-  }
-
-  // Update Boss Next Attack if changed
-  if (bossNextAttackElement.textContent !== nextAttackName) {
-    bossNextAttackElement.textContent = nextAttackName;
-  }
-
-  if (bossAttackTimerElement.textContent !== String(bossAttackTimer)) {
-    bossAttackTimerElement.textContent = String(bossAttackTimer);
-  }
-
   // Update Boss Defensive Stats
   if (skillingBosses.activeBoss) {
     const physicalDefenseText = `${skillingBosses.activeBoss.physicalDefense}%`;
@@ -468,11 +440,12 @@ export function updateBattleStatsUI() {
 
 export function updateCurrentCombatStatsUI() {
   const currentCombatStats = document.getElementById("current-combat-stats");
+  if (!currentCombatStats) return;
   let avgDamagePerAbility =
     game.skillingBosses.currentBattleDamageDealt /
     game.skillingBosses.currentBattleAbilitiesUsed;
   let HTMLContent = `
-    <div>Current Combat's Ticks: ${game.skillingBosses.currentBattleTicks}</div>
+    <div>Current Battle's Total Ticks: ${game.skillingBosses.currentBattleTicks}</div>
     <div>Total Damage Dealt: ${game.skillingBosses.currentBattleDamageDealt}</div>
     <div>Total Abilities Used: ${game.skillingBosses.currentBattleAbilitiesUsed}</div>
     `;
@@ -484,9 +457,10 @@ export function updateCurrentCombatStatsUI() {
       avgDamagePerAbility
     )}</div>`;
   }
-  if (currentCombatStats) {
-    currentCombatStats.innerHTML = HTMLContent;
+  if (game.skillingBosses.currentBattleDebuffDamageDealt > 0) {
+    HTMLContent += `<div>Debuff Damage Dealt: ${game.skillingBosses.currentBattleDebuffDamageDealt}</div>`;
   }
+  currentCombatStats.innerHTML = HTMLContent;
 }
 
 async function fillBossRewards(ctx, boss) {
@@ -608,33 +582,31 @@ export function updateBossEffects() {
 }
 
 function createEffectElement(effect, type) {
+  // [effectId, remainingDuration, damagePerTick, totalDamage]
   const effectElement = document.createElement("div");
   effectElement.className = `boss-${type}`;
-
-  effectElement.innerHTML = `
+  content = `
     <div class="boss-${type}-details">
-      <span class="boss-${type}-name">${effect[0]}</span>
-      <span class="boss-${type}-description">${getEffectDescription(
-    effect
-  )}</span>
-      <span class="boss-${type}-progress-text">
+      <span class="boss-${type}-name">${
+    game.skillingBosses.getEffectById(effect[0]).name
+  }</span>
+      <span class="boss-${type}-description">
+  `;
+  // add the description
+  if (effect[2] > 0) {
+    let description = `Deals ${effect[2]} damage per tick`;
+    content += description;
+  } else {
+    content += `${game.skillingBosses.getEffectById(effect[0]).description}`;
+  }
+  content += `
+  </span>
+  <span class="boss-${type}-progress-text">
         Removed in ${effect[1]} battle ticks
       </span>
     </div>
   `;
+  effectElement.innerHTML = content;
 
   return effectElement;
-}
-
-function getEffectDescription(effect) {
-  switch (effect[0]) {
-    case "burn":
-      return `Deals ${effect[2]} damage per tick`;
-    case "spice":
-      return `Deals ${effect[2]} damage per tick`;
-    case "toxin":
-      return `Deals ${effect[2]} damage per tick`;
-    default:
-      return "Unknown effect";
-  }
 }

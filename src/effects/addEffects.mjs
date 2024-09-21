@@ -22,7 +22,8 @@ function addDebuffEffects(ctx, models) {
       "onTick",
       (boss, effectData) => {
         const [, , damagePerTick] = effectData;
-        game.skillingBosses.takeDamage(damagePerTick, "boss");
+        // TODO: check boss magic defence
+        game.skillingBosses.takeDamage(damagePerTick, "boss", true);
       },
       "onClear",
       (boss, effectData) => {}
@@ -32,7 +33,7 @@ function addDebuffEffects(ctx, models) {
     const spiceEffect = new models.Effect(
       "spice",
       "Spice",
-      "Increases damage taken",
+      "Increases damage taken by 4%",
       8,
       "onApply",
       (boss, effectData) => {},
@@ -44,8 +45,8 @@ function addDebuffEffects(ctx, models) {
 
     game.skillingBosses.addEffect(spiceEffect);
     const toxinEffect = new models.Effect(
-      "toxin",
-      "Toxin",
+      "poison",
+      "Poison",
       "Deals poison damage over time",
       8,
       "onApply",
@@ -53,7 +54,8 @@ function addDebuffEffects(ctx, models) {
       "onTick",
       (boss, effectData) => {
         const [, , damagePerTick] = effectData;
-        game.skillingBosses.takeDamage(damagePerTick, "boss");
+        // TODO: check boss physical defence
+        game.skillingBosses.takeDamage(damagePerTick, "boss", true);
       },
       "onClear",
       (boss, effectData) => {}

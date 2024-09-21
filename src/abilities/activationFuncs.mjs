@@ -31,6 +31,10 @@ export function updateModifierCache(game) {
     "smattyBosses:toxinRoller",
     getModifierValue(game, "smattyBosses:toxinRoller")
   );
+  modifierCache.set(
+    "smattyBosses:wellFed",
+    getModifierValue(game, "smattyBosses:wellFed")
+  );
   game.skillingBosses.modCache = modifierCache;
 }
 
@@ -40,11 +44,17 @@ const skillRollerMap = {
   "melvorD:Fishing": "smattyBosses:fishRoller",
   "melvorD:Firemaking": "smattyBosses:flameRoller",
   "melvorD:Cooking": "smattyBosses:spiceRoller",
-  "melvorF:Herblore": "smattyBosses:toxinRoller",
+  "melvorD:Herblore": "smattyBosses:toxinRoller",
 };
 
-export function dealSkillLevelAsDamage(ability, game, multiplier = 1.0) {
+export function dealSkillLevelAsDamage(
+  ability,
+  game,
+  multiplier = 1.0,
+  flatBonus = 0
+) {
   try {
+    game.skillingBosses.lastSkillExtraText = [];
     const skillRegistry = game.skills.registeredObjects;
     const skill = skillRegistry.get(ability.skill);
     if (!skill) {
@@ -59,27 +69,39 @@ export function dealSkillLevelAsDamage(ability, game, multiplier = 1.0) {
 
     // Check for percent damage boosts
     let percentBoost = checkPercentDamageBoosts(game, ability);
-
-    // Apply the percent boost
-    if (percentBoost > 0) {
-      baseDamage *= 1 + percentBoost / 100;
-    }
-
     // Calculate damage reduction
     const boss = game.skillingBosses.activeBoss;
     const defenseType = ability.tags.includes("Physical")
       ? "physicalDefense"
       : "magicDefense";
+
     const reduction = calculateDamageReduction(
       boss.stats[defenseType],
       baseDamage
     );
-
-    const finalDamage = Math.floor(baseDamage - reduction);
+    // Check for the 'spice' debuff
+    const spiceDebuffCount = game.skillingBosses.checkDebuffsForID("spice");
+    for (let i = 0; i < spiceDebuffCount; i++) {
+      // takes 8 percent damage per stack
+      percentBoost += 8;
+      //
+      game.skillingBosses.currentBattleDebuffDamageDealt += Math.floor(
+        (baseDamage - reduction) * (8 / 100)
+      );
+    }
+    // Apply the percent boost
+    if (percentBoost > 0) {
+      baseDamage *= 1 + percentBoost / 100;
+    }
+    const realBaseDamage = baseDamage + flatBonus;
+    const finalDamage = Math.floor(realBaseDamage - reduction);
     game.skillingBosses.currentBattleBossDamageReduced += reduction;
     game.skillingBosses.takeDamage(finalDamage, "boss");
-    // check if the ability applies a debuff effect
+    // check if it has a debuff effect
     checkDebuffOnDamage(game, ability, finalDamage);
+    // update info for the UI
+    game.skillingBosses.lastSkillDamageDealt = finalDamage;
+    game.skillingBosses.updateLastAttackInfoUI();
   } catch (error) {
     console.error("Error dealing skill level as damage:", error);
   }
@@ -104,7 +126,7 @@ function checkPercentDamageBoosts(game, ability) {
       percentBoost += Math.random() * rollerValue;
     }
   }
-  // Add checks for any other percent damage boosts here
+  // TODO : more percent bonuses
   return percentBoost;
 }
 
@@ -113,7 +135,6 @@ function calculateDamageReduction(defense, baseDamage) {
   return Math.floor(baseDamage * reductionPercentage);
 }
 
-// The getModifierValue function remains unchanged
 export function getModifierValue(game, modifierID) {
   try {
     let totalValue = 0;
@@ -137,27 +158,22 @@ function checkDebuffOnDamage(game, ability, initialDamage) {
 }
 
 function checkRefinementRollers(game, ability, initialDamage) {
-  console.log("Checking refinement rollers for", ability.name);
   const rollerModifier = skillRollerMap[ability.skill];
-  console.log(rollerModifier);
   if (rollerModifier) {
     const rollerValue = game.skillingBosses.modCache.get(rollerModifier);
-    console.log(" rollerValue:", rollerValue);
     if (rollerValue > 0) {
       const randomChance = Math.random() * 100; // Random number between 0 and 100
-      console.log("randomChance:", randomChance);
-      if (randomChance <= rollerValue + 70) {
+      if (randomChance <= rollerValue) {
         // The effect is triggered
-        console.log("Triggering effect");
         switch (ability.skill) {
           case "melvorD:Firemaking":
-            applyBurnEffect(game, initialDamage, ability);
+            applyBurnEffect(game, ability, initialDamage, 4);
             break;
           case "melvorD:Cooking":
-            applySpicedEffect(game, initialDamage, ability);
+            applySpicedEffect(game, ability, 12);
             break;
-          case "melvorF:Herblore":
-            applyPoisonEffect(game, initialDamage, ability);
+          case "melvorD:Herblore":
+            applyPoisonEffect(game, ability, initialDamage, 4);
             break;
         }
       }
@@ -165,68 +181,57 @@ function checkRefinementRollers(game, ability, initialDamage) {
   }
 }
 
-function applyBurnEffect(
+export function applyBurnEffect(
   game,
   ability,
   initialDamage,
-  burnDuration = 3,
-  burnDamagePercent = 0.05
+  burnDuration = 8,
+  burnDamagePercent = 0.02
 ) {
   const burnDamagePerTick = Math.floor(initialDamage * burnDamagePercent);
   const totalBurnDamage = burnDamagePerTick * burnDuration;
 
   game.skillingBosses.applyEffectToBoss(
-    "burn", // Assuming "burn" is the ID for the burn effect
+    "burn",
     burnDuration,
     burnDamagePerTick,
     totalBurnDamage
   );
-
-  console.log(
-    `Applied Burn effect: ${burnDamagePerTick} damage per tick for ${burnDuration} ticks`
+  game.skillingBosses.lastSkillExtraText.push(
+    `applied a burn of ${burnDamagePerTick} damage per tick for ${burnDuration} ticks`
   );
+  game.skillingBosses.updateLastAttackInfoUI();
 }
 
-function applySpicedEffect(
+export function applySpicedEffect(game, ability, spiceDuration = 16) {
+  game.skillingBosses.applyEffectToBoss("spice", spiceDuration, 0, 0);
+  game.skillingBosses.lastSkillExtraText.push(
+    `applied a spice for ${spiceDuration} ticks`
+  );
+  game.skillingBosses.updateLastAttackInfoUI();
+}
+
+export function applyPoisonEffect(
   game,
   ability,
   initialDamage,
-  spiceDuration = 16,
-  spiceDamagePercent = 0.05
-) {
-  const spiceDamagePerTick = Math.floor(initialDamage * spiceDamagePercent);
-  const totalSpiceDamage = spiceDamagePerTick * spiceDuration;
-
-  game.skillingBosses.applyEffectToBoss(
-    "spice", // Assuming "spice" is the ID for the spice effect
-    spiceDuration,
-    spiceDamagePerTick,
-    totalSpiceDamage
-  );
-
-  console.log(
-    `Applied Spice effect: damage per tick for ${spiceDuration} ticks`
-  );
-}
-
-function applyPoisonEffect(
-  game,
-  ability,
-  initialDamage,
-  toxinDuration = 3,
-  toxinDamagePercent = 0.05
+  toxinDuration = 8,
+  toxinDamagePercent = 0.02
 ) {
   const toxinDamagePerTick = Math.floor(initialDamage * toxinDamagePercent);
   const totalToxinDamage = toxinDamagePerTick * toxinDuration;
 
   game.skillingBosses.applyEffectToBoss(
-    "toxin", // Assuming "toxin" is the ID for the toxin effect
+    "poison",
     toxinDuration,
     toxinDamagePerTick,
     totalToxinDamage
   );
-
-  console.log(
-    `Applied Toxin effect: ${toxinDamagePerTick} damage per tick for ${toxinDuration} ticks`
+  game.skillingBosses.lastSkillExtraText.push(
+    `applied a poison of ${Math.max(
+      1, // takeDamage has a .max of 1 as well
+      toxinDamagePerTick
+    )} damage per tick for ${toxinDuration} ticks`
   );
+  game.skillingBosses.updateLastAttackInfoUI();
 }

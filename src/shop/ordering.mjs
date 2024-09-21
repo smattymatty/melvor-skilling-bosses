@@ -1,6 +1,7 @@
 export async function init(ctx) {
   try {
     addShopDisplayOrder(ctx);
+    addBuildingDisplayOrder(ctx);
     addShopCategoryOrder(ctx);
     addShopUpgradeChains(ctx);
     addBankItemOrder(ctx);
@@ -37,8 +38,36 @@ function addShopDisplayOrder(ctx) {
         "smattyBosses:fishRoller3",
         "smattyBosses:fishRoller4",
         "smattyBosses:spiceRoller1",
+        "smattyBosses:spiceRoller2",
+        "smattyBosses:spiceRoller3",
+        "smattyBosses:spiceRoller4",
         "smattyBosses:flameRoller1",
+        "smattyBosses:flameRoller2",
+        "smattyBosses:flameRoller3",
+        "smattyBosses:flameRoller4",
         "smattyBosses:toxinRoller1",
+        "smattyBosses:toxinRoller2",
+        "smattyBosses:toxinRoller3",
+        "smattyBosses:toxinRoller4",
+      ],
+    });
+  });
+  shopPurchases.add();
+}
+
+function addBuildingDisplayOrder(ctx) {
+  const shopPurchases = ctx.gameData.buildPackage((p) => {
+    p.shopDisplayOrder.add({
+      insertAt: "End",
+      ids: [
+        "smattyBosses:inn",
+        "smattyBosses:inn2",
+        "smattyBosses:inn3",
+        "smattyBosses:inn4",
+        "smattyBosses:goodNightsRest1",
+        "smattyBosses:wellFed1",
+        "smattyBosses:goodNightsRest2",
+        "smattyBosses:wellFed2",
       ],
     });
   });
@@ -51,6 +80,7 @@ function addShopCategoryOrder(ctx) {
       insertAt: "After",
       afterID: "melvorF:Township",
       ids: [
+        "smattyBosses:SkillingBossesBuildings",
         "smattyBosses:SkillingBossesGeneric",
         "smattyBosses:SkillingBossesGathering",
         "smattyBosses:SkillingBossesRefining",

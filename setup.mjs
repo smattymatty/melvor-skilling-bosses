@@ -9,7 +9,13 @@ export async function setup(ctx) {
   const abilitiesModule = await ctx.loadModule(
     "src/abilities/addAbilities.mjs"
   );
+  const abilitiesModule2 = await ctx.loadModule(
+    "src/abilities/addAbilities2.mjs"
+  );
   // modifiers
+  const buildingModifiersModule = await ctx.loadModule(
+    "src/modifiers/buildingModifiers.mjs"
+  );
   const gathererModifiersModule = await ctx.loadModule(
     "src/modifiers/gathererModifiers.mjs"
   );
@@ -36,13 +42,15 @@ export async function setup(ctx) {
   );
   const miscItemsModule = await ctx.loadModule("src/items/miscItems.mjs");
   // shop
+  const shopBuildingsModule = await ctx.loadModule("src/shop/buildings.mjs");
   const shopPurchasesModule = await ctx.loadModule("src/shop/purchases.mjs");
   const shopRefinerPurchasesModule = await ctx.loadModule(
     "src/shop/refinerPurchases.mjs"
   );
   const shopOrderingModule = await ctx.loadModule("src/shop/ordering.mjs");
   ctx.onModsLoaded(async () => {
-    // add bew modifiers to the game
+    // add new modifiers to the game
+    buildingModifiersModule.init(ctx);
     genericModifiersModule.init(ctx);
     gathererModifiersModule.init(ctx);
     refinerModifiersModule.init(ctx);
@@ -54,9 +62,12 @@ export async function setup(ctx) {
     bossHeartsModule.init(ctx);
     miscItemsModule.init(ctx);
     // create shop purchases and ordering
+    await shopBuildingsModule.init(ctx);
     await shopPurchasesModule.init(ctx);
     await shopRefinerPurchasesModule.init(ctx);
     await shopOrderingModule.init(ctx);
+    // Alright, the base game stuff is loaded
+    // This is where my mod stuff starts
     // Define a global variable for the Skilling Bosses class
     game.skillingBosses = new skillingBossesModule.SkillingBosses(game, ctx);
     // effects
@@ -68,6 +79,7 @@ export async function setup(ctx) {
     await questsModule.init(ctx);
     // abilities
     await abilitiesModule.init(ctx);
+    await abilitiesModule2.init(ctx);
     console.log("Skilling Bosses mod initialized successfully.");
     console.log(game);
   });
@@ -84,6 +96,7 @@ export async function setup(ctx) {
     );
     activationFuncs.updateModifierCache(game);
     console.log("Mod Cache Updated", game.skillingBosses.modCache);
+    console.log("Discarded ticks:", game.skillingBosses.discardedTicks);
   });
 
   ctx.onInterfaceReady(async () => {

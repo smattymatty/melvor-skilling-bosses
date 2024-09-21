@@ -73,6 +73,40 @@ function fillBattleInfo(ctx) {
   const currentBattleBossHealed = ctx.characterStorage.getItem("BctH");
   const currentBattleBossDamageDealt = ctx.characterStorage.getItem("BctD");
   const currentBattleBossDamageReduced = ctx.characterStorage.getItem("BctB");
+  const lastSkillTickAmounts = ctx.characterStorage.getItem("SltA");
+  const discardedTicks = ctx.characterStorage.getItem("Dst");
+  const bossCurrentDebuffs = ctx.characterStorage.getItem("BsDb");
+  const currentBattleDebuffDamageDealt = ctx.characterStorage.getItem("BctDb");
+  if (currentBattleDebuffDamageDealt) {
+    game.skillingBosses.currentBattleDebuffDamageDealt =
+      currentBattleDebuffDamageDealt;
+    console.log(
+      "Current battle debuff damage dealt loaded from storage:",
+      currentBattleDebuffDamageDealt
+    );
+  }
+  if (bossCurrentDebuffs) {
+    game.skillingBosses.bossCurrentDebuffs = bossCurrentDebuffs;
+    console.log(
+      "Boss current debuffs loaded from storage:",
+      bossCurrentDebuffs
+    );
+  } else {
+    console.log("No boss current debuffs found in storage");
+  }
+  if (discardedTicks) {
+    game.skillingBosses.discardedTicks = discardedTicks;
+    console.log("Discarded ticks loaded from storage:", discardedTicks);
+  } else {
+    console.log("No discarded ticks found in storage");
+  }
+  if (lastSkillTickAmounts) {
+    game.skillingBosses.lastSkillTickAmounts = lastSkillTickAmounts;
+    console.log(
+      "Last skill tick amounts loaded from storage:",
+      lastSkillTickAmounts
+    );
+  }
   if (currentBattleTicks) {
     game.skillingBosses.currentBattleTicks = currentBattleTicks;
     console.log(

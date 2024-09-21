@@ -1,4 +1,4 @@
-const BASE_COOLDOWN = 24;
+const BASE_COOLDOWN = 32;
 
 export async function init(ctx) {
   const activationFuncs = await ctx.loadModule(
@@ -141,7 +141,7 @@ function initializeAbilities(ctx, models, activationFuncs) {
     // Cooking
     const ability10 = new models.Ability(
       10,
-      "Burn",
+      "Char",
       "Deal your Cooking level as Magical damage to the target.",
       "https://cdn2-main.melvor.net/assets/media/skills/cooking/cooking.png",
       "melvorD:Cooking",
@@ -232,7 +232,7 @@ function initializeAbilities(ctx, models, activationFuncs) {
     );
     const ability17 = new models.Ability(
       17,
-      "Extinguish",
+      "Flare",
       "Deal half your Firemaking level as Magical damage to the target.",
       "https://cdn2-main.melvor.net/assets/media/skills/firemaking/firemaking.png",
       "melvorD:Firemaking",
