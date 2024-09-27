@@ -1,3 +1,9 @@
+const { loadModule } = mod.getContext(import.meta);
+
+const progessCheckerModule = await loadModule(
+  "src/quests/progressCheckers.mjs"
+);
+
 export async function init(ctx) {
   try {
     const { SkillingBossesBattleComponent } = await ctx.loadModule(
@@ -16,9 +22,28 @@ export async function init(ctx) {
     if (!document.querySelector(".battle-container")) {
       skillingBossesBattleComponent.mount(battlesContainer);
       skillingBossesBattleComponent.show();
+      const playerHealBtn = document.getElementById("player-heal-btn");
+      if (playerHealBtn) {
+        playerHealBtn.addEventListener("click", (event) => {
+          event.stopPropagation(); // Prevent triggering the details toggle
+          repairCoreWithSkillingSupplies(10);
+        });
+      }
     }
+    const playerHealBtnImg = document.getElementById("player-heal-btn-img");
+    if (playerHealBtnImg) {
+      playerHealBtnImg.src = ctx.getResourceUrl(
+        "assets/items/skilling-supplies.svg"
+      );
+    }
+    initializeTierBossSelectButtons(ctx);
+    setSupplyAmount();
+    updatePlayerHealthBar();
+    updatePlayerShieldBar();
     buildBossSelectionList(ctx);
     updateBossDisplay(ctx);
+    updateBossAttackUI();
+    updatePlayerExtraStats();
     game.skillingBosses.updatePlayerBossStats();
     if (game.skillingBosses.currentBattleTicks > 0) {
       updateCurrentCombatStatsUI();
@@ -30,6 +55,60 @@ export async function init(ctx) {
   }
   if (game.skillingBosses.currentBattleTicks > 0) {
     createRunAwayButton(ctx);
+  }
+}
+
+export function setSupplyAmount() {
+  game.bank.updateSearchArray();
+  const amountOfSupplies = game.skillingBosses.getQuantityFromBankItemArray(
+    "smattyBosses:skillingSupplies"
+  );
+  const supplyAmountElement = document.getElementById("amount-of-supplies");
+  if (supplyAmountElement) {
+    supplyAmountElement.textContent = amountOfSupplies;
+  }
+  return amountOfSupplies;
+}
+
+export function repairCoreWithSkillingSupplies() {
+  const amountOfSupplies = setSupplyAmount();
+  const healAmount = Math.ceil(game.skillingBosses.playerCoreMaxHP * 0.1); // 10% of max HP
+  const suppliesNeeded = healAmount; // 1 supply heals 1 HP
+  if (game.skillingBosses.playerCoreHP >= game.skillingBosses.playerCoreMaxHP) {
+    // TODO: UI warning for full core
+    return;
+  }
+  if (amountOfSupplies === 0) {
+    // TODO: UI warning for no supplies
+    return;
+  } else if (amountOfSupplies >= suppliesNeeded) {
+    game.skillingBosses.healTarget(healAmount, "player");
+    game.skillingBosses.ExtraPlayerStats.suppliesUsed += suppliesNeeded;
+    game.skillingBosses.ctx.characterStorage.setItem(
+      "suppliesUsed",
+      game.skillingBosses.ExtraPlayerStats.suppliesUsed
+    );
+    updatePlayerHealthBar();
+    game.bank.removeItemQuantityByID(
+      "smattyBosses:skillingSupplies",
+      suppliesNeeded
+    );
+    setSupplyAmount();
+  } else {
+    // If there are some supplies, but not enough for 10%, use all available supplies
+    const availableHealAmount = suppliesNeeded;
+    game.skillingBosses.healTarget(availableHealAmount, "player");
+    game.skillingBosses.ExtraPlayerStats.suppliesUsed += availableHealAmount;
+    game.skillingBosses.ctx.characterStorage.setItem(
+      "suppliesUsed",
+      game.skillingBosses.ExtraPlayerStats.suppliesUsed
+    );
+    updatePlayerHealthBar();
+    game.bank.removeItemQuantityByID(
+      "smattyBosses:skillingSupplies",
+      availableHealAmount
+    );
+    setSupplyAmount();
   }
 }
 
@@ -94,36 +173,41 @@ function createBossItem(ctx, boss) {
       "boss-item"
     );
 
+    let levelReqClass = "text-danger";
+    if (
+      progessCheckerModule.checkSkillLevel(
+        game,
+        `melvorD:${boss.skill}`,
+        boss.levelRequirement
+      ) === 1
+    ) {
+      levelReqClass = "text-success";
+    }
+    const levelReqInfo = `
+      <div class="${levelReqClass}" style="font-size: 0.8rem; text-align: center; width: 100%;">
+        Level ${boss.levelRequirement} required
+      </div>
+    `;
+    let fightButtonText = `<button class="btn btn-primary mt-2 mb-2 w-100">Fight Boss</button>`;
+    if (levelReqClass === "text-danger") {
+      fightButtonText = ``;
+    }
     // Build the boss item
     bossItem.innerHTML = `
     <div class="d-flex w-100 justify-content-between align-items-center">
     <h5 class="mb-1 flex-shrink">${boss.name}</h5>
-    <div class="player-skill-tick-info flex-grow" id="boss-player-tick-info" data-boss-id="${
-      boss.id
-    }"></div>
+    <div class="player-skill-tick-info flex-grow" id="boss-player-tick-info" data-boss-id="${boss.id}"></div>
     <small>${boss.stats.maxHP} HP / ${boss.stats.attackPower} ATK</small>
   </div>
-  <img src="https://cdn2-main.melvor.net/assets/media/skills/${boss.skill}/${
-      boss.skill
-    }.png" alt="${
-      boss.name
-    }" class="img-fluid rounded-start" style="max-width: 100px;">
+  <img src="https://cdn2-main.melvor.net/assets/media/skills/${boss.skill}/${boss.skill}.png" alt="${boss.name}" class="img-fluid rounded-start" style="max-width: 100px;">
     <div class="boss-details d-none mt-3">
-    <button class="btn btn-primary mt-2 mb-2 w-100">Fight Boss</button>
-        <p class="mb-1">Physical Reduction: ${boss.stats.physicalDefense}%</p>
-    <p class="mb-1">Magic Reduction: ${boss.stats.magicDefense}%</p>
-    <p class="mb-1">Regen: ${boss.stats.regen}</p>
-      <h6>Boss Attacks:</h6>
-      <ul>
-        ${boss.attacks
-          .map((attack) => `<li>${attack.name}: ${attack.damage} damage</li>`)
-          .join("")}
-      </ul>
+    <div>${levelReqInfo}</div>
+    ${fightButtonText}
+        
       <div class="boss-rewards" id="boss-rewards-${boss.id}">yoooo</div>
     </div>
     `;
 
-    // Add click event to toggle boss details
     bossItem.addEventListener("click", (event) => {
       const detailsContainer = bossItem.querySelector(".boss-details");
       if (event.target.tagName !== "BUTTON") {
@@ -136,12 +220,13 @@ function createBossItem(ctx, boss) {
       }
     });
 
-    // Add click event for the "Fight Boss" button
     const fightButton = bossItem.querySelector(".btn-primary");
-    fightButton.addEventListener("click", (event) => {
-      event.stopPropagation(); // Prevent triggering the details toggle
-      startBossFight(ctx, boss);
-    });
+    if (fightButton) {
+      fightButton.addEventListener("click", (event) => {
+        event.stopPropagation(); // Prevent triggering the details toggle
+        startBossFight(ctx, boss);
+      });
+    }
 
     return bossItem;
   } catch (error) {
@@ -155,7 +240,6 @@ function closeAllDetails() {
 }
 
 function startBossFight(ctx, boss) {
-  // Set the active boss
   game.skillingBosses.setActiveBoss(boss.id);
   ctx.characterStorage.setItem("AcBss", game.skillingBosses.activeBoss.id);
   // Start the battle to initialize battle-related properties
@@ -183,7 +267,7 @@ export function actuallyUpdateBossDisplay() {
   if (game.skillingBosses.activeBoss) {
     bossImage.src = game.skillingBosses.activeBoss.image;
   } else {
-    bossImage.src = "https://via.placeholder.com/200";
+    bossImage.src = "";
   }
   const bossName = document.getElementById("boss-name");
   if (game.skillingBosses.activeBoss) {
@@ -347,12 +431,13 @@ export function updateBattleStatsUI() {
   if (skillingBosses.currentBattleTicks > 0) {
     updateCurrentCombatStatsUI();
   }
-
+  const bossAttackPowerElement = document.getElementById("boss-attack-power");
   const bossCurrentHPElement = document.getElementById("boss-current-hp");
   const bossMaxHPElement = document.getElementById("boss-max-hp");
   const bossHPTextElement = document.getElementById("boss-hp-text");
   const playerCurrentHPElement = document.getElementById("player-current-hp");
   const playerMaxHPElement = document.getElementById("player-max-hp");
+  const playerHPRegenElement = document.getElementById("player-regen");
   const bossNextAttackElement = document.getElementById("boss-next-attack");
   const bossAttackTimerElement = document.getElementById("boss-attack-timer");
   const bossPhysicalDefenseElement = document.getElementById(
@@ -363,6 +448,17 @@ export function updateBattleStatsUI() {
   const bossDefensiveStatsInfo = document.getElementById(
     "boss-defensive-stats-info"
   );
+  const playerShieldElement = document.getElementById("player-shield-current");
+  const playerShieldMaxElement = document.getElementById("player-shield-max");
+  const playerShieldRegenElement = document.getElementById(
+    "player-shield-regen"
+  );
+  const playerPhysicalResistanceElement = document.getElementById(
+    "player-physical-defence"
+  );
+  const playerMagicResistanceElement = document.getElementById(
+    "player-magic-defence"
+  );
 
   // Store boss and player stats in variables
   const bossCurrHP = skillingBosses.bossCurrHP;
@@ -370,6 +466,14 @@ export function updateBattleStatsUI() {
   const bossHPPercentage = (bossCurrHP / bossMaxHP) * 100;
   const playerCurrHP = skillingBosses.playerCoreHP;
   const playerMaxHP = skillingBosses.playerCoreMaxHP;
+  const playerHPRegenChance = skillingBosses.playerHPRegen[0];
+  const playerHPRegenAmount = skillingBosses.playerHPRegen[1];
+  const playerShield = skillingBosses.playerShield;
+  const playerShieldMax = skillingBosses.playerShieldMax;
+  const playerShieldRegenChance = skillingBosses.playerShieldRegen[0];
+  const playerShieldRegenAmount = skillingBosses.playerShieldRegen[1];
+  const playerPhysicalResistance = skillingBosses.playerPhysicalResistance;
+  const playerMagicResistance = skillingBosses.playerMagicResistance;
 
   // Update Boss HP if changed
   const bossCurrentHPText = `${bossCurrHP} `;
@@ -394,11 +498,27 @@ export function updateBattleStatsUI() {
   if (bossHPTextElement.textContent !== bossHPText) {
     bossHPTextElement.textContent = bossHPText;
   }
+  // Update Player Shield if changed
+  const playerShieldText = `${playerShield}`;
+  if (playerShieldElement.textContent !== playerShieldText) {
+    playerShieldElement.textContent = playerShieldText;
+  }
+  // Update Max Shield if changed
+  const playerShieldMaxText = ` ${playerShieldMax}`;
+  if (playerShieldMaxElement.textContent !== playerShieldMaxText) {
+    playerShieldMaxElement.textContent = playerShieldMaxText;
+  }
 
   // Update Player Core HP if changed
   const playerCurrentHPText = `${playerCurrHP} `;
   if (playerCurrentHPElement.textContent !== playerCurrentHPText) {
     playerCurrentHPElement.textContent = playerCurrentHPText;
+  }
+  const playerHPRegenText = `${
+    playerHPRegenChance * 100
+  } % / ${playerHPRegenAmount}`;
+  if (playerHPRegenElement.textContent !== playerHPRegenText) {
+    playerHPRegenElement.textContent = playerHPRegenText;
   }
 
   const playerMaxHPText = ` ${playerMaxHP}`;
@@ -406,34 +526,64 @@ export function updateBattleStatsUI() {
     playerMaxHPElement.textContent = playerMaxHPText;
   }
 
+  // Update Player Shield Regen
+  const playerShieldRegenText = `${
+    playerShieldRegenChance * 100
+  } % / ${playerShieldRegenAmount}`;
+  if (playerShieldRegenElement.textContent !== playerShieldRegenText) {
+    playerShieldRegenElement.textContent = playerShieldRegenText;
+  }
+  const playerPhysicalResistanceText = `${playerPhysicalResistance} %`;
+  if (
+    playerPhysicalResistanceElement.textContent !== playerPhysicalResistanceText
+  ) {
+    playerPhysicalResistanceElement.textContent = playerPhysicalResistanceText;
+  }
+  const playerMagicResistanceText = `${playerMagicResistance} %`;
+  if (playerMagicResistanceElement.textContent !== playerMagicResistanceText) {
+    playerMagicResistanceElement.textContent = playerMagicResistanceText;
+  }
+
   // Update Boss Defensive Stats
   if (skillingBosses.activeBoss) {
-    const physicalDefenseText = `${skillingBosses.activeBoss.physicalDefense}%`;
+    const physicalDefenseText = `${skillingBosses.activeBoss.physicalDefense} %`;
     if (bossPhysicalDefenseElement.textContent !== physicalDefenseText) {
       bossPhysicalDefenseElement.textContent = physicalDefenseText;
     }
 
-    const magicDefenseText = `${skillingBosses.activeBoss.magicDefense}%`;
+    const magicDefenseText = `${skillingBosses.activeBoss.magicDefense} %`;
     if (bossMagicDefenseElement.textContent !== magicDefenseText) {
       bossMagicDefenseElement.textContent = magicDefenseText;
     }
 
-    const regenText = `${skillingBosses.activeBoss.regenChance * 100}% / ${
+    const regenText = `${skillingBosses.activeBoss.regenChance * 100} % / ${
       skillingBosses.activeBoss.regen
     } HP`;
     if (bossRegenElement.textContent !== regenText) {
       bossRegenElement.textContent = regenText;
     }
   }
-
+  let HTMLContent = ``;
   // Update Boss Defensive Stats Info
   if (bossDefensiveStatsInfo) {
-    const HTMLContent = `
-      <div>Healed ${skillingBosses.currentBattleBossHealed} HP</div>
-      <div>Reduced ${skillingBosses.currentBattleBossDamageReduced} Damage</div>
-    `;
-    if (bossDefensiveStatsInfo.innerHTML !== HTMLContent) {
-      bossDefensiveStatsInfo.innerHTML = HTMLContent;
+    if (skillingBosses.activeBoss) {
+      if (skillingBosses.currentBattleDamageDealt > 0) {
+        HTMLContent += `<div>Lost ${skillingBosses.currentBattleDamageDealt} HP</div>`;
+      }
+      if (skillingBosses.currentBattleBossHealed > 0) {
+        HTMLContent += `<div>Healed ${skillingBosses.currentBattleBossHealed} HP</div>`;
+      }
+      if (skillingBosses.currentBattleBossDamageReduced > 0) {
+        HTMLContent += `<div>Reduced ${skillingBosses.currentBattleBossDamageReduced} Damage</div>`;
+      }
+      // apply the html content to the element
+      if (bossDefensiveStatsInfo.innerHTML !== HTMLContent) {
+        bossDefensiveStatsInfo.innerHTML = HTMLContent;
+      }
+    }
+    if (bossAttackPowerElement && skillingBosses.activeBoss) {
+      bossAttackPowerElement.textContent =
+        skillingBosses.activeBoss.attackPower;
     }
   }
 }
@@ -512,7 +662,7 @@ async function fillBossRewards(ctx, boss) {
               };">
                 ${tier.name} <span class="reward-tier-chance">${
             tier.chance
-          }%</span>
+          } %</span>
               </h6>
               <div class="reward-items">
                 ${tier.rewards.items
@@ -571,20 +721,30 @@ export function updateBossEffects() {
   // Update buffs
   game.skillingBosses.bossCurrentBuffs.forEach((buff) => {
     const buffElement = createEffectElement(buff, "buff");
-    bossBuffList.appendChild(buffElement);
+    if (buffElement) {
+      bossBuffList.appendChild(buffElement);
+    }
   });
 
   // Update debuffs
   game.skillingBosses.bossCurrentDebuffs.forEach((debuff) => {
     const debuffElement = createEffectElement(debuff, "debuff");
-    bossDebuffList.appendChild(debuffElement);
+    if (debuffElement) {
+      bossDebuffList.appendChild(debuffElement);
+    }
   });
 }
 
 function createEffectElement(effect, type) {
   // [effectId, remainingDuration, damagePerTick, totalDamage]
+  if (effect[1] === 0) {
+    removeExpiredEffectElements();
+    return;
+  }
   const effectElement = document.createElement("div");
   effectElement.className = `boss-${type}`;
+  effectElement.dataset.effectId = effect[0];
+  effectElement.dataset.duration = effect[1];
   content = `
     <div class="boss-${type}-details">
       <span class="boss-${type}-name">${
@@ -594,8 +754,16 @@ function createEffectElement(effect, type) {
   `;
   // add the description
   if (effect[2] > 0) {
-    let description = `Deals ${effect[2]} damage per tick`;
-    content += description;
+    if (effect[0] === "armorReduction") {
+      content += `Reduces the Physical Resist of the target by ${effect[2]}`;
+    } else if (effect[0] === "magicResistReduction") {
+      content += `Reduces the Magic Resist of the target by ${effect[2]}`;
+    } else if (effect[0] === "stuckArrow") {
+      content += `On expiration, deals ${effect[2]} damage to the target`;
+    } else {
+      let description = `Deals ${effect[2]} damage per tick`;
+      content += description;
+    }
   } else {
     content += `${game.skillingBosses.getEffectById(effect[0]).description}`;
   }
@@ -609,4 +777,293 @@ function createEffectElement(effect, type) {
   effectElement.innerHTML = content;
 
   return effectElement;
+}
+
+function removeExpiredEffectElements() {
+  const effectElements = document.querySelectorAll(".boss-buff, .boss-debuff");
+  for (let i = effectElements.length - 1; i >= 0; i--) {
+    const effectElement = effectElements[i];
+    const duration = effectElement.dataset.duration;
+    if (duration === 0) {
+      effectElement.remove();
+    }
+  }
+}
+
+export function updateBossAttackUI() {
+  const mainGameContainer = document.getElementById(
+    "skilling-bosses-container"
+  );
+  if (!mainGameContainer || mainGameContainer.classList.contains("d-none")) {
+    return;
+  }
+  const bossAttackInfo = document.querySelector(".next-attack.ability-item");
+  if (!bossAttackInfo) {
+    console.warn("Boss attack info not found in DOM!");
+    return;
+  }
+  if (game.skillingBosses.activeBoss === null) {
+    bossAttackInfo.style.display = "none";
+    console.warn("Active boss is null, cannot update boss attack");
+    return;
+  }
+  const bossAttack = game.skillingBosses.getBossAttack();
+  if (!bossAttack) {
+    console.warn("No boss attack found");
+    bossAttackInfo.style.display = "none";
+    return;
+  }
+  bossAttackInfo.style.display = "flex";
+
+  const bossAttackNameElement = document.getElementById("boss-attack-name");
+  const bossAttackTypeElement = document.getElementById("boss-attack-type");
+  const bossAttackDescriptionElement = document.getElementById(
+    "boss-attack-description"
+  );
+  const bossAttackDamageElement = document.getElementById("boss-attack-damage");
+  const bossAttackCooldownElement = document.getElementById(
+    "boss-attack-cooldown"
+  );
+  const bossAttackTimerElement = document.getElementById("boss-attack-timer");
+  const bossAttackStunnedElement = document.getElementById(
+    "boss-attack-stunned"
+  );
+
+  if (bossAttackNameElement)
+    bossAttackNameElement.textContent = bossAttack.name;
+  if (bossAttackTypeElement)
+    bossAttackTypeElement.textContent = bossAttack.type;
+  if (bossAttackDescriptionElement)
+    bossAttackDescriptionElement.textContent = bossAttack.description;
+  if (bossAttackDamageElement)
+    bossAttackDamageElement.textContent =
+      game.skillingBosses.activeBoss.attackPower * bossAttack.damageModifier;
+  if (bossAttackCooldownElement)
+    bossAttackCooldownElement.textContent = bossAttack.cooldown;
+
+  if (bossAttackTimerElement)
+    bossAttackTimerElement.textContent = game.skillingBosses.bossAttackTimer;
+  if (bossAttackStunnedElement && game.skillingBosses.bossStunDuration > 0)
+    bossAttackStunnedElement.textContent = `Stunned! (${game.skillingBosses.bossStunDuration})`;
+  if (bossAttackStunnedElement && game.skillingBosses.bossStunDuration <= 0)
+    bossAttackStunnedElement.textContent = "";
+}
+
+export function updateBossOffensiveInfoUI() {
+  const bossOffensiveStatsInfo = document.getElementById(
+    "boss-offensive-stats-info"
+  );
+  if (bossOffensiveStatsInfo) {
+    let HTMLContent = ``;
+    if (game.skillingBosses.activeBoss) {
+      if (
+        game.skillingBosses.playerShieldLost > 0 ||
+        game.skillingBosses.playerHPLost > 0
+      ) {
+        HTMLContent += `
+        <div>Dealt ${
+          game.skillingBosses.playerShieldLost +
+          game.skillingBosses.playerHPLost
+        } Damage</div>
+        `;
+      }
+      if (game.skillingBosses.bossAbilitiesUsed > 0) {
+        HTMLContent += `
+        <div>Used ${game.skillingBosses.bossAbilitiesUsed} Abilities</div>
+        <div>Avg. Damage/Ability: ${Math.floor(
+          (game.skillingBosses.playerShieldLost +
+            game.skillingBosses.playerHPLost) /
+            game.skillingBosses.bossAbilitiesUsed
+        )}</div>
+        `;
+      }
+      bossOffensiveStatsInfo.innerHTML = HTMLContent;
+    }
+  }
+}
+
+export function updateCurrentCombatPlayerDefenseStatsUI() {
+  const currentCombatPlayerDefenseStats = document.getElementById(
+    "current-combat-player-defense-stats"
+  );
+  if (!currentCombatPlayerDefenseStats) return;
+  const currentBattleShieldLost = game.skillingBosses.playerShieldLost;
+  const currentBattleHPLost = game.skillingBosses.playerHPLost;
+  const currentBattleShieldGained = game.skillingBosses.playerShieldGained;
+  const currentBattleHPGained = game.skillingBosses.playerHPGained;
+  let HTMLContent = ``;
+  if (currentBattleShieldGained > 0) {
+    HTMLContent += `<div>Restored ${currentBattleShieldGained} Shield</div>`;
+  }
+  if (currentBattleShieldLost > 0) {
+    HTMLContent += `<div>Lost ${currentBattleShieldLost} Shield</div>`;
+  }
+  if (currentBattleHPLost > 0) {
+    HTMLContent += `<div>Lost ${currentBattleHPLost} HP</div>`;
+  }
+  if (currentBattleHPGained > 0) {
+    HTMLContent += `<div>Healed ${currentBattleHPGained} HP</div>`;
+  }
+  currentCombatPlayerDefenseStats.innerHTML = HTMLContent;
+}
+export function updatePlayerHealthBar() {
+  const healthBar = document.getElementById("player-health-bar");
+  if (!healthBar) return;
+
+  const currentHP = game.skillingBosses.playerCoreHP;
+  const maxHP = game.skillingBosses.playerCoreMaxHP;
+  const healthPercentage = (currentHP / maxHP) * 100;
+
+  healthBar.style.width = `${healthPercentage}%`;
+
+  // Optional: Update color based on health percentage
+  if (healthPercentage > 50) {
+    healthBar.style.backgroundColor = "#0bc00bcb";
+  } else if (healthPercentage > 25) {
+    healthBar.style.backgroundColor = "#1cc00baa";
+  } else {
+    healthBar.style.backgroundColor = "#2dc00b99";
+  }
+}
+
+export function updatePlayerShieldBar() {
+  const shieldBar = document.getElementById("player-shield-bar");
+  if (!shieldBar) return;
+
+  const currentShield = game.skillingBosses.playerShield;
+  const maxShield = game.skillingBosses.playerShieldMax;
+  const shieldPercentage = (currentShield / maxShield) * 100;
+
+  shieldBar.style.width = `${shieldPercentage}%`;
+
+  // Optional: Update color based on shield percentage
+  if (shieldPercentage > 50) {
+    shieldBar.style.backgroundColor = "#26C6DACC"; // Light Blue
+  } else if (shieldPercentage > 25) {
+    shieldBar.style.backgroundColor = "#03A9F4BB"; // Blue
+  } else {
+    shieldBar.style.backgroundColor = "#1E88E5AA"; // Dark Blue
+  }
+}
+
+export function updatePlayerExtraStats() {
+  function update() {
+    const playerExtraStatsContainer = document.getElementById(
+      "player-extra-stats-container"
+    );
+    if (!playerExtraStatsContainer) return;
+    playerExtraStatsContainer.innerHTML = "";
+    let htmlContent = "";
+    if (game.skillingBosses.ExtraPlayerStats.totalBossKills > 0) {
+      htmlContent += `<div>Total Boss Kills: ${game.skillingBosses.ExtraPlayerStats.totalBossKills}</div>`;
+    }
+    if (game.skillingBosses.ExtraPlayerStats.fastestBossKill > 0) {
+      htmlContent += `<div>Fastest Boss Kill: ${game.skillingBosses.ExtraPlayerStats.fastestBossKill}</div>`;
+    }
+    if (game.skillingBosses.ExtraPlayerStats.damageDealt > 0) {
+      htmlContent += `<div>Total Damage Dealt: ${game.skillingBosses.ExtraPlayerStats.damageDealt}</div>`;
+    }
+    if (game.skillingBosses.ExtraPlayerStats.highestDamageDealt > 0) {
+      htmlContent += `<div>Highest Damage Dealt: ${game.skillingBosses.ExtraPlayerStats.highestDamageDealt}</div>`;
+    }
+    if (game.skillingBosses.ExtraPlayerStats.debuffsApplied > 0) {
+      htmlContent += `<div>Debuffs Applied: ${game.skillingBosses.ExtraPlayerStats.debuffsApplied}</div>`;
+    }
+    if (game.skillingBosses.ExtraPlayerStats.debuffDamageDealt > 0) {
+      htmlContent += `<div>Total Debuff Damage Dealt: ${game.skillingBosses.ExtraPlayerStats.debuffDamageDealt}</div>`;
+    }
+    if (game.skillingBosses.ExtraPlayerStats.highestDebuffDamageDealt > 0) {
+      htmlContent += `<div>Highest Debuff Damage Dealt: ${game.skillingBosses.ExtraPlayerStats.highestDebuffDamageDealt}</div>`;
+    }
+    if (game.skillingBosses.ExtraPlayerStats.damageTaken > 0) {
+      htmlContent += `<div>Total Damage Taken: ${game.skillingBosses.ExtraPlayerStats.damageTaken}</div>`;
+    }
+    if (game.skillingBosses.ExtraPlayerStats.highestDamageTaken > 0) {
+      htmlContent += `<div>Highest Damage Taken: ${game.skillingBosses.ExtraPlayerStats.highestDamageTaken}</div>`;
+    }
+    if (game.skillingBosses.ExtraPlayerStats.physicalResistReduced > 0) {
+      htmlContent += `<div>Physical Resist Reduced: ${game.skillingBosses.ExtraPlayerStats.physicalResistReduced}</div>`;
+    }
+    if (game.skillingBosses.ExtraPlayerStats.magicResistReduced > 0) {
+      htmlContent += `<div>Magic Resist Reduced: ${game.skillingBosses.ExtraPlayerStats.magicResistReduced}</div>`;
+    }
+    if (game.skillingBosses.ExtraPlayerStats.suppliesUsed > 0) {
+      htmlContent += `<div>Skilling Supplies Used: ${game.skillingBosses.ExtraPlayerStats.suppliesUsed}</div>`;
+    }
+    if (game.skillingBosses.ExtraPlayerStats.commonRewardHits > 0) {
+      htmlContent += `<div>Common Rewards: ${game.skillingBosses.ExtraPlayerStats.commonRewardHits}</div>`;
+    }
+    if (game.skillingBosses.ExtraPlayerStats.uncommonRewardHits > 0) {
+      htmlContent += `<div>Uncommon Rewards: ${game.skillingBosses.ExtraPlayerStats.uncommonRewardHits}</div>`;
+    }
+    if (game.skillingBosses.ExtraPlayerStats.rareRewardHits > 0) {
+      htmlContent += `<div>Rare Rewards: ${game.skillingBosses.ExtraPlayerStats.rareRewardHits}</div>`;
+    }
+    if (game.skillingBosses.ExtraPlayerStats.legendaryRewardHits > 0) {
+      htmlContent += `<div>Legendary Rewards: ${game.skillingBosses.ExtraPlayerStats.legendaryRewardHits}</div>`;
+    }
+    playerExtraStatsContainer.innerHTML = htmlContent;
+  }
+  update();
+}
+
+export function initializeTierBossSelectButtons(ctx) {
+  const tier1BossSelectButton = document.getElementById("tier-1-boss-select");
+  const tier2BossSelectButton = document.getElementById("tier-2-boss-select");
+  const tier3BossSelectButton = document.getElementById("tier-3-boss-select");
+  if (tier1BossSelectButton) {
+    tier1BossSelectButton.addEventListener("mousedown", (event) => {
+      updateBossSelectionList(ctx, "tier1");
+    });
+  }
+  if (tier2BossSelectButton) {
+    tier2BossSelectButton.addEventListener("mousedown", (event) => {
+      updateBossSelectionList(ctx, "tier2");
+    });
+  }
+  if (tier3BossSelectButton) {
+    tier3BossSelectButton.addEventListener("mousedown", (event) => {
+      updateBossSelectionList(ctx, "tier3");
+    });
+  }
+  tier2BossSelectButton.disabled = true;
+  tier3BossSelectButton.disabled = true;
+}
+
+function updateBossSelectionList(ctx, tier) {
+  const container = document.getElementById("boss-selection-list");
+  if (!container) return;
+  switch (tier) {
+    case "tier1":
+      const bosses = getBossesByIDRange(0, 13);
+      container.innerHTML = "";
+      bosses.forEach((boss) => {
+        const bossItem = createBossItem(ctx, boss);
+
+        container.appendChild(bossItem);
+        fillBossRewards(ctx, boss);
+        game.skillingBosses.updatePlayerBossStats();
+      });
+      break;
+    case "tier2":
+      container.innerHTML = "";
+      break;
+    case "tier3":
+      container.innerHTML = "";
+      break;
+    default:
+      console.warn("Invalid tier for boss selection list:", tier);
+      return;
+  }
+}
+
+function getBossesByIDRange(rangeStart, rangeEnd) {
+  const bosses = [];
+  for (let i = rangeStart; i <= rangeEnd; i++) {
+    const boss = game.skillingBosses.getBossById(i);
+    if (boss) {
+      bosses.push(boss);
+    }
+  }
+  return bosses;
 }

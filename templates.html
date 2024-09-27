@@ -41,42 +41,38 @@
 </template>
 <template id="skilling-bosses-quests-component">
    <div class="quest-categories">
-      <button class="quest-category-btn active" data-category="main">
-      Main Quest
-      </button>
+      <button class="quest-category-btn active" data-category="main">Main Quest <span id="main-quests-count"></span></button>
       <button class="quest-category-btn d-none" data-category="casual">Casual</button>
-      <button class="quest-category-btn d-none" data-category="beginner">
-      Beginner
-      </button>
-      <button class="quest-category-btn d-none" data-category="intermediate">
-      Intermediate
-      </button>
-      <button class="quest-category-btn d-none" data-category="advanced">
-      Advanced
-      </button>
+      <button class="quest-category-btn" data-category="beginner">Beginner <span id="beginner-quests-count"></span></button>
+      <button class="quest-category-btn" data-category="average">Average <span id="average-quests-count"></span></button>
+      <button class="quest-category-btn d-none" data-category="intermediate">Intermediate</button>
+      <button class="quest-category-btn d-none" data-category="advanced">Advanced</button>
    </div>
    <div class="quest-list">
       <div class="quest-category" id="main-quests">
          <h2 class="quest-category-title">Main Quest</h2>
          <!-- quests will be dynamically inserted here -->
       </div>
-   </div>
-   <div class="quest-category d-none" id="casual-quests">
-      <h2 class="quest-category-title">Casual Quests</h2>
-      <!-- More casual quests... -->
-   </div>
-   <div class="quest-category d-none" id="beginner-quests">
-      <h2 class="quest-category-title">Beginner Quests</h2>
-      <!-- More beginner quests... -->
-   </div>
-   <div class="quest-category d-none" id="intermediate-quests">
-      <h2 class="quest-category-title">Intermediate Quests</h2>
-      <!-- More intermediate quests... -->
-   </div>
-   <div class="quest-category d-none" id="advanced-quests">
-      <h2 class="quest-category-title">Advanced Quests</h2>
-      <!-- More advanced quests... -->
-   </div>
+      <div class="quest-category d-none" id="casual-quests">
+         <h2 class="quest-category-title">Casual Quests</h2>
+         <!-- More casual quests... -->
+      </div>
+      <div class="quest-category" id="beginner-quests">
+         <h2 class="quest-category-title">Beginner Quests</h2>
+         <!-- More beginner quests... -->
+      </div>
+      <div class="quest-category" id="average-quests">
+         <h2 class="quest-category-title">Average Quests</h2>
+         <!-- More average quests... -->
+      </div>
+      <div class="quest-category d-none" id="intermediate-quests">
+         <h2 class="quest-category-title">Intermediate Quests</h2>
+         <!-- More intermediate quests... -->
+      </div>
+      <div class="quest-category d-none" id="advanced-quests">
+         <h2 class="quest-category-title">Advanced Quests</h2>
+         <!-- More advanced quests... -->
+      </div>
    </div>
 </template>
 <template id="skilling-bosses-abilities-component">
@@ -84,28 +80,28 @@
       <div class="mini-slots-container">
          <div class="mini-slot">
             <div class="mini-slot-icon">
-               <img src="https://via.placeholder.com/50" alt="Slot 1">
+               <img src="" alt="Slot 1">
             </div>
             <span class="mini-slot-name">Slot 1</span>
          </div>
          <div class="mini-slot">
             <div class="mini-slot-icon">
-               <img src="https://via.placeholder.com/50" alt="Slot 2">
+               <img src="" alt="Slot 2">
             </div>
             <span class="mini-slot-name">Slot 2</span>
          </div>
          <div class="mini-slot">
             <div class="mini-slot-icon">
-               <img src="https://via.placeholder.com/50" alt="Slot 3">
+               <img src="" alt="Slot 3">
             </div>
             <span class="mini-slot-name">Slot 3</span>
          </div>
       </div>
       <h2 class="abilities-title">Abilities</h2>
-      <p class="content-description">Click on an ability to equip it to a slot. You can only equip one ability per slot.</p>
-      <p class="content-description">Cooldowns are in 'skill-ticks', 
-         1 skill-tick is applied every time you gain XP in any skill.
-         2 skill-ticks are applied if that skill is the same as the ability's skill.
+      <p class="content-description">Click on an ability to equip it to a slot.</p>
+      <p class="content-description">
+         Cooldowns are in 'skill-ticks', 1 skill-tick is applied every time you gain XP in any skill.
+         If the ability matches the trained skill, and the trained skill matches the boss you are fighting, you can get 2 extra skill-ticks per action.
       </p>
       <div class="abilities-list" id="abilities-list">
          <!-- Abilities will be dynamically inserted here -->
@@ -123,15 +119,33 @@
                <div class="boss-section">
                   <div class="boss-offensive-stats">
                      <h4>Offensive Stats</h4>
-                     <div class="next-attack">
-                        <span>Next Attack: </span>
-                        <span id="boss-next-attack">Slam</span>
+                     <div class="boss-attack-power">
+                        <span>Attack Power: <span id="boss-attack-power"></span></span>
                      </div>
                      <div class="attack-timer">
                         <span>Ticks until attack: </span>
-                        <span id="boss-attack-timer">5</span>
+                        <span id="boss-attack-timer"></span>
+                        <span
+                        style="margin-left: 1rem;"
+                        class="text-warning" id="boss-attack-stunned"></span>
                      </div>
-                     <div class="player-skill-tick-info" id="boss-offensive-stats-info">Boss Fights Back - Coming Soon!</div>
+                     <div class="next-attack ability-item">
+                        <div class="ability-content">
+                           <div class="ability-header">
+                              <h3 class="ability-name" id="boss-attack-name">Slam</h3>
+                              <div class="ability-tags">
+                                 <span class="ability-tag" id="boss-attack-type">Physical</span>
+                              </div>
+                           </div>
+                           <p class="ability-description" id="boss-attack-description">Goes Womp Womp in the swamp, and then explodes.</p>
+                           <div class="ability-stats">
+                              <span>Damage: <span id="boss-attack-damage">10</span></span>
+                              <span>Cooldown: <span id="boss-attack-cooldown">5</span></span>
+                           </div>
+                        </div>
+                     </div>
+                     
+                     <div class="player-skill-tick-info" id="boss-offensive-stats-info">--</div>
                   </div>
                   <div class="boss-image">
                      <h2 id="boss-name">Select A Boss</h2>
@@ -142,7 +156,7 @@
                         </div>
                      </div>
                      <div class="boss-image-container">
-                        <img src="https://via.placeholder.com/200" alt="Boss Image" id="boss-image">
+                        <img id="boss-image">
                      </div>
                      <div id="run-away-btn-container"></div>
                   </div>
@@ -154,11 +168,11 @@
                         <span id="boss-current-hp">1000</span>/<span id="boss-max-hp">1000</span>
                      </div>
                      <div class="boss-physical-defense">
-                        <span>Physical Reduction: </span>
+                        <span>Physical Resist: </span>
                         <span id="boss-physical-defense">50</span>
                      </div>
                      <div class="boss-magic-defense">
-                        <span>Magic Reduction: </span>
+                        <span>Magic Resist: </span>
                         <span id="boss-magic-defense">30</span>
                      </div>
                      <div class="boss-regen">
@@ -168,22 +182,31 @@
                      <div class="player-skill-tick-info" id="boss-defensive-stats-info"></div>
                   </div>
                   <div class="boss-effects-container">
-               <div class="boss-buff-container">
-                     <div class="boss-buff-list">
-                        <!-- Boss Buffs will be dynamically inserted here -->
-                        
+                     <div class="boss-buff-container">
+                        <div class="boss-buff-list">
+                           <!-- Boss Buffs will be dynamically inserted here -->
+                        </div>
+                     </div>
+                     <div class="boss-debuff-container">
+                        <div class="boss-debuff-list">
+                           <!-- Boss Debuffs will be dynamically inserted here -->
+                        </div>
                      </div>
                   </div>
-                  <div class="boss-debuff-container">
-                     <div class="boss-debuff-list">
-                        <!-- Boss Debuffs will be dynamically inserted here -->
-                     </div>
-                  </div>
-                </div>
-                
                </div>
-               
                <div class="player-section">
+<div class="player-health-bar-container">
+    <div class="shield-bar" style="width: 100%; height: 20px; overflow: hidden; margin-bottom: 5px;">
+        <div class="shield-bar-inner">
+            <div id="player-shield-bar" style="width: 100%; height: 100%; background-color: #3498db; transition: width 0.3s ease-in-out;"></div>
+        </div>
+    </div>
+    <div class="health-bar" style="width: 100%; height: 32px; overflow: hidden;">
+        <div class="health-bar-inner">
+            <div id="player-health-bar" style="width: 100%; height: 100%; background-color: #2ecc71; transition: width 0.3s ease-in-out;"></div>
+        </div>
+    </div>
+</div>
                   <div class="skill-loop-container">
                      <div class="skill-loop-item">
                         <div class="skill-loop-item-icon">
@@ -219,52 +242,105 @@
                         <div class="skill-loop-item-name">Skill Name</div>
                      </div>
                      <div class="player-skill-tick-info" id="last-attack-info" 
-                     style="margin-bottom: 1rem;opacity: 0.8;">
-               </div>
+                        style="margin-bottom: 1rem;opacity: 0.8;">
+                     </div>
                   </div>
+
                   <div class="player-core">
                      <h4>Player's Core</h4>
                      <span class="text-warning">Defend your core at all costs!</span>
-                     <div class="player-health">
+                     <div class="player-shield">
+    <div class="shield-info">
+        <span>Shield: </span>
+        <span id="player-shield-current">0</span>/<span id="player-shield-max">0</span>
+    </div>
+    <span class="shield-note">Shield is fully regenerated on battle start.</span>
+</div>
+                     <div class="player-health" style="display: flex;">
                         <span>HP: </span>
                         <span id="player-current-hp">100</span>/<span id="player-max-hp">100</span>
+                        <button class="player-heal-btn" id="player-heal-btn">Repair Core</button>
+                        <icon class="player-heal-btn-icon" id="player-heal-btn-icon">
+                           <img id="player-heal-btn-img" src="https://cdn2-main.melvor.net/assets/media/skills/combat/combat.png" 
+                           alt="Heal Icon"
+                           style="
+    width: 2rem;
+    height: 2rem;
+"><span class="item-amount-details" id="amount-of-supplies">23</span></icon>
+                        </icon>
                      </div>
+                     <div class="player-physical-defence">
+                        <span>Physical Resist: </span>
+                        <span id="player-physical-defence">0</span>
+                     </div>
+                     <div class="player-magic-defence">
+                        <span>Magic Resist: </span>
+                        <span id="player-magic-defence">0</span>
+                     </div>
+                     <div class="player-regen">
+                        <span>Regen: </span>
+                        <span id="player-regen">0</span> HP
+                     </div>
+                     <div class="player-shield-regen">
+                        <span>Shield Regen: </span>
+                        <span id="player-shield-regen">0</span> Shield
+                     </div>
+                     <div class="player-skill-tick-info" id="current-combat-player-defense-stats">--</div>
+                  </div>
+                  <div class="row" style="min-width: 100%;">
+                     <div class="col-6 player-skill-tick-info" id="player-skill-tick-info"
+                     style="min-width: 60%;"
+                     >Train a skill to progress through the battle!</div>
+            <div class="col-6 player-skill-tick-info" id="current-combat-stats"
+            style="max-width: 40%;">Begin a Battle to track stats</div>
                   </div>
                </div>
+            </div>
+         </div>
+
+      </div>
+   </div>
+   <div class="row">
+      <div class="col-12 col-lg-6">
+         <div class="block block-rounded-double bg-combat-inner-dark">
+            <div class="block-header block-header-default">
+               <h3 class="block-title">Select Boss</h3>
+               <div class="boss-select-buttons">
+               <button class="btn btn-primary" id="tier-1-boss-select">I</button>
+               <button class="btn btn-primary" id="tier-2-boss-select" disabled>II</button>
+               <button class="btn btn-primary" id="tier-3-boss-select" disabled>III</button>
                </div>
             </div>
-            <div class="row">
-               <div class="col-6 player-skill-tick-info" id="player-skill-tick-info">Train a skill to progress through the battle!</div>
-               <div class="col-6 player-skill-tick-info" id="current-combat-stats">Begin a Battle to track stats</div>
+            <div class="block-content">
+               <div class="list-group" id="boss-selection-list">
+               </div>
             </div>
          </div>
       </div>
-      <div class="row">
-         <div class="col-12 col-lg-6">
-            <div class="block block-rounded-double bg-combat-inner-dark">
-               <div class="block-header block-header-default">
-                  <h3 class="block-title">Select Boss</h3>
+      <div class="col-12 col-lg-6">
+         <div class="block block-rounded-double bg-combat-inner-dark">
+            <div class="block-header block-header-default">
+               <h3 class="block-title">Player Inventory</h3>
+            </div>
+            <div class="block-content">
+               <div id="player-inventory">
+                  <div class="player-loot-container" id="player-loot-container"></div>
                </div>
-               <div class="block-content">
-                  <div class="list-group" id="boss-selection-list">
-                  </div>
+               <div id="equipped-gems">
                </div>
             </div>
          </div>
-         <div class="col-12 col-lg-6">
-            <div class="block block-rounded-double bg-combat-inner-dark">
-               <div class="block-header block-header-default">
-                  <h3 class="block-title">Player Inventory</h3>
-               </div>
-               <div class="block-content">
-                  <div id="player-inventory">
-                     <div class="player-loot-container" id="player-loot-container"></div>
-                  </div>
-                  <div id="equipped-gems">
-                  </div>
+         <div class="block block-rounded-double bg-combat-inner-dark">
+            <div class="block-header block-header-default">
+               <h3 class="block-title">Extra Stats</h3>
+            </div>
+            <div class="block-content">
+               <div class="player-extra-stats-container" id="player-extra-stats-container">
+                  
                </div>
             </div>
          </div>
       </div>
+   </div>
    </div>
 </template>

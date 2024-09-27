@@ -1,30 +1,41 @@
 export function init(ctx) {
   fillMainQuestInfo(ctx);
+  fillSideQuestInfo(ctx);
   fillAbilitySlots(ctx);
   fillCurrentBoss(ctx);
   fillBattleInfo(ctx);
   fillBossKillsArray(ctx);
   fillPlayerLoot(ctx);
+  fillBossAttackInfo(ctx);
+  fillPlayerStats(ctx);
+  //fillBossStats(ctx);
+  fillExtraPlayerStats(ctx);
   console.log("Storage initialized");
   console.log(ctx.characterStorage);
 }
 
 export function fillMainQuestInfo(ctx) {
-  console.log("Filling main quest info from storage");
   const mainQuestNumber = ctx.characterStorage.getItem("mqNum");
   if (mainQuestNumber === null || mainQuestNumber === undefined) {
-    console.log("No main quest number found in storage");
     return;
   }
   game.skillingBosses.currentMainQuest = mainQuestNumber;
-  console.log("Main quest number loaded from storage:", mainQuestNumber);
+}
+
+export function fillSideQuestInfo(ctx) {
+  const beginnerQuestCompleted = ctx.characterStorage.getItem("BQc");
+  if (beginnerQuestCompleted) {
+    game.skillingBosses.beginnerQuestsCompleted = beginnerQuestCompleted;
+  }
+  const averageQuestCompleted = ctx.characterStorage.getItem("AQc");
+  if (averageQuestCompleted) {
+    game.skillingBosses.averageQuestsCompleted = averageQuestCompleted;
+  }
 }
 
 export function fillAbilitySlots(ctx) {
   const abilityIDsString = ctx.characterStorage.getItem("ASlts");
   const abilityIDs = abilityIDsString ? JSON.parse(abilityIDsString) : [];
-
-  console.log("Filling ability slots from storage", abilityIDs);
 
   game.skillingBosses.equippedAbilities = abilityIDs.map((abilityID, index) => {
     if (abilityID !== null && abilityID !== undefined) {
@@ -39,25 +50,17 @@ export function fillAbilitySlots(ctx) {
       return null;
     }
   });
-
-  console.log(
-    "Ability slots loaded from storage:",
-    game.skillingBosses.equippedAbilities
-  );
 }
 
 function fillCurrentBoss(ctx) {
   const currentBossId = ctx.characterStorage.getItem("AcBss");
   if (currentBossId !== null && currentBossId !== undefined) {
-    const boss = game.skillingBosses.getBossById(parseInt(currentBossId, 10));
+    const boss = game.skillingBosses.getBossById(currentBossId);
     if (boss) {
       game.skillingBosses.setActiveBoss(boss.id);
-      console.log("Current boss loaded from storage:", boss.name);
     } else {
       console.warn(`Boss with ID ${currentBossId} not found`);
     }
-  } else {
-    console.log("No current boss found in storage");
   }
 }
 
@@ -77,6 +80,24 @@ function fillBattleInfo(ctx) {
   const discardedTicks = ctx.characterStorage.getItem("Dst");
   const bossCurrentDebuffs = ctx.characterStorage.getItem("BsDb");
   const currentBattleDebuffDamageDealt = ctx.characterStorage.getItem("BctDb");
+  const bossStatChanges = ctx.characterStorage.getItem("BstC");
+  const abilitySkillsThisBattle = ctx.characterStorage.getItem("AsTb");
+
+  if (abilitySkillsThisBattle) {
+    game.skillingBosses.abilitySkillsThisBattle = abilitySkillsThisBattle;
+    console.log(
+      "Ability skills this battle loaded from storage:",
+      abilitySkillsThisBattle
+    );
+  } else {
+    console.log("No ability skills this battle found in storage");
+  }
+  if (bossStatChanges) {
+    game.skillingBosses.bossStatChanges = bossStatChanges;
+    console.log("Boss stat changes loaded from storage:", bossStatChanges);
+  } else {
+    console.log("No boss stat changes found in storage");
+  }
   if (currentBattleDebuffDamageDealt) {
     game.skillingBosses.currentBattleDebuffDamageDealt =
       currentBattleDebuffDamageDealt;
@@ -196,6 +217,51 @@ function fillBattleInfo(ctx) {
   } else {
     console.log("No current battle boss damage reduced found in storage");
   }
+  const pauseBattleTicks = ctx.characterStorage.getItem("Pbt");
+  if (pauseBattleTicks) {
+    game.skillingBosses.pauseBattleTicks = pauseBattleTicks;
+    console.log("Paused battle ticks loaded from storage:", pauseBattleTicks);
+  } else {
+    console.log("No paused battle ticks found in storage");
+  }
+  const playerShield = ctx.characterStorage.getItem("Psh");
+  if (playerShield) {
+    game.skillingBosses.playerShield = playerShield;
+    console.log("Player shield loaded from storage:", playerShield);
+  } else {
+    console.log("No player shield found in storage");
+  }
+  const playerShieldLost = ctx.characterStorage.getItem("PshL");
+  if (playerShieldLost) {
+    game.skillingBosses.playerShieldLost = playerShieldLost;
+    console.log("Player shield lost loaded from storage:", playerShieldLost);
+  } else {
+    console.log("No player shield lost found in storage");
+  }
+  const playerHPLost = ctx.characterStorage.getItem("PhL");
+  if (playerHPLost) {
+    game.skillingBosses.playerHPLost = playerHPLost;
+    console.log("Player HP lost loaded from storage:", playerHPLost);
+  } else {
+    console.log("No player HP lost found in storage");
+  }
+  const playerShieldGained = ctx.characterStorage.getItem("PshG");
+  if (playerShieldGained) {
+    game.skillingBosses.playerShieldGained = playerShieldGained;
+    console.log(
+      "Player shield gained loaded from storage:",
+      playerShieldGained
+    );
+  } else {
+    console.log("No player shield gained found in storage");
+  }
+  const playerHPGained = ctx.characterStorage.getItem("PhG");
+  if (playerHPGained) {
+    game.skillingBosses.playerHPGained = playerHPGained;
+    console.log("Player HP gained loaded from storage:", playerHPGained);
+  } else {
+    console.log("No player HP gained found in storage");
+  }
 }
 
 function fillBossKillsArray(ctx) {
@@ -204,9 +270,7 @@ function fillBossKillsArray(ctx) {
     console.log("Filling boss kills array from storage");
     console.log(bossKillsArray);
     if (bossKillsArray) {
-      // Assuming bossKillsArray is an array of arrays where each sub-array contains [totalKills, fastestKill]
-
-      // Loop through each entry in the bossKillsArray and map it to the respective boss
+      // bossKillsArray is an array of arrays where each sub-array contains [totalKills, fastestKill]
       bossKillsArray.forEach((bossData, index) => {
         const boss = game.skillingBosses.getBossById(index); // Get boss by its index (ID)
         console.log("boss,", boss);
@@ -215,7 +279,6 @@ function fillBossKillsArray(ctx) {
         if (boss) {
           const [totalKills, fastestKill] = bossData;
 
-          // Apply the loaded data to the boss
           boss.kills = totalKills || 0;
           boss.tickRecord = fastestKill || 0;
 
@@ -227,7 +290,6 @@ function fillBossKillsArray(ctx) {
         }
       });
 
-      // Update game state with the filled array
       game.skillingBosses.bossKillsArray = bossKillsArray;
       console.log("Boss kills array loaded from storage:", bossKillsArray);
     } else {
@@ -244,8 +306,6 @@ function fillPlayerLoot(ctx) {
     console.log("Filling player loot from storage");
     console.log(playerLoot);
     if (playerLoot) {
-      // Assuming playerLoot is an array of arrays where each sub-array contains [itemId, quantity]
-
       game.skillingBosses.playerLoot = playerLoot;
       console.log("Player loot loaded from storage:", playerLoot);
     } else {
@@ -253,5 +313,199 @@ function fillPlayerLoot(ctx) {
     }
   } catch (error) {
     console.error("Error filling player loot from storage:", error);
+  }
+}
+
+function fillBossAttackInfo(ctx) {
+  try {
+    const bossNextAttackIndex = ctx.characterStorage.getItem("Bna");
+    const bossAttackTimer = ctx.characterStorage.getItem("Bat");
+    const bossAbilitiesUsed = ctx.characterStorage.getItem("BaU");
+
+    if (bossAbilitiesUsed) {
+      game.skillingBosses.bossAbilitiesUsed = bossAbilitiesUsed;
+    }
+
+    if (bossNextAttackIndex) {
+      game.skillingBosses.bossNextAttackIndex = bossNextAttackIndex;
+    }
+    if (bossAttackTimer) {
+      game.skillingBosses.bossAttackTimer = bossAttackTimer;
+    }
+  } catch (error) {
+    console.error("Error filling boss attack info from storage:", error);
+  }
+}
+
+function fillPlayerStats(ctx) {
+  try {
+    const playerCoreMaxHP = ctx.characterStorage.getItem("PcMH");
+    const playerHPRegen = ctx.characterStorage.getItem("PhR");
+    const playerShieldMax = ctx.characterStorage.getItem("PshM");
+    const playerShieldRegen = ctx.characterStorage.getItem("PshR");
+    const playerHPRegenAmount = ctx.characterStorage.getItem("PhRA");
+    const playerShieldRegenAmount = ctx.characterStorage.getItem("PshRA");
+    const playerPhysicalResistance = ctx.characterStorage.getItem("PcPD");
+    const playerMagicResistance = ctx.characterStorage.getItem("PccMD");
+    if (playerPhysicalResistance) {
+      game.skillingBosses.playerPhysicalResistance = playerPhysicalResistance;
+    }
+    if (playerMagicResistance) {
+      game.skillingBosses.playerMagicResistance = playerMagicResistance;
+    }
+    if (playerShieldMax) {
+      game.skillingBosses.playerShieldMax = playerShieldMax;
+    }
+    if (playerCoreMaxHP) {
+      game.skillingBosses.playerCoreMaxHP = playerCoreMaxHP;
+    }
+    if (playerHPRegen) {
+      game.skillingBosses.playerHPRegen = playerHPRegen;
+    }
+    if (playerShieldRegen) {
+      game.skillingBosses.playerShieldRegen = playerShieldRegen;
+    }
+    if (playerHPRegenAmount) {
+      game.skillingBosses.playerHPRegenAmount = playerHPRegenAmount;
+    }
+    if (playerShieldRegenAmount) {
+      game.skillingBosses.playerShieldRegenAmount = playerShieldRegenAmount;
+    }
+  } catch (error) {
+    console.error("Error filling player stats from storage:", error);
+  }
+}
+
+function fillBossStats(ctx) {
+  try {
+    const bossPhysicalDefence = ctx.characterStorage.getItem("Bpd");
+    const bossMagicDefence = ctx.characterStorage.getItem("Bmd");
+    if (bossPhysicalDefence) {
+      game.skillingBosses.activeBoss.physicalDefense = bossPhysicalDefence;
+    }
+    if (bossMagicDefence) {
+      game.skillingBosses.activeBoss.magicDefense = bossMagicDefence;
+    }
+  } catch (error) {
+    console.error("Error filling boss stats from storage:", error);
+  }
+}
+
+function fillExtraPlayerStats(ctx) {
+  try {
+    const highestDamageDealt =
+      ctx.characterStorage.getItem("highestDamageDealt");
+    const debuffsApplied = ctx.characterStorage.getItem("debuffsApplied");
+    const damageTaken = ctx.characterStorage.getItem("damageTaken");
+    const highestDamageTaken =
+      ctx.characterStorage.getItem("highestDamageTaken");
+    const damageDealt = ctx.characterStorage.getItem("damageDealt");
+    if (damageDealt) {
+      game.skillingBosses.ExtraPlayerStats.damageDealt = damageDealt;
+    }
+    if (highestDamageTaken) {
+      game.skillingBosses.ExtraPlayerStats.highestDamageTaken =
+        highestDamageTaken;
+    }
+    if (highestDamageDealt) {
+      game.skillingBosses.ExtraPlayerStats.highestDamageDealt =
+        highestDamageDealt;
+    }
+    if (debuffsApplied) {
+      game.skillingBosses.ExtraPlayerStats.debuffsApplied = debuffsApplied;
+    }
+    if (damageTaken) {
+      game.skillingBosses.ExtraPlayerStats.damageTaken = damageTaken;
+    }
+    const debuffDamageDealt = ctx.characterStorage.getItem("debuffDamageDealt");
+    const highestDebuffDamageDealt = ctx.characterStorage.getItem(
+      "highestDebuffDamageDealt"
+    );
+    if (debuffDamageDealt) {
+      game.skillingBosses.ExtraPlayerStats.debuffDamageDealt =
+        debuffDamageDealt;
+    }
+    if (highestDebuffDamageDealt) {
+      game.skillingBosses.ExtraPlayerStats.highestDebuffDamageDealt =
+        highestDebuffDamageDealt;
+    }
+    const physicalResistReduced = ctx.characterStorage.getItem(
+      "physicalResistReduced"
+    );
+    if (physicalResistReduced) {
+      game.skillingBosses.ExtraPlayerStats.physicalResistReduced =
+        physicalResistReduced;
+    }
+    const magicResistReduced =
+      ctx.characterStorage.getItem("magicResistReduced");
+    if (magicResistReduced) {
+      game.skillingBosses.ExtraPlayerStats.magicResistReduced =
+        magicResistReduced;
+    }
+    const totalBossKills = getTotalBossKills(ctx);
+    if (totalBossKills) {
+      game.skillingBosses.ExtraPlayerStats.totalBossKills = totalBossKills;
+    }
+    const fastestBossKill = getFastestBossKill(ctx);
+    if (fastestBossKill) {
+      game.skillingBosses.ExtraPlayerStats.fastestBossKill = fastestBossKill;
+    }
+    const commonRewardHits = ctx.characterStorage.getItem("commonRewardHits");
+    if (commonRewardHits) {
+      game.skillingBosses.ExtraPlayerStats.commonRewardHits = commonRewardHits;
+    }
+    const uncommonRewardHits =
+      ctx.characterStorage.getItem("uncommonRewardHits");
+    if (uncommonRewardHits) {
+      game.skillingBosses.ExtraPlayerStats.uncommonRewardHits =
+        uncommonRewardHits;
+    }
+    const rareRewardHits = ctx.characterStorage.getItem("rareRewardHits");
+    if (rareRewardHits) {
+      game.skillingBosses.ExtraPlayerStats.rareRewardHits = rareRewardHits;
+    }
+    const legendaryRewardHits = ctx.characterStorage.getItem(
+      "legendaryRewardHits"
+    );
+    if (legendaryRewardHits) {
+      game.skillingBosses.ExtraPlayerStats.legendaryRewardHits =
+        legendaryRewardHits;
+    }
+  } catch (error) {
+    console.error("Error filling extra player stats from storage:", error);
+  }
+}
+
+function getTotalBossKills(ctx) {
+  const bossKillsArray = ctx.characterStorage.getItem("BctR");
+  if (bossKillsArray) {
+    let totalBossKills = 0;
+    bossKillsArray.forEach((bossData, index) => {
+      const boss = game.skillingBosses.getBossById(index); // Get boss by its index (ID)
+      if (boss) {
+        totalBossKills += bossData[0];
+      }
+    });
+    return totalBossKills;
+  } else {
+    return 0;
+  }
+}
+
+function getFastestBossKill(ctx) {
+  const bossKillsArray = ctx.characterStorage.getItem("BctR");
+  if (bossKillsArray) {
+    let fastestBossKill = 9999999999;
+    bossKillsArray.forEach((bossData, index) => {
+      const boss = game.skillingBosses.getBossById(index); // Get boss by its index (ID)
+      if (boss) {
+        if (bossData[1] < fastestBossKill) {
+          fastestBossKill = bossData[1];
+        }
+      }
+    });
+    return fastestBossKill;
+  } else {
+    return 0;
   }
 }

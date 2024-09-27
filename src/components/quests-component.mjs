@@ -4,6 +4,8 @@ const { SkillingBossesUIComponent } = await loadModule(
   "src/components/skilling-bosses-ui-component.mjs"
 );
 
+const { questUIModule } = await loadModule("src/ui/quest.mjs");
+
 export class SkillingBossesQuestComponent extends SkillingBossesUIComponent {
   constructor(manager, game) {
     super(manager, game, "skilling-bosses-quests-component");
@@ -16,7 +18,7 @@ export class SkillingBossesQuestComponent extends SkillingBossesUIComponent {
 
   initializeEventListeners() {
     this.navButtons.forEach((button) => {
-      button.addEventListener("mousedown", (event) => {
+      button.addEventListener("click", (event) => {
         this.showSection(event.target.dataset.category);
       });
     });

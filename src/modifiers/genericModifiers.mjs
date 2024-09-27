@@ -35,6 +35,17 @@ function addGenericModifiers(ctx) {
         },
       ],
     });
+    // Shield Charger
+    upgradeHelpers.createModifier(ctx, game, {
+      namespace: "smattyBosses",
+      id: "shieldCharger",
+      tiers: 6,
+      descriptions: [
+        {
+          text: "When your third ability is used, regenerate ${value} shield.",
+        },
+      ],
+    });
   } catch (error) {
     console.error("Error adding generic modifiers:", error);
   }

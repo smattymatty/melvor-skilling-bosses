@@ -25,6 +25,11 @@ function addShopDisplayOrder(ctx) {
         "smattyBosses:luckyLevels2",
         "smattyBosses:luckyLevels3",
         "smattyBosses:luckyLevels4",
+        "smattyBosses:shieldCharger1",
+        "smattyBosses:shieldCharger2",
+        "smattyBosses:shieldCharger3",
+        "smattyBosses:shieldCharger4",
+        // gatherer
         "smattyBosses:woodRoller1",
         "smattyBosses:woodRoller2",
         "smattyBosses:woodRoller3",
@@ -37,6 +42,7 @@ function addShopDisplayOrder(ctx) {
         "smattyBosses:fishRoller2",
         "smattyBosses:fishRoller3",
         "smattyBosses:fishRoller4",
+        // refiner
         "smattyBosses:spiceRoller1",
         "smattyBosses:spiceRoller2",
         "smattyBosses:spiceRoller3",
@@ -49,6 +55,28 @@ function addShopDisplayOrder(ctx) {
         "smattyBosses:toxinRoller2",
         "smattyBosses:toxinRoller3",
         "smattyBosses:toxinRoller4",
+        // artisan
+        "smattyBosses:ingotRoller1",
+        "smattyBosses:ingotRoller2",
+        "smattyBosses:ingotRoller3",
+        "smattyBosses:ingotRoller4",
+        "smattyBosses:leatherRoller1",
+        "smattyBosses:leatherRoller2",
+        "smattyBosses:leatherRoller3",
+        "smattyBosses:leatherRoller4",
+        "smattyBosses:arrowRoller1",
+        "smattyBosses:arrowRoller2",
+        "smattyBosses:arrowRoller3",
+        "smattyBosses:arrowRoller4",
+        // shifty
+        "smattyBosses:moneyRoller1",
+        "smattyBosses:moneyRoller2",
+        "smattyBosses:moneyRoller3",
+        "smattyBosses:moneyRoller4",
+        "smattyBosses:speedRoller1",
+        "smattyBosses:speedRoller2",
+        "smattyBosses:speedRoller3",
+        "smattyBosses:speedRoller4",
       ],
     });
   });
@@ -60,6 +88,19 @@ function addBuildingDisplayOrder(ctx) {
     p.shopDisplayOrder.add({
       insertAt: "End",
       ids: [
+        "smattyBosses:repairShop",
+        "smattyBosses:repairShop2",
+        "smattyBosses:repairShop3",
+        "smattyBosses:skillingSupplies",
+        "smattyBosses:enhanceCore",
+        "smattyBosses:enhanceCore2",
+        "smattyBosses:HardenCore",
+        "smattyBosses:HardenCore2",
+        "smattyBosses:shieldSmith",
+        "smattyBosses:shieldSmith2",
+        "smattyBosses:shieldSmith3",
+        "smattyBosses:enchanceShields",
+        "smattyBosses:enchanceShields2",
         "smattyBosses:inn",
         "smattyBosses:inn2",
         "smattyBosses:inn3",
@@ -84,6 +125,8 @@ function addShopCategoryOrder(ctx) {
         "smattyBosses:SkillingBossesGeneric",
         "smattyBosses:SkillingBossesGathering",
         "smattyBosses:SkillingBossesRefining",
+        "smattyBosses:SkillingBossesArtisan",
+        "smattyBosses:SkillingBossesShifty",
       ],
     });
   });

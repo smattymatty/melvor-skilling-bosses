@@ -53,6 +53,21 @@ async function initializeMainQuests(
         "https://www.svgrepo.com/show/513272/book-closed.svg",
         (game) => rewardFuncs.nextMainQuest(game, ctx)
       ),
+      new questModels.Reward(
+        "200 Skilling Supplies",
+        "These will be used to repair your core. Buy more at the Repair Shop.",
+        itemImagesHelper.getImageUrlByItemID(
+          ctx,
+          "smattyBosses:skillingSupplies"
+        ),
+        (game) => rewardFuncs.addSkillingSupplies(game, ctx, 200)
+      ),
+      new questModels.Reward(
+        "1000 Boss Coins",
+        "Here's a small bonus to get you started.",
+        itemImagesHelper.getImageUrlByItemID(ctx, "smattyBosses:bossCoin"),
+        (game) => rewardFuncs.addBossCoins(game, ctx, 1000)
+      ),
     ],
     [],
     true, // isMainQuest
@@ -80,10 +95,10 @@ async function initializeMainQuests(
         (game) => rewardFuncs.nextMainQuest(game, ctx)
       ),
       new questModels.Reward(
-        "1000 Boss Coins",
-        "Here's a small bonus to get you started.",
-        itemImagesHelper.getImageUrlByItemID(ctx, "smattyBosses:bossCoin"),
-        (game) => rewardFuncs.addBossCoins(game, ctx, 1000)
+        "Bank Slot Token",
+        "You're going to need it.",
+        "https://cdn2-main.melvor.net/assets/media/main/bank_header.png",
+        (game) => rewardFuncs.addBankSlotTokenToBank(game, ctx)
       ),
     ],
     [],
@@ -117,6 +132,15 @@ async function initializeMainQuests(
         itemImagesHelper.getImageUrlByItemID(ctx, "smattyBosses:genericSoul"),
         (game) => rewardFuncs.addGenericSouls(game, ctx, 10)
       ),
+      new questModels.Reward(
+        "100 Skilling Supplies",
+        "Have you unlocked the Repair Shop yet?",
+        itemImagesHelper.getImageUrlByItemID(
+          ctx,
+          "smattyBosses:skillingSupplies"
+        ),
+        (game) => rewardFuncs.addSkillingSupplies(game, ctx, 200)
+      ),
     ],
     [],
     true, // isMainQuest
@@ -143,6 +167,18 @@ async function initializeMainQuests(
         "https://www.svgrepo.com/show/252134/paper-bag.svg",
         (game) => rewardFuncs.nextMainQuest(game, ctx)
       ),
+      new questModels.Reward(
+        "1000 Boss Coins",
+        "A Full Refund!",
+        itemImagesHelper.getImageUrlByItemID(ctx, "smattyBosses:bossCoin"),
+        (game) => rewardFuncs.addBossCoins(game, ctx, 1000)
+      ),
+      new questModels.Reward(
+        "10 Generic Souls",
+        "Keep the souls, you've earned them.",
+        itemImagesHelper.getImageUrlByItemID(ctx, "smattyBosses:genericSoul"),
+        (game) => rewardFuncs.addGenericSouls(game, ctx, 10)
+      ),
     ],
     [],
     true, // isMainQuest
@@ -150,13 +186,13 @@ async function initializeMainQuests(
   );
 
   const mainQuest5 = new questModels.Quest(
-    "Double Trouble!",
-    "Defeat any two different bosses!",
+    "Another One!",
+    "Defeat any two different bosses in total!",
     "Main",
     "https://cdn2-main.melvor.net/assets/media/skills/combat/combat.png",
     [
       new questModels.Objective(
-        "Defeat Two Different Bosses",
+        "Defeat Two Different Bosses in total",
         "Choose another boss to defeat.",
         "https://www.svgrepo.com/show/200452/skull.svg",
         (game) => progressCheckers.checkTotalTypesOfBossesKilled(game, 2)
@@ -168,6 +204,15 @@ async function initializeMainQuests(
         "Another one for the loot.",
         "https://cdn2-main.melvor.net/assets/media/main/bank_header.png",
         (game) => rewardFuncs.nextMainQuest(game, ctx)
+      ),
+      new questModels.Reward(
+        "50 Skilling Supplies",
+        "This is the last handout.",
+        itemImagesHelper.getImageUrlByItemID(
+          ctx,
+          "smattyBosses:skillingSupplies"
+        ),
+        (game) => rewardFuncs.addSkillingSupplies(game, ctx, 200)
       ),
     ],
     [],
@@ -226,10 +271,10 @@ async function initializeMainQuests(
         (game) => rewardFuncs.nextMainQuest(game, ctx)
       ),
       new questModels.Reward(
-        "Mastery Token Bag (Tier 1)",
-        "I hope you get the skill you want.",
+        "2 Mastery Token Bags (Tier 1)",
+        "I hope you get the skills you want.",
         "https://www.svgrepo.com/show/252134/paper-bag.svg",
-        (game) => rewardFuncs.addMasteryTokenBagToBank(game, ctx, 1)
+        (game) => rewardFuncs.addMasteryTokenBagToBank(game, ctx, 3)
       ),
     ],
     [],
@@ -257,7 +302,7 @@ async function initializeMainQuests(
         (game) => rewardFuncs.addGenericSouls(game, ctx, 30)
       ),
       new questModels.Reward(
-        "Mastery Token Bag (Tier 1)",
+        "3 Mastery Token Bags (Tier 1)",
         "I hope you get the skill you want.",
         "https://www.svgrepo.com/show/252134/paper-bag.svg",
         (game) => rewardFuncs.nextMainQuest(game, ctx)

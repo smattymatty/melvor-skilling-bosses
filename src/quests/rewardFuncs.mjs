@@ -1,3 +1,7 @@
+const { loadModule } = mod.getContext(import.meta);
+
+const battlesUIModule = await loadModule("src/ui/battle.mjs");
+
 export async function nextMainQuest(game, ctx) {
   if (
     game.skillingBosses.currentMainQuest === 2 ||
@@ -22,6 +26,14 @@ export async function nextMainQuest(game, ctx) {
     game.skillingBosses.currentMainQuest === 8
   ) {
     // add mastery token bag
+    addMasteryTokenBagToBank(game, ctx);
+  }
+  if (game.skillingBosses.currentMainQuest === 6) {
+    //1 more bag
+    addMasteryTokenBagToBank(game, ctx);
+  } else if (game.skillingBosses.currentMainQuest === 7) {
+    //2 more bags
+    addMasteryTokenBagToBank(game, ctx);
     addMasteryTokenBagToBank(game, ctx);
   }
   game.skillingBosses.startNextMainQuest();
@@ -57,6 +69,102 @@ export async function addBossCoins(game, ctx, amount) {
 export async function addGenericSouls(game, ctx, amount) {
   game.bank.addItemByID(
     "smattyBosses:genericSoul",
+    amount,
+    false,
+    true,
+    true,
+    true
+  );
+}
+
+export async function addSkillingSupplies(game, ctx, amount) {
+  game.bank.addItemByID(
+    "smattyBosses:skillingSupplies",
+    amount,
+    false,
+    true,
+    true,
+    true
+  );
+  battlesUIModule.setSupplyAmount();
+}
+
+export async function addGathererSouls(game, ctx, amount) {
+  game.bank.addItemByID(
+    "smattyBosses:gathererSoul",
+    amount,
+    false,
+    true,
+    true,
+    true
+  );
+}
+
+export async function addRefinerSouls(game, ctx, amount) {
+  game.bank.addItemByID(
+    "smattyBosses:refinerSoul",
+    amount,
+    false,
+    true,
+    true,
+    true
+  );
+}
+
+export async function addArtisanSouls(game, ctx, amount) {
+  game.bank.addItemByID(
+    "smattyBosses:artisanSoul",
+    amount,
+    false,
+    true,
+    true,
+    true
+  );
+}
+export async function addMysticSouls(game, ctx, amount) {
+  game.bank.addItemByID(
+    "smattyBosses:mysticSoul",
+    amount,
+    false,
+    true,
+    true,
+    true
+  );
+}
+
+export async function addShiftySouls(game, ctx, amount) {
+  game.bank.addItemByID(
+    "smattyBosses:shiftySoul",
+    amount,
+    false,
+    true,
+    true,
+    true
+  );
+}
+
+export async function addCherryCupCakes(game, ctx, amount) {
+  game.bank.addItemByID(
+    "melvorD:Cherry_Cupcake",
+    amount,
+    false,
+    true,
+    true,
+    true
+  );
+}
+
+export async function addSharks(game, ctx, amount) {
+  game.bank.addItemByID("melvorD:Shark", amount, false, true, true, true);
+}
+
+export async function addSapphires(game, ctx, amount) {
+  game.bank.addItemByID("melvorD:Sapphire", amount, false, true, true, true);
+}
+
+export function addSwordfish(game, ctx, amount) {
+  game.bank.addItemByID(
+    "melvorD:Raw_Swordfish",
     amount,
     false,
     true,

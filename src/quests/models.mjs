@@ -38,3 +38,13 @@ export class Quest {
     this.mainQuestNumber = mainQuestNumber;
   }
 }
+
+export class SideQuest {
+  constructor(id, name, category, objectives, rewards) {
+    this.id = id;
+    this.name = name;
+    this.category = category;
+    this.objectives = objectives;
+    this.rewards = rewards;
+  }
+}

@@ -12,7 +12,7 @@ function addShopCategory(ctx) {
   const skillingBossesGeneric = ctx.gameData.buildPackage((p) => {
     p.shopCategories.add({
       id: "SkillingBossesGeneric",
-      name: "Upgrades - Generic",
+      name: "Generic",
       media: "assets/items/souls/generic-soul.svg",
     });
   });
@@ -20,7 +20,7 @@ function addShopCategory(ctx) {
   const skillingBossesGathering = ctx.gameData.buildPackage((p) => {
     p.shopCategories.add({
       id: "SkillingBossesGathering",
-      name: "Upgrades - Gathering",
+      name: "Gathering",
       media: "assets/items/souls/gatherer-soul.svg",
     });
   });
@@ -33,6 +33,8 @@ function addGenericPurchases(ctx) {
     addDuckDefenceTiers(ctx);
     // Lucky Levels
     addLuckyLevelsTiers(ctx);
+    // Shield Charger
+    addShieldCharger(ctx);
   } catch (error) {
     console.error("Error adding generic purchases:", error);
   }
@@ -1401,5 +1403,227 @@ function addLuckyLevelsTiers(ctx) {
     luckyLevels4.add();
   } catch (error) {
     console.error("Error adding generic purchases:", error);
+  }
+}
+
+function addShieldCharger(ctx) {
+  try {
+    function generateDescription(tier) {
+      switch (tier) {
+        case "1":
+          return buildDescription(tier, 1, 0);
+        case "2":
+          return buildDescription(tier, 2, 1);
+        case "3":
+          return buildDescription(tier, 3, 2);
+        case "4":
+          return buildDescription(tier, 4, 3);
+        case "5":
+          return buildDescription(tier, 5, 4);
+        case "6":
+          return buildDescription(tier, 6, 5);
+          function buildDescription(tier, upgradeAmmount, currentAmount) {
+            return `
+        <div class="upgrade-card" data-upgrade="shieldCharger${tier}">
+          <div class="upgrade-effect">
+            <h4 class="effect-title">When your third ability is used:</h4>
+            <p class="effect-description">Regnerate ${upgradeAmmount} shield.</p>
+          
+            </div><div class="current-upgrade-level">
+            <p class="current-upgrade-level-text">Current: ${currentAmount} shield</p>
+          </div>
+            </div>
+            `;
+          }
+      }
+    }
+
+    const shieldCharger1 = ctx.gameData.buildPackage((p) => {
+      p.shopPurchases.add({
+        id: "shieldCharger1",
+        media:
+          "https://cdn2-main.melvor.net/assets/media/skills/combat/defence.png",
+        category: "smattyBosses:SkillingBossesGeneric",
+        contains: {
+          items: [],
+          modifiers: {
+            "smattyBosses:shieldCharger": 1,
+          },
+        },
+        cost: {
+          gp: {
+            type: "Fixed",
+            cost: 0,
+          },
+          slayerCoins: {
+            type: "Fixed",
+            cost: 0,
+          },
+          items: [
+            { id: "smattyBosses:bossCoin", quantity: 5000 },
+            { id: "smattyBosses:skillingSupplies", quantity: 100 },
+            { id: "melvorF:Leather_Gloves", quantity: 100 },
+            { id: "melvorD:Steel_Gloves", quantity: 100 },
+          ],
+          raidCoins: {
+            type: "Fixed",
+            cost: 0,
+          },
+        },
+        allowQuantityPurchase: false,
+        unlockRequirements: [],
+        purchaseRequirements: [],
+        defaultBuyLimit: 1,
+        buyLimitOverrides: [],
+        showBuyLimit: false,
+        customName: "Shield Charger I",
+        customDescription: generateDescription("1"),
+      });
+    });
+    shieldCharger1.add();
+    const shieldCharger2 = ctx.gameData.buildPackage((p) => {
+      p.shopPurchases.add({
+        id: "shieldCharger2",
+        media:
+          "https://cdn2-main.melvor.net/assets/media/skills/combat/defence.png",
+        category: "smattyBosses:SkillingBossesGeneric",
+        contains: {
+          items: [],
+          modifiers: {
+            "smattyBosses:shieldCharger_2": 1,
+          },
+        },
+        cost: {
+          gp: {
+            type: "Fixed",
+            cost: 0,
+          },
+          slayerCoins: {
+            type: "Fixed",
+            cost: 0,
+          },
+          items: [
+            { id: "smattyBosses:bossCoin", quantity: 10000 },
+            { id: "smattyBosses:skillingSupplies", quantity: 200 },
+            { id: "melvorF:Hard_Leather_Gloves", quantity: 200 },
+            { id: "melvorD:Mithril_Gloves", quantity: 200 },
+          ],
+          raidCoins: {
+            type: "Fixed",
+            cost: 0,
+          },
+        },
+        allowQuantityPurchase: false,
+        unlockRequirements: [
+          {
+            type: "ShopPurchase",
+            purchaseID: "smattyBosses:shieldCharger1",
+            count: 1,
+          },
+        ],
+        purchaseRequirements: [],
+        defaultBuyLimit: 1,
+        buyLimitOverrides: [],
+        showBuyLimit: false,
+        customName: "Shield Charger II",
+        customDescription: generateDescription("2"),
+      });
+    });
+    shieldCharger2.add();
+    const shieldCharger3 = ctx.gameData.buildPackage((p) => {
+      p.shopPurchases.add({
+        id: "shieldCharger3",
+        media:
+          "https://cdn2-main.melvor.net/assets/media/skills/combat/defence.png",
+        category: "smattyBosses:SkillingBossesGeneric",
+        contains: {
+          items: [],
+          modifiers: {
+            "smattyBosses:shieldCharger_3": 1,
+          },
+        },
+        cost: {
+          gp: {
+            type: "Fixed",
+            cost: 0,
+          },
+          slayerCoins: {
+            type: "Fixed",
+            cost: 0,
+          },
+          items: [
+            { id: "smattyBosses:bossCoin", quantity: 15000 },
+            { id: "smattyBosses:skillingSupplies", quantity: 300 },
+            { id: "melvorD:Green_Dhide_Vambraces", quantity: 300 },
+            { id: "melvorD:Adamant_Gloves", quantity: 300 },
+          ],
+          raidCoins: {
+            type: "Fixed",
+            cost: 0,
+          },
+        },
+        allowQuantityPurchase: false,
+        unlockRequirements: [
+          {
+            type: "ShopPurchase",
+            purchaseID: "smattyBosses:shieldCharger2",
+            count: 1,
+          },
+        ],
+        purchaseRequirements: [],
+        defaultBuyLimit: 1,
+        buyLimitOverrides: [],
+        showBuyLimit: false,
+        customName: "Shield Charger III",
+        customDescription: generateDescription("3"),
+      });
+    });
+    shieldCharger3.add();
+    const shieldCharger4 = ctx.gameData.buildPackage((p) => {
+      p.shopPurchases.add({
+        id: "shieldCharger4",
+        media:
+          "https://cdn2-main.melvor.net/assets/media/skills/combat/defence.png",
+        category: "smattyBosses:SkillingBossesGeneric",
+        contains: {
+          items: [],
+          modifiers: {
+            "smattyBosses:shieldCharger_4": 1,
+          },
+        },
+        cost: {
+          gp: {
+            type: "Fixed",
+            cost: 0,
+          },
+          slayerCoins: {
+            type: "Fixed",
+            cost: 0,
+          },
+          items: [{ id: "smattyBosses:impossibleItem", quantity: 1 }],
+          raidCoins: {
+            type: "Fixed",
+            cost: 0,
+          },
+        },
+        allowQuantityPurchase: false,
+        unlockRequirements: [
+          {
+            type: "ShopPurchase",
+            purchaseID: "smattyBosses:shieldCharger3",
+            count: 1,
+          },
+        ],
+        purchaseRequirements: [],
+        defaultBuyLimit: 1,
+        buyLimitOverrides: [],
+        showBuyLimit: false,
+        customName: "Shield Charger IV",
+        customDescription: generateDescription("4"),
+      });
+    });
+    shieldCharger4.add();
+  } catch (error) {
+    console.error("Error adding shield charger purchases:", error);
   }
 }

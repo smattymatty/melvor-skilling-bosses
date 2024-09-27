@@ -6,6 +6,9 @@ export async function init(ctx) {
   try {
     addShopCategory(ctx);
     addBuildingPurchases(ctx);
+    addSkillingSuppliesPurchases(ctx);
+    addEnhanceCorePurchases(ctx);
+    addHardenCorePurchases(ctx);
     // patch to update offline ticks
     ctx.patch(Shop, "onLoad").after(function () {
       updateUIForShopOfflineTicks(ctx);
@@ -29,6 +32,8 @@ function addShopCategory(ctx) {
 function addBuildingPurchases(ctx) {
   try {
     addInnPurchases(ctx);
+    addRepairShopPurchases(ctx);
+    addShieldSmithPurchases(ctx);
   } catch (error) {
     console.error("Error adding building purchases:", error);
   }
@@ -38,18 +43,17 @@ function addInnPurchases(ctx) {
   try {
     const offlineTickInfo = `
     <p class="current-upgrade-level-text">
-    While offline, only <span class="text-danger">1/6th</span> of Skilling Bosses ticks are fully processesed.
+    While offline,  <span class="text-danger">not all</span> of Skilling Bosses ticks are fully processesed.
     </p>
     <p class="current-upgrade-level-text">
-    The remainder are discarded and thrown into the <span class="text-success">'offline ticks'</span> pool.
+    The ticks that are discarded get thrown into the <span class="text-success">'offline ticks'</span> pool.
     </p>
     `;
 
     const innBuilding1 = ctx.gameData.buildPackage((p) => {
       p.shopPurchases.add({
         id: "inn",
-        media:
-          "https://cdn2-main.melvor.net/assets/media/skills/combat/defence.png",
+        media: "https://www.svgrepo.com/show/435145/sleep.svg",
         category: "smattyBosses:SkillingBossesBuildings",
         contains: {
           items: [],
@@ -58,14 +62,13 @@ function addInnPurchases(ctx) {
         cost: {
           gp: {
             type: "Fixed",
-            cost: 0,
+            cost: 10000,
           },
           slayerCoins: {
             type: "Fixed",
             cost: 0,
           },
           items: [
-            { id: "smattyBosses:bossCoin", quantity: 1000 },
             { id: "melvorD:Oak_Logs", quantity: 100 },
             { id: "melvorD:Iron_Ore", quantity: 100 },
             { id: "melvorD:Raw_Herring", quantity: 100 },
@@ -98,8 +101,7 @@ function addInnPurchases(ctx) {
     const innBuilding2 = ctx.gameData.buildPackage((p) => {
       p.shopPurchases.add({
         id: "inn2",
-        media:
-          "https://cdn2-main.melvor.net/assets/media/skills/combat/defence.png",
+        media: "https://www.svgrepo.com/show/435145/sleep.svg",
         category: "smattyBosses:SkillingBossesBuildings",
         contains: {
           items: [],
@@ -154,8 +156,7 @@ function addInnPurchases(ctx) {
     const innBuilding3 = ctx.gameData.buildPackage((p) => {
       p.shopPurchases.add({
         id: "inn3",
-        media:
-          "https://cdn2-main.melvor.net/assets/media/skills/combat/defence.png",
+        media: "https://www.svgrepo.com/show/435145/sleep.svg",
         category: "smattyBosses:SkillingBossesBuildings",
         contains: {
           items: [],
@@ -531,5 +532,799 @@ export function updateUIForShopOfflineTicks() {
   }
   if (offlineElement2) {
     offlineElement2.innerHTML = content;
+  }
+}
+
+function addSkillingSuppliesPurchases(ctx) {
+  try {
+    const skillingSuppliesPurchases = ctx.gameData.buildPackage((p) => {
+      p.shopPurchases.add({
+        id: "skillingSupplies",
+        media: "assets/items/skilling-supplies.svg",
+        category: "smattyBosses:SkillingBossesBuildings",
+        contains: {
+          items: [
+            {
+              id: "smattyBosses:skillingSupplies",
+              quantity: 1,
+            },
+          ],
+          modifiers: {},
+        },
+        cost: {
+          gp: {
+            type: "Fixed",
+            cost: 100,
+          },
+          slayerCoins: {
+            type: "Fixed",
+            cost: 0,
+          },
+          items: [],
+          raidCoins: {
+            type: "Fixed",
+            cost: 0,
+          },
+        },
+        allowQuantityPurchase: true,
+        unlockRequirements: [
+          {
+            type: "ShopPurchase",
+            purchaseID: "smattyBosses:repairShop",
+            count: 1,
+          },
+        ],
+        purchaseRequirements: [],
+        defaultBuyLimit: 0,
+        buyLimitOverrides: [],
+        showBuyLimit: false,
+        customName: "Skilling Supplies",
+        customDescription: `
+        Skilling Supplies are used to repair your core!`,
+      });
+    });
+    skillingSuppliesPurchases.add();
+  } catch (error) {
+    console.error("Error adding skilling supplies purchases:", error);
+  }
+}
+
+function addRepairShopPurchases(ctx) {
+  try {
+    function generateDescription(title, description, extra) {
+      return `
+        <div class="upgrade-card" data-upgrade="repair">
+          <div class="upgrade-effect">
+            <h4 class="effect-title">${title}</h4>
+            <p class="effect-description">${description}</p>
+            <p class="current-upgrade-level-text">${extra}</p>
+          </div>
+        </div>
+      `;
+    }
+    const repairShop1 = ctx.gameData.buildPackage((p) => {
+      p.shopPurchases.add({
+        id: "repairShop",
+        media:
+          "https://cdn2-main.melvor.net/assets/media/skills/crafting/crafting.png",
+        category: "smattyBosses:SkillingBossesBuildings",
+        contains: {
+          items: [],
+          modifiers: {},
+        },
+        cost: {
+          gp: {
+            type: "Fixed",
+            cost: 1000,
+          },
+          slayerCoins: {
+            type: "Fixed",
+            cost: 0,
+          },
+          items: [
+            { id: "melvorD:Iron_Bar", quantity: 25 },
+            { id: "melvorD:Leather", quantity: 25 },
+          ],
+          raidCoins: {
+            type: "Fixed",
+            cost: 0,
+          },
+        },
+        allowQuantityPurchase: false,
+        unlockRequirements: [],
+        purchaseRequirements: [],
+        defaultBuyLimit: 1,
+        buyLimitOverrides: [],
+        showBuyLimit: false,
+        customName: "Build a Repair Shop",
+        customDescription: generateDescription(
+          "You can repair your core!",
+          "Buy skilling supplies at the Repair Shop",
+          "You can also upgrade your core's stats."
+        ),
+      });
+    });
+    repairShop1.add();
+    const repairShop2 = ctx.gameData.buildPackage((p) => {
+      p.shopPurchases.add({
+        id: "repairShop2",
+        media:
+          "https://cdn2-main.melvor.net/assets/media/skills/crafting/crafting.png",
+        category: "smattyBosses:SkillingBossesBuildings",
+        contains: {
+          items: [],
+          modifiers: {},
+        },
+        cost: {
+          gp: {
+            type: "Fixed",
+            cost: 5000,
+          },
+          slayerCoins: {
+            type: "Fixed",
+            cost: 0,
+          },
+          items: [
+            { id: "melvorD:Mithril_Bar", quantity: 50 },
+            { id: "melvorD:Green_Dragonhide", quantity: 50 },
+          ],
+          raidCoins: {
+            type: "Fixed",
+            cost: 0,
+          },
+        },
+        allowQuantityPurchase: false,
+        unlockRequirements: [
+          {
+            type: "ShopPurchase",
+            purchaseID: "smattyBosses:repairShop",
+            count: 1,
+          },
+        ],
+        purchaseRequirements: [],
+        defaultBuyLimit: 1,
+        buyLimitOverrides: [],
+        showBuyLimit: false,
+        customName: "Repair Shop II",
+        customDescription: generateDescription(
+          "Upgrade your Repair Shop",
+          "You can further upgrade your core's stats.",
+          ""
+        ),
+      });
+    });
+    repairShop2.add();
+    const repairShop3 = ctx.gameData.buildPackage((p) => {
+      p.shopPurchases.add({
+        id: "repairShop3",
+        media:
+          "https://cdn2-main.melvor.net/assets/media/skills/crafting/crafting.png",
+        category: "smattyBosses:SkillingBossesBuildings",
+        contains: {
+          items: [],
+          modifiers: {},
+        },
+        cost: {
+          gp: {
+            type: "Fixed",
+            cost: 1000,
+          },
+          slayerCoins: {
+            type: "Fixed",
+            cost: 0,
+          },
+          items: [{ id: "smattyBosses:impossibleItem", quantity: 1 }],
+          raidCoins: {
+            type: "Fixed",
+            cost: 0,
+          },
+        },
+        allowQuantityPurchase: false,
+        unlockRequirements: [
+          {
+            type: "ShopPurchase",
+            purchaseID: "smattyBosses:repairShop2",
+            count: 1,
+          },
+        ],
+        purchaseRequirements: [],
+        defaultBuyLimit: 1,
+        buyLimitOverrides: [],
+        showBuyLimit: false,
+        customName: "Repair Shop III",
+        customDescription: generateDescription(
+          "Repair Shop III",
+          "Not YET",
+          ":)"
+        ),
+      });
+    });
+    repairShop3.add();
+  } catch (error) {
+    console.error("Error adding repair shop purchases:", error);
+  }
+}
+
+function addShieldSmithPurchases(ctx) {
+  try {
+    function generateDescription(title, description, extra) {
+      return `
+        <div class="upgrade-card" data-upgrade="shieldSmith">
+          <div class="upgrade-effect">
+            <h4 class="effect-title">${title}</h4>
+            <p class="effect-description">${description}</p>
+            <p class="current-upgrade-level-text">${extra}</p>
+          </div>
+        </div>
+      `;
+    }
+    const shieldSmith1 = ctx.gameData.buildPackage((p) => {
+      p.shopPurchases.add({
+        id: "shieldSmith",
+        media:
+          "https://cdn2-main.melvor.net/assets/media/skills/smithing/smithing.png",
+        category: "smattyBosses:SkillingBossesBuildings",
+        contains: {
+          items: [],
+          modifiers: {},
+        },
+        cost: {
+          gp: {
+            type: "Fixed",
+            cost: 5000,
+          },
+          slayerCoins: {
+            type: "Fixed",
+            cost: 0,
+          },
+          items: [
+            { id: "melvorD:Steel_Shield", quantity: 25 },
+            { id: "melvorF:Ash", quantity: 25 },
+          ],
+          raidCoins: {
+            type: "Fixed",
+            cost: 0,
+          },
+        },
+        allowQuantityPurchase: false,
+        unlockRequirements: [],
+        purchaseRequirements: [],
+        defaultBuyLimit: 1,
+        buyLimitOverrides: [],
+        showBuyLimit: false,
+        customName: "Build a Shield Smith",
+        customDescription: generateDescription(
+          "Your Shields are important!",
+          "They protect your core from attacks!",
+          "You can upgrade your Shield Stats here."
+        ),
+      });
+    });
+    shieldSmith1.add();
+    const shieldSmith2 = ctx.gameData.buildPackage((p) => {
+      p.shopPurchases.add({
+        id: "shieldSmith2",
+        media:
+          "https://cdn2-main.melvor.net/assets/media/skills/smithing/smithing.png",
+        category: "smattyBosses:SkillingBossesBuildings",
+        contains: {
+          items: [],
+          modifiers: {},
+        },
+        cost: {
+          gp: {
+            type: "Fixed",
+            cost: 15000,
+          },
+          slayerCoins: {
+            type: "Fixed",
+            cost: 0,
+          },
+          items: [
+            { id: "melvorD:Mithril_Shield", quantity: 50 },
+            { id: "melvorF:Ash", quantity: 50 },
+          ],
+          raidCoins: {
+            type: "Fixed",
+            cost: 0,
+          },
+        },
+        allowQuantityPurchase: false,
+        unlockRequirements: [
+          {
+            type: "ShopPurchase",
+            purchaseID: "smattyBosses:shieldSmith",
+            count: 1,
+          },
+        ],
+        purchaseRequirements: [],
+        defaultBuyLimit: 1,
+        buyLimitOverrides: [],
+        showBuyLimit: false,
+        customName: "Shield Smith II",
+        customDescription: generateDescription(
+          "Upgrade your Shield Smith",
+          "You can further upgrade your Shield Stats.",
+          ""
+        ),
+      });
+    });
+    shieldSmith2.add();
+    const shieldSmith3 = ctx.gameData.buildPackage((p) => {
+      p.shopPurchases.add({
+        id: "shieldSmith3",
+        media: "https://cdn2-main.melvor.net/assets/media/combat/defence.png",
+        category: "smattyBosses:SkillingBossesBuildings",
+        contains: {
+          items: [],
+          modifiers: {},
+        },
+        cost: {
+          gp: {
+            type: "Fixed",
+            cost: 25000,
+          },
+          slayerCoins: {
+            type: "Fixed",
+            cost: 0,
+          },
+          items: [{ id: "smattyBosses:impossibleItem", quantity: 1 }],
+          raidCoins: {
+            type: "Fixed",
+            cost: 0,
+          },
+        },
+        allowQuantityPurchase: false,
+        unlockRequirements: [
+          {
+            type: "ShopPurchase",
+            purchaseID: "smattyBosses:shieldSmith2",
+            count: 1,
+          },
+        ],
+        purchaseRequirements: [],
+        defaultBuyLimit: 1,
+        buyLimitOverrides: [],
+        showBuyLimit: false,
+        customName: "Shield Smith III",
+        customDescription: generateDescription(
+          "Shield Smith III",
+          "Not YET",
+          ":)"
+        ),
+      });
+    });
+    shieldSmith3.add();
+    addEnchanceShieldsPurchases(ctx);
+  } catch (error) {
+    console.error("Error adding shield smith purchases:", error);
+  }
+}
+
+function addEnchanceShieldsPurchases(ctx) {
+  try {
+    function generateDescription(title, description, extra) {
+      return `
+        <div class="upgrade-card" data-upgrade="enchanceShields">
+          <div class="upgrade-effect">
+            <h4 class="effect-title">${title}</h4>
+            <p class="effect-description">${description}</p>
+            <p class="current-upgrade-level-text">${extra}</p>
+          </div>
+        </div>
+      `;
+    }
+    const enchanceShields1 = ctx.gameData.buildPackage((p) => {
+      p.shopPurchases.add({
+        id: "enchanceShields",
+        media:
+          "https://cdn2-main.melvor.net/assets/media/skills/defence/defence.png",
+        category: "smattyBosses:SkillingBossesBuildings",
+        contains: {
+          items: [],
+          modifiers: {},
+        },
+        cost: {
+          gp: {
+            type: "Fixed",
+            cost: 10000,
+          },
+          slayerCoins: {
+            type: "Fixed",
+            cost: 0,
+          },
+          items: [
+            { id: "melvorD:Steel_Platebody", quantity: 50 },
+            { id: "melvorF:Ash", quantity: 50 },
+          ],
+          raidCoins: {
+            type: "Fixed",
+            cost: 0,
+          },
+        },
+        allowQuantityPurchase: false,
+        unlockRequirements: [
+          {
+            type: "ShopPurchase",
+            purchaseID: "smattyBosses:shieldSmith",
+            count: 1,
+          },
+        ],
+        purchaseRequirements: [],
+        defaultBuyLimit: 1,
+        buyLimitOverrides: [],
+        showBuyLimit: false,
+        customName: "Enchance Shields",
+        customDescription: generateDescription(
+          "Enhance Shields I",
+          "Increase your maximum shield by +10.",
+          ""
+        ),
+      });
+    });
+    enchanceShields1.add();
+    const enchanceShields2 = ctx.gameData.buildPackage((p) => {
+      p.shopPurchases.add({
+        id: "enchanceShields2",
+        media:
+          "https://cdn2-main.melvor.net/assets/media/skills/defence/defence.png",
+        category: "smattyBosses:SkillingBossesBuildings",
+        contains: {
+          items: [],
+          modifiers: {},
+        },
+        cost: {
+          gp: {
+            type: "Fixed",
+            cost: 20000,
+          },
+          slayerCoins: {
+            type: "Fixed",
+            cost: 0,
+          },
+          items: [
+            { id: "melvorD:Mithril_Platebody", quantity: 100 },
+            { id: "melvorF:Ash", quantity: 100 },
+          ],
+          raidCoins: {
+            type: "Fixed",
+            cost: 0,
+          },
+        },
+        allowQuantityPurchase: false,
+        unlockRequirements: [
+          {
+            type: "ShopPurchase",
+            purchaseID: "smattyBosses:shieldSmith2",
+            count: 1,
+          },
+          {
+            type: "ShopPurchase",
+            purchaseID: "smattyBosses:enchanceShields",
+            count: 1,
+          },
+        ],
+        purchaseRequirements: [],
+        defaultBuyLimit: 1,
+        buyLimitOverrides: [],
+        showBuyLimit: false,
+        customName: "Enchance Shields II",
+        customDescription: generateDescription(
+          "Enhance Shields II",
+          "Increase your maximum shield by +10.",
+          ""
+        ),
+      });
+    });
+    enchanceShields2.add();
+    function giveShields(ctx, game) {
+      game.skillingBosses.playerShieldMax += 10;
+      ctx.characterStorage.setItem("PshM", game.skillingBosses.playerShieldMax);
+      game.skillingBosses.needsCombatStatsUIUpdate = true;
+      game.skillingBosses.needsPlayerHealthBarUpdate = true;
+      game.skillingBosses.updateUIIfNeeded();
+    }
+
+    // patch enhance shields purchases to add shield
+    ctx.patch(Shop, "buyItemOnClick").after(function (x, purchase, confirmed) {
+      if (purchase.id === "smattyBosses:enchanceShields") {
+        if (confirmed) {
+          giveShields(ctx, game);
+        }
+      } else if (purchase.id === "smattyBosses:enchanceShields2") {
+        if (confirmed) {
+          giveShields(ctx, game);
+        }
+      }
+    });
+  } catch (error) {
+    console.error("Error adding enchance shields purchases:", error);
+  }
+}
+
+function addEnhanceCorePurchases(ctx) {
+  try {
+    function generateDescription(title, description, extra) {
+      return `
+        <div class="upgrade-card" data-upgrade="enhanceCore">
+          <div class="upgrade-effect">
+            <h4 class="effect-title">${title}</h4>
+            <p class="effect-description">${description}</p>
+            <p class="current-upgrade-level-text">${extra}</p>
+          </div>
+        </div>
+      `;
+    }
+    const enhanceCore1 = ctx.gameData.buildPackage((p) => {
+      p.shopPurchases.add({
+        id: "enhanceCore",
+        media:
+          "https://cdn2-main.melvor.net/assets/media/skills/crafting/crafting.png",
+        category: "smattyBosses:SkillingBossesBuildings",
+        contains: {
+          items: [],
+          modifiers: {},
+        },
+        cost: {
+          gp: {
+            type: "Fixed",
+            cost: 10000,
+          },
+          slayerCoins: {
+            type: "Fixed",
+            cost: 0,
+          },
+          items: [
+            { id: "melvorF:Silver_Topaz_Ring", quantity: 25 },
+            { id: "melvorD:Gold_Topaz_Ring", quantity: 25 },
+          ],
+          raidCoins: {
+            type: "Fixed",
+            cost: 0,
+          },
+        },
+        allowQuantityPurchase: false,
+        unlockRequirements: [
+          {
+            type: "ShopPurchase",
+            purchaseID: "smattyBosses:repairShop",
+            count: 1,
+          },
+        ],
+        purchaseRequirements: [],
+        defaultBuyLimit: 1,
+        buyLimitOverrides: [],
+        showBuyLimit: false,
+        customName: "Enhance Core I",
+        customDescription: generateDescription(
+          "Enhance Core I",
+          "Gain +10 core max HP",
+          ""
+        ),
+      });
+    });
+    enhanceCore1.add();
+    const enhanceCore2 = ctx.gameData.buildPackage((p) => {
+      p.shopPurchases.add({
+        id: "enhanceCore2",
+        media:
+          "https://cdn2-main.melvor.net/assets/media/skills/crafting/crafting.png",
+        category: "smattyBosses:SkillingBossesBuildings",
+        contains: {
+          items: [],
+          modifiers: {},
+        },
+        cost: {
+          gp: {
+            type: "Fixed",
+            cost: 20000,
+          },
+          slayerCoins: {
+            type: "Fixed",
+            cost: 0,
+          },
+          items: [
+            { id: "melvorF:Silver_Sapphire_Ring", quantity: 50 },
+            { id: "melvorF:Gold_Sapphire_Ring", quantity: 50 },
+          ],
+          raidCoins: {
+            type: "Fixed",
+            cost: 0,
+          },
+        },
+        allowQuantityPurchase: false,
+        unlockRequirements: [
+          {
+            type: "ShopPurchase",
+            purchaseID: "smattyBosses:repairShop2",
+            count: 1,
+          },
+          {
+            type: "ShopPurchase",
+            purchaseID: "smattyBosses:enhanceCore",
+            count: 1,
+          },
+        ],
+        purchaseRequirements: [],
+        defaultBuyLimit: 1,
+        buyLimitOverrides: [],
+        showBuyLimit: false,
+        customName: "Enhance Core II",
+        customDescription: generateDescription(
+          "Enhance Core II",
+          "Gain +10 core max HP",
+          ""
+        ),
+      });
+    });
+    enhanceCore2.add();
+    function giveCoreHP(ctx, game) {
+      game.skillingBosses.playerCoreMaxHP += 10;
+      ctx.characterStorage.setItem("PcMH", game.skillingBosses.playerCoreMaxHP);
+      game.skillingBosses.needsCombatStatsUIUpdate = true;
+      game.skillingBosses.needsPlayerHealthBarUpdate = true;
+      game.skillingBosses.updateUIIfNeeded();
+    }
+    ctx.patch(Shop, "buyItemOnClick").after(function (x, purchase, confirmed) {
+      if (purchase.id === "smattyBosses:enhanceCore") {
+        if (confirmed) {
+          giveCoreHP(ctx, game);
+        }
+      } else if (purchase.id === "smattyBosses:enhanceCore2") {
+        if (confirmed) {
+          giveCoreHP(ctx, game);
+        }
+      }
+    });
+  } catch (error) {
+    console.error("Error adding enhance core purchases:", error);
+  }
+}
+
+// Harden Core increases the physical and magical defence of the player's shield by 2.
+function addHardenCorePurchases(ctx) {
+  try {
+    function generateDescription(title, description, extra) {
+      return `
+        <div class="upgrade-card" data-upgrade="HardenCore">
+          <div class="upgrade-effect">
+            <h4 class="effect-title">${title}</h4>
+            <p class="effect-description">${description}</p>
+            <p class="current-upgrade-level-text">${extra}</p>
+          </div>
+        </div>
+      `;
+    }
+    const HardenCore1 = ctx.gameData.buildPackage((p) => {
+      p.shopPurchases.add({
+        id: "HardenCore",
+        media:
+          "https://cdn2-main.melvor.net/assets/media/skills/defence/defence.png",
+        category: "smattyBosses:SkillingBossesBuildings",
+        contains: {
+          items: [],
+          modifiers: {},
+        },
+        cost: {
+          gp: {
+            type: "Fixed",
+            cost: 10000,
+          },
+          slayerCoins: {
+            type: "Fixed",
+            cost: 0,
+          },
+          items: [
+            { id: "melvorD:Steel_Platebody", quantity: 25 },
+            { id: "melvorF:Leather_Body", quantity: 50 },
+          ],
+          raidCoins: {
+            type: "Fixed",
+            cost: 0,
+          },
+        },
+        allowQuantityPurchase: false,
+        unlockRequirements: [
+          {
+            type: "ShopPurchase",
+            purchaseID: "smattyBosses:repairShop",
+            count: 1,
+          },
+        ],
+        purchaseRequirements: [],
+        defaultBuyLimit: 1,
+        buyLimitOverrides: [],
+        showBuyLimit: false,
+        customName: "Harden Core I",
+        customDescription: generateDescription(
+          "Harden Core I",
+          "Increase your core's physical and magical defence by +2.",
+          ""
+        ),
+      });
+    });
+    HardenCore1.add();
+    const HardenCore2 = ctx.gameData.buildPackage((p) => {
+      p.shopPurchases.add({
+        id: "HardenCore2",
+        media:
+          "https://cdn2-main.melvor.net/assets/media/skills/defence/defence.png",
+        category: "smattyBosses:SkillingBossesBuildings",
+        contains: {
+          items: [],
+          modifiers: {},
+        },
+        cost: {
+          gp: {
+            type: "Fixed",
+            cost: 20000,
+          },
+          slayerCoins: {
+            type: "Fixed",
+            cost: 0,
+          },
+          items: [
+            { id: "melvorD:Mithril_Platebody", quantity: 50 },
+            { id: "melvorF:Hard_Leather_Body", quantity: 100 },
+          ],
+          raidCoins: {
+            type: "Fixed",
+            cost: 0,
+          },
+        },
+        allowQuantityPurchase: false,
+        unlockRequirements: [
+          {
+            type: "ShopPurchase",
+            purchaseID: "smattyBosses:shieldSmith2",
+            count: 1,
+          },
+          {
+            type: "ShopPurchase",
+            purchaseID: "smattyBosses:HardenCore",
+            count: 1,
+          },
+        ],
+        purchaseRequirements: [],
+        defaultBuyLimit: 1,
+        buyLimitOverrides: [],
+        showBuyLimit: false,
+        customName: "Harden Core II",
+        customDescription: generateDescription(
+          "Harden Core II",
+          "Increase your core's physical and magical defence by +2.",
+          ""
+        ),
+      });
+    });
+    HardenCore2.add();
+    function giveCoreDefence(ctx, game) {
+      game.skillingBosses.playerPhysicalResistance += 2;
+      game.skillingBosses.playerMagicResistance += 2;
+      ctx.characterStorage.setItem(
+        "PcPD",
+        game.skillingBosses.playerPhysicalResistance
+      );
+      ctx.characterStorage.setItem(
+        "PccMD",
+        game.skillingBosses.playerMagicResistance
+      );
+      game.skillingBosses.needsCombatStatsUIUpdate = true;
+      game.skillingBosses.needsPlayerHealthBarUpdate = true;
+      game.skillingBosses.updateUIIfNeeded();
+    }
+    ctx.patch(Shop, "buyItemOnClick").after(function (x, purchase, confirmed) {
+      if (purchase.id === "smattyBosses:HardenCore") {
+        if (confirmed) {
+          giveCoreDefence(ctx, game);
+        }
+      } else if (purchase.id === "smattyBosses:HardenCore2") {
+        if (confirmed) {
+          giveCoreDefence(ctx, game);
+        }
+      }
+    });
+  } catch (error) {
+    console.error("Error adding harden shield purchases:", error);
   }
 }

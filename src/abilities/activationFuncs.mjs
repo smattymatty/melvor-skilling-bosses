@@ -35,6 +35,30 @@ export function updateModifierCache(game) {
     "smattyBosses:wellFed",
     getModifierValue(game, "smattyBosses:wellFed")
   );
+  modifierCache.set(
+    "smattyBosses:shieldCharger",
+    getModifierValue(game, "smattyBosses:shieldCharger")
+  );
+  modifierCache.set(
+    "smattyBosses:ingotRoller",
+    getModifierValue(game, "smattyBosses:ingotRoller")
+  );
+  modifierCache.set(
+    "smattyBosses:leatherRoller",
+    getModifierValue(game, "smattyBosses:leatherRoller")
+  );
+  modifierCache.set(
+    "smattyBosses:arrowRoller",
+    getModifierValue(game, "smattyBosses:arrowRoller")
+  );
+  modifierCache.set(
+    "smattyBosses:moneyRoller",
+    getModifierValue(game, "smattyBosses:moneyRoller")
+  );
+  modifierCache.set(
+    "smattyBosses:speedRoller",
+    getModifierValue(game, "smattyBosses:speedRoller")
+  );
   game.skillingBosses.modCache = modifierCache;
 }
 
@@ -45,13 +69,19 @@ const skillRollerMap = {
   "melvorD:Firemaking": "smattyBosses:flameRoller",
   "melvorD:Cooking": "smattyBosses:spiceRoller",
   "melvorD:Herblore": "smattyBosses:toxinRoller",
+  "melvorD:Smithing": "smattyBosses:ingotRoller",
+  "melvorD:Crafting": "smattyBosses:leatherRoller",
+  "melvorD:Fletching": "smattyBosses:arrowRoller",
+  "melvorD:Thieving": "smattyBosses:moneyRoller",
+  "melvorD:Agility": "smattyBosses:speedRoller",
 };
 
 export function dealSkillLevelAsDamage(
   ability,
   game,
   multiplier = 1.0,
-  flatBonus = 0
+  flatBonus = 0,
+  updateUI = true
 ) {
   try {
     game.skillingBosses.lastSkillExtraText = [];
@@ -101,7 +131,9 @@ export function dealSkillLevelAsDamage(
     checkDebuffOnDamage(game, ability, finalDamage);
     // update info for the UI
     game.skillingBosses.lastSkillDamageDealt = finalDamage;
-    game.skillingBosses.updateLastAttackInfoUI();
+    if (updateUI) {
+      game.skillingBosses.updateLastAttackInfoUI();
+    }
   } catch (error) {
     console.error("Error dealing skill level as damage:", error);
   }
@@ -155,16 +187,55 @@ export function getModifierValue(game, modifierID) {
 
 function checkDebuffOnDamage(game, ability, initialDamage) {
   checkRefinementRollers(game, ability, initialDamage);
+  checkArtisanRollers(game, ability, initialDamage);
+  checkShiftyRollers(game, ability, initialDamage);
 }
 
-function checkRefinementRollers(game, ability, initialDamage) {
+function checkShiftyRollers(game, ability, initialDamage) {
+  const validSkills = ["melvorD:Thieving", "melvorD:Agility"];
+  if (!validSkills.includes(ability.skill)) {
+    return;
+  }
   const rollerModifier = skillRollerMap[ability.skill];
   if (rollerModifier) {
     const rollerValue = game.skillingBosses.modCache.get(rollerModifier);
     if (rollerValue > 0) {
-      const randomChance = Math.random() * 100; // Random number between 0 and 100
+      const randomChance = Math.random() * 100;
       if (randomChance <= rollerValue) {
-        // The effect is triggered
+        switch (ability.skill) {
+          case "melvorD:Thieving":
+            gainUpToGoldAndDealThatMuchDamage(
+              ability,
+              game,
+              game.thieving.level / 6,
+              1,
+              0
+            );
+            break;
+          case "melvorD:Agility":
+            addTimeToBossAttackTimer(ability, game, 1);
+            break;
+        }
+      }
+    }
+  }
+}
+
+function checkRefinementRollers(game, ability, initialDamage) {
+  const validSkills = [
+    "melvorD:Firemaking",
+    "melvorD:Cooking",
+    "melvorD:Herblore",
+  ];
+  if (!validSkills.includes(ability.skill)) {
+    return;
+  }
+  const rollerModifier = skillRollerMap[ability.skill];
+  if (rollerModifier) {
+    const rollerValue = game.skillingBosses.modCache.get(rollerModifier);
+    if (rollerValue > 0) {
+      const randomChance = Math.random() * 100;
+      if (randomChance <= rollerValue) {
         switch (ability.skill) {
           case "melvorD:Firemaking":
             applyBurnEffect(game, ability, initialDamage, 4);
@@ -181,6 +252,37 @@ function checkRefinementRollers(game, ability, initialDamage) {
   }
 }
 
+function checkArtisanRollers(game, ability, initialDamage) {
+  const validSkills = [
+    "melvorD:Fletching",
+    "melvorD:Smithing",
+    "melvorD:Crafting",
+  ];
+  if (!validSkills.includes(ability.skill)) {
+    return;
+  }
+  const rollerModifier = skillRollerMap[ability.skill];
+  if (rollerModifier) {
+    const rollerValue = game.skillingBosses.modCache.get(rollerModifier);
+    if (rollerValue > 0) {
+      const randomChance = Math.random() * 100;
+      if (randomChance <= rollerValue) {
+        switch (ability.skill) {
+          case "melvorD:Fletching":
+            applyStuckArrowEffect(game, ability, initialDamage, 6, 0.1);
+            break;
+          case "melvorD:Smithing":
+            dealDamagePerShield(ability, game, 0.5, 5);
+            break;
+          case "melvorD:Crafting":
+            dealDamagePerShield(ability, game, 0.5, 5);
+            break;
+        }
+      }
+    }
+  }
+}
+
 export function applyBurnEffect(
   game,
   ability,
@@ -189,6 +291,9 @@ export function applyBurnEffect(
   burnDamagePercent = 0.02
 ) {
   const burnDamagePerTick = Math.floor(initialDamage * burnDamagePercent);
+  if (burnDamagePerTick <= 0) {
+    burnDamagePerTick = 1;
+  }
   const totalBurnDamage = burnDamagePerTick * burnDuration;
 
   game.skillingBosses.applyEffectToBoss(
@@ -203,7 +308,7 @@ export function applyBurnEffect(
   game.skillingBosses.updateLastAttackInfoUI();
 }
 
-export function applySpicedEffect(game, ability, spiceDuration = 16) {
+export function applySpicedEffect(game, ability, spiceDuration = 12) {
   game.skillingBosses.applyEffectToBoss("spice", spiceDuration, 0, 0);
   game.skillingBosses.lastSkillExtraText.push(
     `applied a spice for ${spiceDuration} ticks`
@@ -219,6 +324,9 @@ export function applyPoisonEffect(
   toxinDamagePercent = 0.02
 ) {
   const toxinDamagePerTick = Math.floor(initialDamage * toxinDamagePercent);
+  if (toxinDamagePerTick <= 0) {
+    toxinDamagePerTick = 1;
+  }
   const totalToxinDamage = toxinDamagePerTick * toxinDuration;
 
   game.skillingBosses.applyEffectToBoss(
@@ -234,4 +342,302 @@ export function applyPoisonEffect(
     )} damage per tick for ${toxinDuration} ticks`
   );
   game.skillingBosses.updateLastAttackInfoUI();
+}
+
+export function applyBleedEffect(
+  game,
+  ability,
+  initialDamage,
+  bleedDuration = 8,
+  bleedDamagePercent = 0.02
+) {
+  const bleedDamagePerTick = Math.max(
+    1,
+    Math.floor(initialDamage * bleedDamagePercent)
+  );
+
+  const totalBleedDamage = bleedDamagePerTick * bleedDuration;
+
+  game.skillingBosses.applyEffectToBoss(
+    "bleed",
+    bleedDuration,
+    bleedDamagePerTick,
+    totalBleedDamage
+  );
+  game.skillingBosses.lastSkillExtraText.push(
+    `applied a bleed of ${bleedDamagePerTick} damage per tick for ${bleedDuration} ticks`
+  );
+  game.skillingBosses.updateLastAttackInfoUI();
+}
+
+export function applyStuckArrowEffect(
+  game,
+  ability,
+  initialDamage,
+  stuckArrowDuration = 6,
+  stuckArrowDamagePercent = 0.08
+) {
+  // arrows deal damage on removal
+  const stuckArrowDamagePerTick = Math.max(
+    1,
+    Math.floor(initialDamage * stuckArrowDamagePercent)
+  );
+
+  game.skillingBosses.applyEffectToBoss(
+    "stuckArrow",
+    stuckArrowDuration,
+    stuckArrowDamagePerTick,
+    stuckArrowDamagePerTick
+  );
+  game.skillingBosses.lastSkillExtraText.push(
+    `applied a stuck arrow of ${stuckArrowDamagePerTick} damage for ${stuckArrowDuration} ticks`
+  );
+  game.skillingBosses.updateLastAttackInfoUI();
+}
+
+export function applyArmorReductionEffect(
+  game,
+  ability,
+  duration,
+  reductionPercent
+) {
+  for (let i = 0; i < game.skillingBosses.bossCurrentDebuffs.length; i++) {
+    if (game.skillingBosses.bossCurrentDebuffs[i][0] === "armorReduction") {
+      // increase the duration of the existing effect
+      game.skillingBosses.bossCurrentDebuffs[i][1] = duration;
+      game.skillingBosses.bossCurrentDebuffs[i][2] = reductionPercent;
+      game.skillingBosses.needsBossEffectsUIUpdate = true;
+      game.skillingBosses.updateUIIfNeeded();
+      return;
+    }
+  }
+  game.skillingBosses.applyEffectToBoss(
+    "armorReduction",
+    duration,
+    reductionPercent,
+    0
+  );
+  game.skillingBosses.ExtraPlayerStats.physicalResistReduced +=
+    reductionPercent;
+  game.skillingBosses.ctx.characterStorage.setItem(
+    "physicalResistReduced",
+    game.skillingBosses.ExtraPlayerStats.physicalResistReduced
+  );
+
+  game.skillingBosses.lastSkillExtraText.push(
+    `reduced the armor of the target by ${reductionPercent}% for ${duration} ticks`
+  );
+  game.skillingBosses.updateLastAttackInfoUI();
+}
+
+export function applyMagicResistReductionEffect(
+  game,
+  ability,
+  duration,
+  reductionPercent
+) {
+  for (let i = 0; i < game.skillingBosses.bossCurrentDebuffs.length; i++) {
+    if (
+      game.skillingBosses.bossCurrentDebuffs[i][0] === "magicResistReduction"
+    ) {
+      // increase the duration of the existing effect
+      game.skillingBosses.bossCurrentDebuffs[i][1] = duration;
+      game.skillingBosses.bossCurrentDebuffs[i][2] = reductionPercent;
+      game.skillingBosses.needsBossEffectsUIUpdate = true;
+      game.skillingBosses.updateUIIfNeeded();
+      return;
+    }
+  }
+  game.skillingBosses.applyEffectToBoss("magicResistReduction", duration);
+  game.skillingBosses.ExtraPlayerStats.magicResistReduced += reductionPercent;
+  game.skillingBosses.ctx.characterStorage.setItem(
+    "magicResistReduced",
+    game.skillingBosses.ExtraPlayerStats.magicResistReduced
+  );
+  game.skillingBosses.applyEffectToBoss(
+    "magicResistReduction",
+    duration,
+    reductionPercent,
+    0
+  );
+
+  game.skillingBosses.lastSkillExtraText.push(
+    `reduced the magic resist of the target by ${reductionPercent}% for ${duration} ticks`
+  );
+  game.skillingBosses.updateLastAttackInfoUI();
+}
+
+export function chanceToStun(game, ability, chance, duration) {
+  const roll = Math.random();
+
+  if (roll <= chance) {
+    stunBoss(game, ability, duration);
+  }
+}
+
+export function chanceToBleed(
+  game,
+  ability,
+  chance,
+  duration,
+  bleedPercent = 0.02
+) {
+  const roll = Math.random();
+
+  if (roll <= chance) {
+    applyBleedEffect(
+      game,
+      ability,
+      game.skillingBosses.lastSkillDamageDealt,
+      duration,
+      bleedPercent
+    );
+    return true;
+  }
+  return false;
+}
+
+export function stunBoss(game, ability, stunDuration) {
+  if (game.skillingBosses.bossStunDuration <= 0) {
+    // apply stun normally
+    game.skillingBosses.bossStunDuration += stunDuration;
+  } else if (game.skillingBosses.bossStunDuration > stunDuration) {
+    return;
+  } else if (game.skillingBosses.bossStunDuration < stunDuration) {
+    // Replace with this stun
+    game.skillingBosses.bossStunDuration = stunDuration;
+  }
+  game.skillingBosses.lastSkillExtraText.push(
+    `applied a stun for ${stunDuration} ticks`
+  );
+  game.skillingBosses.bossAttackNeedsUIUpdate = true;
+  game.skillingBosses.updateUIIfNeeded();
+  game.skillingBosses.updateLastAttackInfoUI();
+}
+
+export function gainShield(ability, game, amount) {
+  game.skillingBosses.restoreShield(amount, "player");
+  game.skillingBosses.needsCombatStatsUIUpdate = true;
+  game.skillingBosses.updateUIIfNeeded();
+}
+
+export function dealDamageMultipleTimesAndChanceToBleed(
+  ability,
+  game,
+  damageMulti,
+  hitAmount,
+  chance,
+  duration,
+  bleedPercent = 0.02
+) {
+  let totalDamage = 0;
+  let bleedsApplied = 0;
+  for (let i = 0; i < hitAmount; i++) {
+    dealSkillLevelAsDamage(ability, game, damageMulti, 0, false);
+    totalDamage += game.skillingBosses.lastSkillDamageDealt;
+    if (chanceToBleed(game, ability, chance, duration, bleedPercent)) {
+      bleedsApplied++;
+    }
+  }
+  game.skillingBosses.lastSkillDamageDealt = totalDamage;
+  game.skillingBosses.lastSkillExtraText.push(
+    `applied a total of ${bleedsApplied} bleed effect(s)`
+  );
+  game.skillingBosses.updateLastAttackInfoUI();
+}
+
+export function multiAttack(
+  ability,
+  game,
+  hits,
+  damageMultiplier = 1,
+  flatBonus = 0
+) {
+  let totalDamage = 0;
+  for (let i = 0; i < hits; i++) {
+    dealSkillLevelAsDamage(ability, game, damageMultiplier, flatBonus);
+    totalDamage += game.skillingBosses.lastSkillDamageDealt;
+  }
+  game.skillingBosses.lastSkillDamageDealt = totalDamage;
+  game.skillingBosses.updateLastAttackInfoUI();
+}
+
+export function attackWithChanceToGainGoldAndDealThatMuchDamage(
+  ability,
+  game,
+  goldGain,
+  damageMultiplier = 1,
+  flatBonus = 0
+) {
+  let totalDamage = 0;
+  dealSkillLevelAsDamage(ability, game, damageMultiplier, flatBonus);
+  totalDamage += game.skillingBosses.lastSkillDamageDealt;
+  const roll = Math.random();
+  const goldGained = Math.floor(goldGain * roll);
+  if (goldGained > 0) {
+    game.gp.add(goldGained);
+    game.skillingBosses.takeDamage(goldGained, "boss");
+    totalDamage += goldGained;
+  }
+  game.skillingBosses.lastSkillDamageDealt = totalDamage;
+  game.skillingBosses.updateLastAttackInfoUI();
+}
+
+export function gainUpToGoldAndDealThatMuchDamage(
+  ability,
+  game,
+  maxGold,
+  damageMultiplier = 1,
+  flatBonus = 0
+) {
+  const roll = Math.random();
+  const goldGained = Math.floor(maxGold * roll);
+  if (goldGained > 0) {
+    game.gp.add(goldGained);
+    game.skillingBosses.takeDamage(
+      goldGained * damageMultiplier + flatBonus,
+      "boss"
+    );
+  }
+}
+
+export function attackWithFlatBonusPerDebuff(
+  ability,
+  game,
+  bonusPerDebuff,
+  damageMultiplier = 1,
+  flatBonus = 0
+) {
+  let totalDebuffs = 0;
+  for (let i = 0; i < game.skillingBosses.bossCurrentDebuffs.length; i++) {
+    totalDebuffs++;
+  }
+  const totalExtraDamage = totalDebuffs * bonusPerDebuff;
+  dealSkillLevelAsDamage(
+    ability,
+    game,
+    damageMultiplier,
+    flatBonus + totalExtraDamage
+  );
+}
+
+export function dealDamagePerShield(
+  ability,
+  game,
+  damageMultiplier = 1,
+  minDamage = 5
+) {
+  const shield = game.skillingBosses.playerShield;
+  const damage = Math.floor(shield * damageMultiplier);
+  if (damage > minDamage) {
+    game.skillingBosses.takeDamage(damage, "boss");
+  } else {
+    game.skillingBosses.takeDamage(minDamage, "boss");
+  }
+}
+
+export function addTimeToBossAttackTimer(ability, game, duration) {
+  game.skillingBosses.bossAttackTimer += duration;
+  game.skillingBosses.bossAttackNeedsUIUpdate = true;
+  game.skillingBosses.updateUIIfNeeded();
 }

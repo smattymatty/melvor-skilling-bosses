@@ -14,7 +14,7 @@ function addShopCategory(ctx) {
   const skillingBossesRefining = ctx.gameData.buildPackage((p) => {
     p.shopCategories.add({
       id: "SkillingBossesRefining",
-      name: "Upgrades - Refining",
+      name: "Refining",
       media: "assets/items/souls/refiner-soul.svg",
     });
   });

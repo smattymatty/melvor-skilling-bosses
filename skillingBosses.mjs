@@ -1,6 +1,7 @@
 const { loadModule } = mod.getContext(import.meta);
 
 const battlesUIModule = await loadModule("src/ui/battle.mjs");
+const questUIModule = await loadModule("src/ui/quest.mjs");
 const inventoryUIModule = await loadModule("src/ui/inventory.mjs");
 const activationFuncs = await loadModule("src/abilities/activationFuncs.mjs");
 
@@ -17,6 +18,10 @@ export class SkillingBosses {
     this.activeQuests = new Set();
     this.completedQuests = new Set();
     this.currentMainQuest = null;
+    this.beginnerQuestsCompleted = []; // array of beginner quest IDs
+    this.beginnerQuests = new Map();
+    this.averageQuests = new Map();
+    this.averageQuestsCompleted = []; // array of average quest IDs
     // Abilities
     this.abilities = new Map();
     this.activeAbilitySlot = null;
@@ -25,8 +30,19 @@ export class SkillingBosses {
     this.lastSkillDamageDealt = 0;
     this.lastSkillExtraText = []; // array of strings
     // Battle-related properties
+    this.pauseBattleTicks = 0; // pauses the battle for a certain amount of ticks
     this.playerCoreHP = 100;
     this.playerCoreMaxHP = 100;
+    this.playerHPRegen = [0.1, 1]; // [regenChance, regenAmount]
+    this.playerShield = 50;
+    this.playerShieldMax = 50;
+    this.playerShieldRegen = [0.1, 1]; // [regenChance, regenAmount]
+    this.playerPhysicalResistance = 10;
+    this.playerMagicResistance = 10;
+    this.playerShieldLost = 0;
+    this.playerHPLost = 0;
+    this.playerShieldGained = 0;
+    this.playerHPGained = 0;
     this.activeBoss = null;
     this.bossCurrHP = null;
     this.bossMaxHP = null;
@@ -39,6 +55,7 @@ export class SkillingBosses {
     this.currentBattleBossDamageReduced = 0;
     this.currentBattleDebuffDamageDealt = 0;
     this.lastAbilityTickText = "";
+    this.bossAbilitiesUsed = 0;
     // for offline processing
     this.lastTickTime = Date.now();
     this.skippedTicks = 0;
@@ -51,9 +68,15 @@ export class SkillingBosses {
     this.lastLootDrop = null;
     // effects
     this.effects = new Map();
+    this.bossStatChanges = []; // [[stat, change, duration], ...]
     // Format: [effectId, remainingDuration, damagePerTick, totalDamage]
     this.bossCurrentBuffs = new Array(); // [[id, duration, damage, totalDamage], [id, duration, damage, totalDamage], ...]
     this.bossCurrentDebuffs = new Array(); // [[id, duration, stacks, damage, totalDamage], [id, duration, stacks, damage, totalDamage], ...]
+    this.currentlyTrainingSkill = null;
+    this.bossStunDuration = 0; // if above 1, attacks won't tick and this will decrement
+    // extra, for quest tracking
+    this.ExtraPlayerStats = new ExtraPlayerStats();
+    this.abilitySkillsThisBattle = [];
   }
   addEffect(effect) {
     this.effects.set(effect.id, effect);
@@ -67,6 +90,30 @@ export class SkillingBosses {
     this.bosses.set(boss.id, boss);
   }
 
+  addBossStatChange(stat, change, duration) {
+    this.bossStatChanges.push([stat, change, duration]);
+    this.ctx.characterStorage.setItem("BstC", this.bossStatChanges);
+  }
+
+  removeBossStatChange(stat, change) {
+    // removes the first stat change that matches the stat and change and also has a duration of 0
+    const index = this.bossStatChanges.findIndex(
+      (statChange) =>
+        statChange[0] === stat &&
+        statChange[1] === change &&
+        statChange[2] === 0
+    );
+
+    if (index !== -1) {
+      this.bossStatChanges.splice(index, 1);
+      this.ctx.characterStorage.setItem("BstC", this.bossStatChanges);
+    } else {
+      console.warn(
+        `No stat change found for stat ${stat} and change ${change}`
+      );
+    }
+  }
+
   setActiveBoss(bossId) {
     this.activeBoss = this.bosses.get(bossId);
     // reset the global battle stats
@@ -75,11 +122,21 @@ export class SkillingBosses {
     this.currentBattleTicks = 0;
     this.currentBattleAbilitiesUsed = 0;
     this.currentBattleDamageDealt = 0;
+    this.currentBattleBossDamageDamageDealt = 0;
     this.currentBattleBossHealed = 0;
     this.currentBattleBossDamageReduced = 0;
     this.currentBattleDebuffDamageDealt = 0;
     this.lastSkillDamageDealt = 0;
+    this.bossAbilitiesUsed = 0;
     this.clearEffects();
+    this.ctx.characterStorage.setItem("AcBss", this.activeBoss.id);
+    // reset player ability
+    this.activeAbilitySlot = 0;
+    this.activeAbilityTimer = this.equippedAbilities[0].cooldown;
+    this.ctx.characterStorage.setItem("Aslt", this.activeAbilitySlot);
+    this.ctx.characterStorage.setItem("Acat", this.activeAbilityTimer);
+    this.abilitySkillsThisBattle = [];
+    this.ctx.characterStorage.setItem("AsTb", this.abilitySkillsThisBattle);
     // check modifiers for stat changes
     const duckDefence = activationFuncs.getModifierValue(
       this.game,
@@ -98,6 +155,7 @@ export class SkillingBosses {
     this.needsCombatStatsUIUpdate = true;
     this.needsAbilityUIUpdate = true;
     this.needsBossEffectsUIUpdate = true;
+    this.bossAttackNeedsUIUpdate = true;
     this.updateUIIfNeeded();
   }
 
@@ -111,6 +169,11 @@ export class SkillingBosses {
     if (effect) {
       const effectData = [effectId, duration, damagePerTick, totalDamage];
       this.bossCurrentDebuffs.push(effectData);
+      this.ExtraPlayerStats.debuffsApplied++;
+      this.ctx.characterStorage.setItem(
+        "debuffsApplied",
+        this.ExtraPlayerStats.debuffsApplied
+      );
       effect.activationFunc(this.activeBoss, effectData);
     }
     this.needsBossEffectsUIUpdate = true;
@@ -119,22 +182,31 @@ export class SkillingBosses {
   }
 
   tickEffects() {
-    for (let i = this.bossCurrentDebuffs.length - 1; i >= 0; i--) {
-      const [effectId, duration, damagePerTick, totalDamage] =
-        this.bossCurrentDebuffs[i];
+    const effectsToRemove = [];
+
+    this.bossCurrentDebuffs.forEach((effectData, index) => {
+      const [effectId, duration] = effectData;
       const effect = this.effects.get(effectId);
 
       if (effect) {
-        effect.tickFunc(this.activeBoss, this.bossCurrentDebuffs[i]);
-        this.bossCurrentDebuffs[i][1]--; // Decrease duration
-        this.needsBossEffectsUIUpdate = true; // Effect tick may affect combat stats
+        if (effect.tickEvent === "onTick") {
+          effect.tickFunc(this.activeBoss, effectData);
+        }
+        effectData[1]--; // Decrease duration
 
-        if (this.bossCurrentDebuffs[i][1] <= 0) {
-          effect.clearFunc(this.activeBoss, this.bossCurrentDebuffs[i]);
-          this.bossCurrentDebuffs.splice(i, 1);
+        if (effectData[1] <= 0) {
+          effect.clearFunc(this.activeBoss, effectData);
+          effectsToRemove.push(index);
+        } else {
+          this.needsBossEffectsUIUpdate = true; // Effect tick may affect combat stats
         }
       }
+    });
+    // Remove effects after iteration to avoid modifying the array during iteration
+    for (let i = effectsToRemove.length - 1; i >= 0; i--) {
+      this.bossCurrentDebuffs.splice(effectsToRemove[i], 1);
     }
+    this.ctx.characterStorage.setItem("BsDb", this.bossCurrentDebuffs);
     this.updateUIIfNeeded();
   }
 
@@ -155,6 +227,25 @@ export class SkillingBosses {
     } else {
       this.quests.set(quest.name, quest);
     }
+  }
+
+  addSideQuest(quest) {
+    if (quest.category === "beginner") {
+      this.beginnerQuests.set(quest.id, quest);
+    } else if (quest.category === "average") {
+      this.averageQuests.set(quest.id, quest);
+    }
+  }
+
+  completeSideQuest(questID, type) {
+    if (type === "beginner") {
+      this.beginnerQuestsCompleted.push(questID);
+      this.ctx.characterStorage.setItem("BQc", this.beginnerQuestsCompleted);
+    } else if (type === "average") {
+      this.averageQuestsCompleted.push(questID);
+      this.ctx.characterStorage.setItem("AQc", this.averageQuestsCompleted);
+    }
+    this.updateUIIfNeeded();
   }
 
   startQuest(questName) {
@@ -221,17 +312,14 @@ export class SkillingBosses {
     this.ctx.characterStorage.setItem("ASlt", this.activeAbilitySlot);
   }
   // Methods for managing battles
-  useAbility(slotIndex) {
-    const ability = this.equippedAbilities[slotIndex];
-    // TODO: implement ability activation
-  }
+
   startBattle() {
     try {
       const boss = this.activeBoss;
+      this.resetPlayerDefensiveTrackers();
       // setActiveBoss makes sure the stats are reset (hp, buffs, etc )
       this.setActiveBoss(this.activeBoss.id);
       if (boss && this.playerCoreHP > 0) {
-        this.setActiveBoss(this.activeBoss.id);
         // Initialize ability activation
         for (let i = 0; i < this.equippedAbilities.length; i++) {
           const ability = this.equippedAbilities[i];
@@ -248,6 +336,12 @@ export class SkillingBosses {
         // Initialize boss attack timer and index
         this.bossAttackTimer = boss.attacks[0].cooldown;
         this.bossNextAttackIndex = 0;
+        // Regenerate Player Shield
+        this.restoreShield(this.playerShieldMax * 10, "player", true);
+        this.playerShieldGained = 0;
+        this.playerHPGained = 0;
+        this.ctx.characterStorage.setItem("PhG", this.playerHPGained);
+        this.ctx.characterStorage.setItem("PshG", this.playerShieldGained);
         // cache players modifiers
         activationFuncs.updateModifierCache(this.game);
         battlesUIModule.updateCurrentCombatStatsUI();
@@ -262,59 +356,104 @@ export class SkillingBosses {
   }
 
   tickBattle() {
-    // return early if certain conditions are not met
+    if (this.activeBoss === null) {
+      console.warn("Active boss is null, cannot tick battle");
+      return;
+    }
     if (this.currentBattleTicks === null) {
       console.warn("BattleTicks is null!");
-      // if battle ticks exist in the storage, use that
-      if (this.ctx.characterStorage.getItem("Crbt") !== null) {
-        this.currentBattleTicks = this.ctx.characterStorage.getItem("Crbt");
-        // if they do not exist, and there is currently a boss, start at 0
-      } else if (this.activeBoss !== null) {
-        // failsafe
-        console.warn(
-          "BattleTicks is null! no active boss, and no stored battle ticks"
-        );
-        this.currentBattleTicks = 0;
-      } else {
-        console.warn(
-          "BattleTicks is null! no active boss, and no stored battle ticks"
-        );
-      }
+      // Try to retrieve from storage or initialize to 0
+      this.currentBattleTicks = this.ctx.characterStorage.getItem("Crbt") || 0;
     }
     this.currentBattleTicks++;
 
-    // Tick abilities
+    // Tick abilities if timer is active
     if (this.activeAbilityTimer !== null) {
       this.tickAbility();
     }
 
-    // Check for regen
+    // Check for regeneration
+    let regenOccurred = false;
     if (this.checkforRegen("boss")) {
       this.needsCombatStatsUIUpdate = true;
+      regenOccurred = true;
+    }
+    if (this.checkforRegen("player")) {
+      this.needsCombatStatsUIUpdate = true;
+      regenOccurred = true;
     }
 
+    // Only update UI if regeneration occurred
+    if (regenOccurred) {
+      this.updateUIIfNeeded();
+    }
+
+    // Tick effects
     this.tickEffects();
 
     // Check for win/loss conditions
     if (this.playerCoreHP <= 0) {
       this.endBattle("loss");
+      return; // Exit early since battle has ended
     } else if (this.bossCurrHP <= 0) {
       this.endBattle("win");
+      return; // Exit early since battle has ended
     }
-    // boss attack handling
-    if (this.bossAttackTimer === null) {
-      this.bossAttackTimer = this.boss.attacks[0].cooldown;
+
+    // Initialize boss attack if not set
+    if (!this.bossNextAttack) {
+      this.bossNextAttack = this.activeBoss.attacks[0];
+      this.bossAttackTimer = this.bossNextAttack.cooldown;
     }
-    // TODO check for stun effects
-    this.bossAttackTimer--;
-    console.log("Boss attack timer:", this);
+    if (this.bossStunDuration <= 0) {
+      // Decrement boss attack timer
+      this.bossAttackTimer--;
+    } else if (this.bossStunDuration > 0) {
+      this.bossStunDuration--;
+    }
+    this.ctx.characterStorage.setItem("Bat", this.bossAttackTimer);
+    this.ctx.characterStorage.setItem("Bna", this.bossNextAttackIndex);
+    this.bossAttackNeedsUIUpdate = true;
+    let nextAttack = this.getBossAttack();
+    if (nextAttack === null) {
+      // default to the first attack
+      nextAttack = this.activeBoss.attacks[0];
+      this.bossAttackTimer = nextAttack.cooldown;
+    } // Execute boss attack when timer reaches zero
     if (this.bossAttackTimer <= 0) {
+      if (nextAttack) {
+        this.executeBossAttack(nextAttack);
+        this.updateBossAttack();
+      }
+    } else {
+    }
+    this.bossAttackNeedsUIUpdate = true;
+    // Update UI if needed
+    this.updateUIIfNeeded();
   }
+
   activateCurrentAbility() {
     const ability = this.equippedAbilities[this.activeAbilitySlot];
     if (ability) {
       ability.activate(game);
+      // if the ability isn't already in the array, add it
+      if (!this.abilitySkillsThisBattle.includes(ability.skill)) {
+        this.abilitySkillsThisBattle.push(ability.skill);
+        this.ctx.characterStorage.setItem("AsTb", this.abilitySkillsThisBattle);
+      }
       battlesUIModule.updateCurrentCombatStatsUI();
+      // check if its the third ability slot
+      if (this.activeAbilitySlot === 2) {
+        // check if the player has the shield charger upgrade
+        const shieldChargerValue = this.modCache.get(
+          "smattyBosses:shieldCharger"
+        );
+        if (shieldChargerValue > 0) {
+          this.restoreShield(shieldChargerValue, "player");
+          this.needsCombatStatsUIUpdate = true;
+          this.updateUIIfNeeded();
+        }
+      }
     } else {
       console.warn(`No ability equipped in slot ${this.activeAbilitySlot}`);
     }
@@ -341,17 +480,33 @@ export class SkillingBosses {
     }
     if (this.needsCombatStatsUIUpdate) {
       battlesUIModule.updateCurrentCombatStatsUI();
+      battlesUIModule.updateCurrentCombatPlayerDefenseStatsUI();
       this.needsCombatStatsUIUpdate = false;
+    }
+    if (this.needsPlayerHealthBarUpdate) {
+      battlesUIModule.updatePlayerHealthBar();
+      battlesUIModule.updatePlayerShieldBar();
+      battlesUIModule.updateBossOffensiveInfoUI();
+      this.needsPlayerHealthBarUpdate = false;
     }
     if (this.needsBossEffectsUIUpdate) {
       battlesUIModule.updateBossEffects();
       this.needsBossEffectsUIUpdate = false;
+    }
+    if (this.bossAttackNeedsUIUpdate) {
+      battlesUIModule.updateBossAttackUI();
+      battlesUIModule.updateBossOffensiveInfoUI();
+      this.bossAttackNeedsUIUpdate = false;
     }
     const playerSkillTickInfo = document.getElementById(
       "player-skill-tick-info"
     );
     if (playerSkillTickInfo) {
       playerSkillTickInfo.innerHTML = this.lastAbilityTickText;
+    }
+    if (this.needsQuestUIUpdate) {
+      questUIModule.buildQuests(this.ctx);
+      this.needsQuestUIUpdate = false;
     }
   }
 
@@ -388,87 +543,272 @@ export class SkillingBosses {
       this.advanceAbilitySlot();
     }
   }
-  executeBossAttack() {
-    const currentAttack = this.activeBoss.attacks[this.bossNextAttackIndex];
-    const damage = currentAttack.damage;
+  executeBossAttack(attack) {
+    let damage = this.activeBoss.attackPower * attack.damageModifier;
+    if (attack.type === "Magic") {
+      damage -= damage * (1 / this.playerMagicResistance);
+    } else if (attack.type === "Physical") {
+      damage -= damage * (1 / this.playerPhysicalResistance);
+    }
     this.takeDamage(damage, "player");
+    this.bossAbilitiesUsed++;
+    this.ctx.characterStorage.setItem("BaU", this.bossAbilitiesUsed);
+    this.needsQuestUIUpdate = true;
+    this.bossAttackNeedsUIUpdate = true;
   }
 
   updateBossAttack() {
-    this.bossNextAttackIndex =
-      (this.bossNextAttackIndex + 1) % this.activeBoss.attacks.length;
-    const nextAttack = this.activeBoss.attacks[this.bossNextAttackIndex];
-    this.bossAttackTimer = nextAttack.cooldown;
+    try {
+      if (this.activeBoss === null) {
+        console.warn("Active boss is null, cannot update boss attack");
+        return;
+      }
+      this.bossNextAttackIndex =
+        (this.bossNextAttackIndex + 1) % this.activeBoss.attacks.length;
+      if (
+        this.bossNextAttackIndex === null ||
+        this.bossNextAttackIndex > this.activeBoss.attacks.length
+      ) {
+        console.warn("Invalid boss attack index", this.bossNextAttackIndex);
+        throw new Error("Invalid boss attack index", this);
+      }
+      const nextAttack = this.activeBoss.attacks[this.bossNextAttackIndex];
+      this.bossAttackTimer = nextAttack.cooldown;
+      this.bossAttackNeedsUIUpdate = true;
+    } catch (error) {
+      console.error("Error updating boss attack:", error);
+      throw error;
+    }
+  }
+
+  pauseBattle(amount) {
+    this.pauseBattleTicks = amount;
+    this.ctx.characterStorage.setItem("Pbt", this.pauseBattleTicks);
   }
 
   takeDamage(amount, target, debuff = false) {
     amount = Math.floor(amount);
     amount = Math.max(1, amount);
     if (target === "player") {
-      this.playerCoreHP -= amount;
+      this.currentBattleBossDamageDamageDealt += amount;
+      this.ExtraPlayerStats.damageTaken += amount;
+      this.ctx.characterStorage.setItem(
+        "damageTaken",
+        this.ExtraPlayerStats.damageTaken
+      );
+      if (this.ExtraPlayerStats.highestDamageTaken < amount) {
+        this.ExtraPlayerStats.highestDamageTaken = amount;
+        this.ctx.characterStorage.setItem(
+          "highestDamageTaken",
+          this.ExtraPlayerStats.highestDamageTaken
+        );
+      }
+      if (this.playerShield > 0) {
+        if (this.playerShield >= amount) {
+          // Shield absorbs all the damage
+          this.playerShield -= amount;
+          this.playerShieldLost += amount;
+          this.showPlayerDamageIndicatorOnUI(amount, "shield");
+        } else {
+          // Shield is depleted; apply remaining damage to HP
+          const remainingDamage = amount - this.playerShield;
+          this.playerShieldLost += this.playerShield;
+          this.playerShield = 0;
+
+          // Apply remaining damage to HP
+          this.playerCoreHP -= remainingDamage;
+          this.playerHPLost += remainingDamage;
+          this.showPlayerDamageIndicatorOnUI(remainingDamage, "hp");
+        }
+      } else {
+        // No shield - damage applies directly to HP
+        this.playerCoreHP -= amount;
+        this.playerHPLost += amount;
+        this.showPlayerDamageIndicatorOnUI(amount, "hp");
+      }
+
+      // Update character storage and UI
+      this.ctx.characterStorage.setItem("Psh", this.playerShield);
+      this.ctx.characterStorage.setItem("PshL", this.playerShieldLost);
+      this.ctx.characterStorage.setItem("PcHP", this.playerCoreHP);
+      this.ctx.characterStorage.setItem("PhL", this.playerHPLost);
+
+      this.ctx.characterStorage.setItem("BctD", this.currentBattleDamageDealt);
+      this.needsCombatStatsUIUpdate = true;
+      this.needsPlayerHealthBarUpdate = true;
+
       if (this.playerCoreHP <= 0) {
         this.playerCoreHP = 0;
         this.endBattle("loss");
       }
     } else if (target === "boss") {
       this.bossCurrHP -= amount;
-      const bossHPContainer = document.querySelector(".boss-hp-bar");
-      if (bossHPContainer) {
-        const classOptions = [
-          "boss-damage-indicator",
-          "boss-damage-indicator-2",
-          "boss-damage-indicator-3",
-          "boss-damage-indicator-4",
-          "boss-damage-indicator-5",
-          "boss-damage-indicator-6",
-          "boss-damage-indicator-7",
-        ];
-        const chosenClass =
-          classOptions[Math.floor(Math.random() * classOptions.length)];
-        const damageIndicator = document.createElement("div");
-        damageIndicator.classList.add(chosenClass);
-        damageIndicator.classList.add("animate-damage-indicator");
-        damageIndicator.textContent = `-${amount}`;
-        bossHPContainer.appendChild(damageIndicator);
-        this.currentBattleDamageDealt += amount;
-        if (debuff) {
-          this.currentBattleDebuffDamageDealt += amount;
+      this.showBossDamageIndicatorOnUI(amount);
+      this.currentBattleDamageDealt += amount;
+      this.ExtraPlayerStats.damageDealt += amount;
+      this.ctx.characterStorage.setItem(
+        "damageDealt",
+        this.ExtraPlayerStats.damageDealt
+      );
+      if (this.ExtraPlayerStats.highestDamageDealt < amount) {
+        this.ExtraPlayerStats.highestDamageDealt = amount;
+        this.ctx.characterStorage.setItem(
+          "highestDamageDealt",
+          this.ExtraPlayerStats.highestDamageDealt
+        );
+      }
+      if (debuff) {
+        this.currentBattleDebuffDamageDealt += amount;
+        this.ctx.characterStorage.setItem(
+          "BctDb",
+          this.currentBattleDebuffDamageDealt
+        );
+        this.ExtraPlayerStats.debuffDamageDealt += amount;
+        this.ctx.characterStorage.setItem(
+          "debuffDamageDealt",
+          this.ExtraPlayerStats.debuffDamageDealt
+        );
+        if (this.ExtraPlayerStats.highestDebuffDamageDealt < amount) {
+          this.ExtraPlayerStats.highestDebuffDamageDealt = amount;
           this.ctx.characterStorage.setItem(
-            "BctDb",
-            this.currentBattleDebuffDamageDealt
+            "highestDebuffDamageDealt",
+            this.ExtraPlayerStats.highestDebuffDamageDealt
           );
         }
-        // remove the damage indicator after a few seconds
-        setTimeout(() => {
-          damageIndicator.remove();
-        }, 3000);
       }
       if (this.bossCurrHP <= 0) {
         this.bossCurrHP = 0;
         this.endBattle("win");
       }
     }
+    this.needsQuestUIUpdate = true;
     battlesUIModule.updateBattleStatsUI();
+    this.updateUIIfNeeded;
+  }
+
+  showBossDamageIndicatorOnUI(amount) {
+    const bossHPContainer = document.querySelector(".boss-hp-bar");
+    if (bossHPContainer) {
+      const classOptions = [
+        "boss-damage-indicator",
+        "boss-damage-indicator-2",
+        "boss-damage-indicator-3",
+        "boss-damage-indicator-4",
+        "boss-damage-indicator-5",
+        "boss-damage-indicator-6",
+        "boss-damage-indicator-7",
+      ];
+      const chosenClass =
+        classOptions[Math.floor(Math.random() * classOptions.length)];
+      const damageIndicator = document.createElement("div");
+      damageIndicator.classList.add(chosenClass);
+      damageIndicator.classList.add("animate-damage-indicator");
+      damageIndicator.textContent = `-${amount}`;
+      bossHPContainer.appendChild(damageIndicator);
+      // remove the damage indicator after a few seconds
+      setTimeout(() => {
+        damageIndicator.remove();
+      }, 3000);
+    }
+  }
+
+  showPlayerDamageIndicatorOnUI(amount, type) {
+    const playerHPContainer = document.querySelector(
+      ".player-health-bar-container"
+    );
+    if (playerHPContainer) {
+      // TODO : class types based
+      const classOptions = [
+        "player-damage-indicator",
+        "player-damage-indicator-2",
+        "player-damage-indicator-3",
+        "player-damage-indicator-4",
+        "player-damage-indicator-5",
+        "player-damage-indicator-6",
+        "player-damage-indicator-7",
+      ];
+      const chosenClass =
+        classOptions[Math.floor(Math.random() * classOptions.length)];
+      const damageIndicator = document.createElement("div");
+      damageIndicator.classList.add(chosenClass);
+      damageIndicator.classList.add("animate-damage-indicator");
+      damageIndicator.textContent = `-${amount}`;
+      playerHPContainer.appendChild(damageIndicator);
+      // remove the damage indicator after a few seconds
+      setTimeout(() => {
+        damageIndicator.remove();
+      }, 3000);
+    }
   }
 
   checkforRegen(target) {
     if (target === "player") {
-      // TODO: implement player regen
+      let regenerated = false;
+
+      // Shield regeneration
+      if (this.playerShield < this.playerShieldMax) {
+        const [regenChance, regenAmount] = this.playerShieldRegen;
+        if (Math.random() <= regenChance) {
+          this.restoreShield(regenAmount, target);
+          regenerated = true;
+        }
+      }
+
+      // Health regeneration
+      if (this.playerCoreHP < this.playerCoreMaxHP) {
+        const [regenChance, regenAmount] = this.playerHPRegen;
+        if (Math.random() <= regenChance) {
+          this.healTarget(regenAmount, target);
+          regenerated = true;
+        }
+      }
+
+      return regenerated; // Indicate whether regeneration occurred
     } else if (target === "boss") {
-      let chanceToRegen = this.activeBoss.regenChance;
-      let roll = Math.random();
-      if (roll <= chanceToRegen) {
+      if (this.bossCurrHP >= this.activeBoss.maxHP) return false; // Early return if boss HP is full
+
+      if (Math.random() <= this.activeBoss.regenChance) {
         this.healTarget(this.activeBoss.regen, target);
         return true;
       }
     }
+    return false;
+  }
+
+  restoreShield(amount, target, ignore = false) {
+    amount = Math.max(1, amount);
+    amount = Math.floor(amount);
+    if (target === "player") {
+      this.playerShield += amount;
+      if (!ignore) {
+        this.playerShieldGained += amount;
+      }
+      if (this.playerShield > this.playerShieldMax) {
+        this.playerShield = this.playerShieldMax;
+      }
+      this.ctx.characterStorage.setItem("Psh", this.playerShield);
+      this.ctx.characterStorage.setItem("PshG", this.playerShieldGained);
+    } else if (target === "boss") {
+      // TODO
+    }
+    this.needsPlayerHealthBarUpdate = true;
+    this.needsCombatStatsUIUpdate = true;
+    this.updateUIIfNeeded();
   }
 
   healTarget(amount, target) {
-    amount = Math.max(0, amount);
+    amount = Math.max(1, amount);
     amount = Math.floor(amount);
     if (target === "player") {
       this.playerCoreHP += amount;
+      this.playerHPGained += amount;
+
+      if (this.playerCoreHP > this.playerCoreMaxHP) {
+        const difference = this.playerCoreMaxHP - this.playerCoreHP;
+        this.playerCoreHP = this.playerCoreMaxHP;
+        this.playerHPGained += difference;
+      }
+      this.ctx.characterStorage.setItem("PhG", this.playerHPGained);
     } else if (target === "boss") {
       this.bossCurrHP += amount;
       if (this.bossCurrHP >= this.activeBoss.maxHP) {
@@ -490,25 +830,54 @@ export class SkillingBosses {
         parentContainer.appendChild(healIndicator);
       }
       this.currentBattleBossHealed += amount;
-      battlesUIModule.updateBattleStatsUI();
+
       setTimeout(() => {
         healIndicator.remove();
       }, 3000);
     }
+    this.needsCombatStatsUIUpdate = true;
+    battlesUIModule.updateBattleStatsUI();
+    this.updateUIIfNeeded;
   }
 
   getBossAttack() {
-    return this.currentBattle.boss.attacks[this.bossNextAttackIndex];
-  }
-
-  updateBossAttack() {
-    // TODO implement boss attack update
+    try {
+      if (this.activeBoss === null) {
+        console.warn("Getting boss attack index, but active boss is null");
+        return null;
+      }
+      if (
+        this.bossNextAttackIndex === null ||
+        this.bossNextAttackIndex > this.activeBoss.attacks.length
+      ) {
+        console.warn(
+          "Getting boss attack with index",
+          this.bossNextAttackIndex
+        );
+        // failsafe so the boss at least has an attack to do
+        return this.activeBoss.attacks[0];
+      }
+      return this.activeBoss.attacks[this.bossNextAttackIndex];
+    } catch (error) {
+      console.error("Error getting boss attack:", error);
+    }
   }
 
   clearEffects() {
     this.bossCurrentBuffs = [];
     this.bossCurrentDebuffs = [];
     this.ctx.characterStorage.setItem("BsDb", this.bossCurrentDebuffs);
+    this.needsBossEffectsUIUpdate = true;
+    this.updateUIIfNeeded();
+  }
+
+  resetPlayerDefensiveTrackers() {
+    this.playerShieldLost = 0;
+    this.playerHPLost = 0;
+    this.ctx.characterStorage.setItem("PhL", this.playerHPLost);
+    this.ctx.characterStorage.setItem("PshL", this.playerShieldLost);
+    this.needsCombatStatsUIUpdate = true;
+    this.updateUIIfNeeded();
   }
 
   endBattle(result) {
@@ -525,9 +894,11 @@ export class SkillingBosses {
       this.ctx.characterStorage.setItem("BctR", this.bossKillsArray);
       this.updatePlayerBossStats();
       this.grantBossRewards(this.activeBoss);
-
+      // check if certain ability skills were used against certain bosses
+      this.checkForAbilitySkillsAgainstBoss();
       this.startBattle();
     } else if (result === "loss") {
+      this.healTarget(10, "player");
       this.currentBattleTicks = null;
       this.activeBoss = null;
       battlesUIModule.updateCurrentCombatStatsUI();
@@ -537,6 +908,31 @@ export class SkillingBosses {
     this.currentBattleBossHealed = 0;
     this.currentBattleDamageDealt = 0;
     this.currentBattleBossDamageReduced = 0;
+  }
+
+  checkForAbilitySkillsAgainstBoss() {
+    // this is called on battle won
+    // for example, if the player used only cooking skills against the fishing boss,
+    // the quest will be marked as complete
+    if (this.abilitySkillsThisBattle.length > 1) {
+      return;
+    }
+    for (let i = 0; i < this.abilitySkillsThisBattle.length; i++) {
+      const abilitySkill = this.abilitySkillsThisBattle[i];
+      const boss = this.activeBoss;
+      if (abilitySkill === "melvorD:Cooking" && this.currentBattleTicks < 150) {
+        if (boss.skill === "Fishing") {
+          this.ExtraPlayerStats.cookTheFish = 1;
+        }
+      } else if (
+        abilitySkill === "melvorD:Thieving" &&
+        this.currentBattleTicks < 150
+      ) {
+        if (boss.skill === "Cooking") {
+          this.ExtraPlayerStats.thiefTheChef = 1;
+        }
+      }
+    }
   }
 
   updatePlayerBossStats() {
@@ -617,15 +1013,35 @@ export class SkillingBosses {
     switch (tier) {
       case "common":
         rewardItems = boss.commonRewardTier.items;
+        this.ExtraPlayerStats.commonRewardHits++;
+        this.ctx.characterStorage.setItem(
+          "commonRewardHits",
+          this.ExtraPlayerStats.commonRewardHits
+        );
         break;
       case "uncommon":
         rewardItems = boss.uncommonRewardTier.items;
+        this.ExtraPlayerStats.uncommonRewardHits++;
+        this.ctx.characterStorage.setItem(
+          "uncommonRewardHits",
+          this.ExtraPlayerStats.uncommonRewardHits
+        );
         break;
       case "rare":
         rewardItems = boss.rareRewardTier.items;
+        this.ExtraPlayerStats.rareRewardHits++;
+        this.ctx.characterStorage.setItem(
+          "rareRewardHits",
+          this.ExtraPlayerStats.rareRewardHits
+        );
         break;
       case "legendary":
         rewardItems = boss.legendaryRewardTier.items;
+        this.ExtraPlayerStats.legendaryRewardHits++;
+        this.ctx.characterStorage.setItem(
+          "legendaryRewardHits",
+          this.ExtraPlayerStats.legendaryRewardHits
+        );
         break;
       default:
         console.warn(`Unknown reward tier: ${tier}`);
@@ -646,5 +1062,75 @@ export class SkillingBosses {
   }
   setLastLootDrop(boss, tier, loot) {
     this.lastLootDrop = { boss, tier, loot };
+  }
+  // helper functions
+  getQuantityFromBankItemArray(itemID) {
+    const bankArray = game.bank.searchArray;
+    for (let i = 0; i < bankArray.length; i++) {
+      if (bankArray[i].item.id === itemID) {
+        return bankArray[i].qty;
+      }
+    }
+    return 0;
+  }
+  reduceBossPhysicalDefence(reduction) {
+    this.activeBoss.physicalDefense -= reduction;
+    this.activeBoss.physicalDefense = Math.max(
+      0,
+      this.activeBoss.physicalDefense
+    );
+    this.ctx.characterStorage.setItem("Bpd", this.activeBoss.physicalDefense);
+    this.needsCombatStatsUIUpdate = true;
+    this.needsBossEffectsUIUpdate = true;
+    this.updateUIIfNeeded();
+  }
+  increaseBossPhysicalDefence(increase) {
+    this.activeBoss.physicalDefense += increase;
+    this.activeBoss.physicalDefense = Math.min(
+      75,
+      this.activeBoss.physicalDefense
+    );
+    this.ctx.characterStorage.setItem("Bpd", this.activeBoss.physicalDefense);
+    this.needsCombatStatsUIUpdate = true;
+    this.needsBossEffectsUIUpdate = true;
+    this.updateUIIfNeeded();
+  }
+  reduceBossMagicDefence(reduction) {
+    this.activeBoss.magicDefense -= reduction;
+    this.activeBoss.magicDefense = Math.max(0, this.activeBoss.magicDefense);
+    this.ctx.characterStorage.setItem("Bmd", this.activeBoss.magicDefense);
+    this.needsCombatStatsUIUpdate = true;
+    this.needsBossEffectsUIUpdate = true;
+    this.updateUIIfNeeded();
+  }
+  increaseBossMagicDefence(increase) {
+    this.activeBoss.magicDefense += increase;
+    this.activeBoss.magicDefense = Math.min(75, this.activeBoss.magicDefense);
+    this.ctx.characterStorage.setItem("Bmd", this.activeBoss.magicDefense);
+    this.needsCombatStatsUIUpdate = true;
+    this.needsBossEffectsUIUpdate = true;
+    this.updateUIIfNeeded();
+  }
+}
+
+export class ExtraPlayerStats {
+  constructor() {
+    this.totalBossKills = 0;
+    this.fastestBossKill = 0;
+    this.damageDealt = 0;
+    this.highestDamageDealt = 0;
+    this.debuffsApplied = 0;
+    this.debuffDamageDealt = 0;
+    this.highestDebuffDamageDealt = 0;
+    this.damageTaken = 0;
+    this.highestDamageTaken = 0;
+    this.physicalResistReduced = 0;
+    this.magicResistReduced = 0;
+    this.suppliesUsed = 0;
+    // rewards
+    this.commonRewardHits = 0;
+    this.uncommonRewardHits = 0;
+    this.rareRewardHits = 0;
+    this.legendaryRewardHits = 0;
   }
 }

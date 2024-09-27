@@ -27,6 +27,12 @@ function saveBattleState(ctx) {
   );
   ctx.characterStorage.setItem("ASlt", skillingBosses.activeAbilitySlot);
   ctx.characterStorage.setItem("Dst", skillingBosses.discardedTicks);
+  ctx.characterStorage.setItem("Psh", skillingBosses.playerShield);
+  ctx.characterStorage.setItem("Bat", game.skillingBosses.bossAttackTimer);
+  ctx.characterStorage.setItem("Bna", game.skillingBosses.bossNextAttackIndex);
+  // resistance
+  ctx.characterStorage.setItem("PcPD", skillingBosses.playerPhysicalResistance);
+  ctx.characterStorage.setItem("PccMD", skillingBosses.playerMagicResistance);
 }
 
 function patchloopOffline(ctx) {
@@ -45,7 +51,7 @@ function patchloopOffline(ctx) {
 async function patchSkillTicks(ctx) {
   const battlesUIModule = await ctx.loadModule("src/ui/battle.mjs");
 
-  const combatAbilities = new Set([
+  let combatAbilities = new Set([
     "Hitpoints",
     "Attack",
     "Defence",
@@ -54,14 +60,20 @@ async function patchSkillTicks(ctx) {
     "Ranged",
     "Farming",
     "Township",
+    "Prayer",
+    "Slayer",
+    "Necromancy",
+    "Profile",
   ]);
 
   let lastProcessedTime = 0;
   const TICK_INTERVAL = 100; // 0.1 seconds in milliseconds
+  let forcedTicks = 0; // amount of ticks that have been forces
+  let forceTickInterval = 5;
+  let summoningTicks = 0;
 
   ctx.patch(Skill, "addXP").before(function (amount, masteryAction) {
     try {
-      const currentTime = Date.now();
       const skillingBosses = game.skillingBosses;
 
       if (
@@ -70,6 +82,24 @@ async function patchSkillTicks(ctx) {
       ) {
         return;
       }
+      const lastSkill = game.skillingBosses.currentlyTrainingSkill;
+      if (game.skillingBosses.currentlyTrainingSkill !== this.id) {
+        game.skillingBosses.currentlyTrainingSkill = this.id;
+      }
+      if (
+        lastSkill !== "melvorD:Summoning" &&
+        this.id === "melvorD:Summoning" &&
+        summoningTicks < 1
+      ) {
+        game.skillingBosses.currentlyTrainingSkill = lastSkill;
+        summoningTicks++;
+        return;
+      }
+      if (summoningTicks > 0) {
+        summoningTicks = 0;
+      }
+      const currentTime = Date.now();
+
       let multiTree = false;
       if (this.name === "Woodcutting") {
         // if multi tree
@@ -77,16 +107,34 @@ async function patchSkillTicks(ctx) {
           multiTree = true;
         }
       }
-      let forceTickInterval = 5;
       if (multiTree) {
         forceTickInterval *= 2;
       }
+      if (forcedTicks > 200 && forceTickInterval < 9999) {
+        forceTickInterval = 9999; // should stop ticking at 200
+      } else if (forcedTicks > 175 && forceTickInterval < 17) {
+        forceTickInterval = 17;
+      } else if (forcedTicks > 150 && forceTickInterval < 15) {
+        forceTickInterval = 15;
+      } else if (forcedTicks > 125 && forceTickInterval < 13) {
+        forceTickInterval = 13;
+      } else if (forcedTicks > 100 && forceTickInterval < 11) {
+        forceTickInterval = 11;
+      } else if (forcedTicks > 80 && forceTickInterval < 9) {
+        forceTickInterval = 9;
+      } else if (forcedTicks > 40 && forceTickInterval < 8) {
+        forceTickInterval = 8;
+      } else if (forcedTicks > 20 && forceTickInterval < 7) {
+        forceTickInterval = 7;
+      } else if (forcedTicks > 10 && forceTickInterval < 6) {
+        forceTickInterval = 6;
+      }
       let forceTick = false;
-      // check if skippedTicks is above 5:
-      if (game.skillingBosses.skippedTicks > 5) {
+      if (game.skillingBosses.skippedTicks > forceTickInterval) {
         forceTick = true;
         game.skillingBosses.skippedTicks = 0;
-        // if the player has skipped the last 5 ticks, force the tick to process
+        forcedTicks += 1;
+        // if the player has skipped the last 7 ticks, force the tick to process
       }
       // Check if enough time has passed since the last processed tick
       const timeSinceLastTick = currentTime - lastProcessedTime;
@@ -97,7 +145,7 @@ async function patchSkillTicks(ctx) {
       } else {
         game.skillingBosses.skippedTicks++;
         if (game.skillingBosses.isOffline) {
-          game.skillingBosses.discardedTicks += 0.8;
+          game.skillingBosses.discardedTicks += 0.6;
         }
         // skippedTicks are used to force every 6 ticks to process, they get reset to 0 after 6 ticks
         // discardedTicks are used to track how many ticks have been thrown away, they are not reset
@@ -148,7 +196,7 @@ async function patchSkillTicks(ctx) {
     }
     // check for discarded ticks
     let restedBonus = 0;
-    let RESTED_CAP = 3;
+    let RESTED_CAP = 1;
     // check for wellFed modifier
     if (
       !game.skillingBosses.isOffline &&
@@ -250,9 +298,13 @@ function updatePlayerSkillTickInfo(
   }
 
   if (xpBonus === 0) {
-    htmlContent += `<div class="text-warning">Gained <span class="text-muted">${amount}</span> XP from Skilling Action! +0 skill-ticks</div>`;
+    htmlContent += `<div class="text-warning">Gained <span class="text-muted">${Math.floor(
+      amount
+    )}</span> XP from Skilling Action! +0 skill-ticks</div>`;
   } else {
-    htmlContent += `<div class="text-success">Gained <span class="text-muted">${amount}</span> XP from Skilling Action! +${xpBonus} skill-ticks</div>`;
+    htmlContent += `<div class="text-success">Gained <span class="text-muted">${Math.floor(
+      amount
+    )}</span> XP from Skilling Action! +${xpBonus} skill-ticks</div>`;
   }
   if (restedBonus > 0) {
     htmlContent += `<div class="text-success">

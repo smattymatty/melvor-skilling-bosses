@@ -1,3 +1,7 @@
+const { loadModule } = mod.getContext(import.meta);
+
+const battlesUIModule = await loadModule("src/ui/battle.mjs");
+
 export async function init(ctx) {
   try {
     buildPlayerLootContainer(ctx);
@@ -59,7 +63,7 @@ export async function updateInventoryDisplay(ctx) {
         `;
       }
     }
-
+    battlesUIModule.setSupplyAmount();
     htmlContent += "</div>";
     gridContainer.innerHTML = htmlContent;
   }
@@ -86,6 +90,7 @@ function handleTransferToBank(ctx) {
           Bank is Full! You can't add more items to the bank.
         `;
       }
+      battlesUIModule.setSupplyAmount();
       setTimeout(() => {
         transferWarning.innerHTML = "";
       }, 3000);

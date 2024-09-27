@@ -171,3 +171,192 @@ export function checkForGenericUpgrades(game, amount) {
     console.error("Error checking for generic upgrade:", error);
   }
 }
+
+export function checkTotalDamageDealt(game, amount) {
+  // return 0 to 1 indicating the progress of the objective
+  try {
+    let totalProgress = 0;
+    const totalDamageDealt = game.skillingBosses.ExtraPlayerStats.damageDealt;
+    if (totalDamageDealt > amount) {
+      return 1;
+    } else {
+      return totalDamageDealt / amount;
+    }
+    return 0;
+  } catch (error) {
+    console.error("Error checking for total damage dealt:", error);
+  }
+}
+
+export function checkTotalDamageTaken(game, amount) {
+  // return 0 to 1 indicating the progress of the objective
+  try {
+    let totalProgress = 0;
+    const totalDamageTaken = game.skillingBosses.ExtraPlayerStats.damageTaken;
+    if (totalDamageTaken > amount) {
+      return 1;
+    } else {
+      return totalDamageTaken / amount;
+    }
+    return 0;
+  } catch (error) {
+    console.error("Error checking for total damage taken:", error);
+  }
+}
+
+export function checkCommonRewardHits(game, amount) {
+  // return 0 to 1 indicating the progress of the objective
+  try {
+    let totalProgress = 0;
+    const commonRewardHits =
+      game.skillingBosses.ExtraPlayerStats.commonRewardHits;
+    if (commonRewardHits > amount) {
+      return 1;
+    } else {
+      return commonRewardHits / amount;
+    }
+    return 0;
+  } catch (error) {
+    console.error("Error checking for common reward hits:", error);
+  }
+}
+
+export function checkUncommonRewardHits(game, amount) {
+  // return 0 to 1 indicating the progress of the objective
+  try {
+    let totalProgress = 0;
+    const uncommonRewardHits =
+      game.skillingBosses.ExtraPlayerStats.uncommonRewardHits;
+    if (uncommonRewardHits > amount) {
+      return 1;
+    } else {
+      return uncommonRewardHits / amount;
+    }
+    return 0;
+  } catch (error) {
+    console.error("Error checking for uncommon reward hits:", error);
+  }
+}
+
+export function checkRareRewardHits(game, amount) {
+  // return 0 to 1 indicating the progress of the objective
+  try {
+    let totalProgress = 0;
+    const rareRewardHits = game.skillingBosses.ExtraPlayerStats.rareRewardHits;
+    if (rareRewardHits > amount) {
+      return 1;
+    } else {
+      return rareRewardHits / amount;
+    }
+    return 0;
+  } catch (error) {
+    console.error("Error checking for rare reward hits:", error);
+  }
+}
+
+export function checkLegendaryRewardHits(game, amount) {
+  // return 0 to 1 indicating the progress of the objective
+  try {
+    let totalProgress = 0;
+    const legendaryRewardHits =
+      game.skillingBosses.ExtraPlayerStats.legendaryRewardHits;
+    if (legendaryRewardHits > amount) {
+      return 1;
+    } else {
+      return legendaryRewardHits / amount;
+    }
+    return 0;
+  } catch (error) {
+    console.error("Error checking for legendary reward hits:", error);
+  }
+}
+
+export function checkTotalDebuffsApplied(game, amount) {
+  // return 0 to 1 indicating the progress of the objective
+  try {
+    let totalProgress = 0;
+    const totalDebuffsApplied =
+      game.skillingBosses.ExtraPlayerStats.debuffsApplied;
+    if (totalDebuffsApplied > amount) {
+      return 1;
+    } else {
+      return totalDebuffsApplied / amount;
+    }
+    return 0;
+  } catch (error) {
+    console.error("Error checking for total debuffs applied:", error);
+  }
+}
+
+export function checkFastestKillOnBossByID(game, bossID, amount) {
+  try {
+    const bossKillsArray = game.skillingBosses.bossKillsArray;
+    if (bossKillsArray) {
+      // bosskillsarray is an array of arrays where each sub-array contains [totalKills, fastestKill]
+      for (let i = 0; i < bossKillsArray.length; i++) {
+        const bossKills = bossKillsArray[i];
+        if (i === bossID) {
+          const fastestKill = bossKills[1];
+          if (fastestKill < amount && fastestKill > 0) {
+            return 1;
+          } else {
+            // return a percentage of the completed objective
+            if (fastestKill === 0) {
+              return 0;
+            }
+            return amount / fastestKill;
+          }
+        }
+      }
+    }
+    return 0;
+  } catch (error) {
+    console.error("Error checking for fastest kill on boss:", error);
+  }
+}
+
+export function checkSkillingSuppliesUsed(game, amount) {
+  try {
+    const suppliesUsed = game.skillingBosses.ExtraPlayerStats.suppliesUsed;
+    if (suppliesUsed > amount) {
+      return 1;
+    } else {
+      return suppliesUsed / amount;
+    }
+    return 0;
+  } catch (error) {
+    console.error("Error checking for skilling supplies used:", error);
+  }
+}
+
+export function checkSingleAttackDamage(game, amount) {
+  // return 0 to 1 indicating the progress of the objective
+  try {
+    const highestDamage =
+      game.skillingBosses.ExtraPlayerStats.highestDamageDealt;
+    if (highestDamage > amount) {
+      return 1;
+    } else {
+      return highestDamage / amount;
+    }
+    return 0;
+  } catch (error) {
+    console.error("Error checking for single attack damage:", error);
+  }
+}
+
+export function checkCookTheFish(game, amount) {
+  if (game.skillingBosses.ExtraPlayerStats.cookTheFish > 0) {
+    return 1;
+  } else {
+    return 0;
+  }
+}
+
+export function checkThiefTheChef(game, amount) {
+  if (game.skillingBosses.ExtraPlayerStats.thiefTheChef > 0) {
+    return 1;
+  } else {
+    return 0;
+  }
+}

@@ -76,6 +76,40 @@ function addBossSouls(ctx) {
       });
     });
     artisanSoul.add();
+    const mysticSoul = ctx.gameData.buildPackage((p) => {
+      p.items.add({
+        itemType: "Item",
+        id: "mysticSoul",
+        name: "Mystic Soul",
+        category: "Souls",
+        type: "Item",
+        media: "assets/items/souls/mystic-soul.svg",
+        customDescription:
+          "Used to purchase upgrades in the <span class='text-warning'>'Skilling Bosses'</span> shop tab.",
+        ignoreCompletion: false,
+        obtainFromItemLog: false,
+        goblinRaidExclusive: false,
+        sellsFor: 1000,
+      });
+    });
+    mysticSoul.add();
+    const shiftySoul = ctx.gameData.buildPackage((p) => {
+      p.items.add({
+        itemType: "Item",
+        id: "shiftySoul",
+        name: "Shifty Soul",
+        category: "Souls",
+        type: "Item",
+        media: "assets/items/souls/shifty-soul.svg",
+        customDescription:
+          "Used to purchase upgrades in the <span class='text-warning'>'Skilling Bosses'</span> shop tab.",
+        ignoreCompletion: false,
+        obtainFromItemLog: false,
+        goblinRaidExclusive: false,
+        sellsFor: 1000,
+      });
+    });
+    shiftySoul.add();
   } catch (error) {
     console.error("Error adding boss souls:", error);
   }

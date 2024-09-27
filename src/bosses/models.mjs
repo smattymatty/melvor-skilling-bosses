@@ -7,7 +7,8 @@ export class Boss {
     stats,
     attacks,
     rewards,
-    rewardProbabilities
+    rewardProbabilities,
+    levelRequirement = 20
   ) {
     this.id = id;
     this.name = name;
@@ -15,6 +16,7 @@ export class Boss {
     this.image = image;
     this.stats = stats;
     this.attacks = attacks; // array of BossAttack objects
+    this.attackPower = stats.attackPower;
     this.currentHP = stats.maxHP;
     this.maxHP = stats.maxHP;
     this.physicalDefense = stats.physicalDefense;
@@ -36,6 +38,7 @@ export class Boss {
       rare: 0.15,
       legendary: 0.05,
     };
+    this.levelRequirement = levelRequirement;
   }
 
   determineRewardTier() {
@@ -99,10 +102,20 @@ export class BossStats {
 }
 
 export class BossAttack {
-  constructor(name, damage, cooldown) {
+  constructor(
+    name,
+    damageModifier,
+    cooldown,
+    description,
+    type,
+    usageCondition = "always"
+  ) {
     this.name = name;
-    this.damage = damage;
+    this.damageModifier = damageModifier;
     this.cooldown = cooldown;
+    this.description = description;
+    this.type = type; // Magic or Physical
+    this.usageCondition = usageCondition;
   }
 }
 

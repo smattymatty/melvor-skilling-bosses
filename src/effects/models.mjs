@@ -17,8 +17,8 @@ export class Effect {
     this.duration = duration;
     this.activationEvent = activationEvent;
     this.activationFunc = activationFunc;
-    this.tickEvent = tickEvent;
-    this.tickFunc = tickFunc;
+    this.tickEvent = tickEvent; // when the stack is lowered by 1
+    this.tickFunc = tickFunc; // what happens when the stack is lowered by 1
     this.clearEvent = clearEvent;
     this.clearFunc = clearFunc;
     this.extraData = null; // For storing additional effect-specific data

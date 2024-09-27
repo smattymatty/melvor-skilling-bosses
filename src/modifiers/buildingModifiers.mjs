@@ -23,7 +23,16 @@ function addBuildingModifiers(ctx) {
         },
       ],
     });
+    // ShieldSmith
+    addShieldSmithModifiers(ctx);
   } catch (error) {
     console.error("Error adding building modifiers:", error);
+  }
+}
+
+function addShieldSmithModifiers(ctx) {
+  try {
+  } catch (error) {
+    console.error("Error adding shield smith modifiers:", error);
   }
 }

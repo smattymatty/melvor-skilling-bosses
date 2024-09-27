@@ -205,6 +205,12 @@ body.darkMode .skilling-bosses-content {
   margin-top: 1rem;
 }
 
+@media (max-width: 1122px) {
+  .skill-loop-container {
+    width: 100%;
+  }
+}
+
 .skill-loop-item {
   display: flex;
   flex-direction: column;
@@ -315,13 +321,9 @@ body.darkMode .skilling-bosses-content {
   padding: 15px;
 }
 
-@media (max-width: 991px) {
+@media (max-width: 1122px) {
   .battle-arena {
     height: fit-content;
-  }
-
-  .skill-loop-container {
-    width: 90%;
   }
 
   .skill-loop-item {
@@ -377,6 +379,10 @@ body.darkMode .skilling-bosses-content {
 
 .quest-category {
   margin-bottom: 2rem;
+  display: flex;
+  flex-wrap: wrap;
+  flex-direction: row;
+  justify-content: space-between;
 }
 
 .quest-category-title {
@@ -396,6 +402,7 @@ body.darkMode .skilling-bosses-content {
   padding-left: 1rem;
   padding-right: 1rem;
   opacity: 0.5;
+  width: 100%;
 }
 
 .quest-item {
@@ -405,7 +412,6 @@ body.darkMode .skilling-bosses-content {
   margin-bottom: 1rem;
   display: flex;
   transition: all 0.3s ease;
-  min-width: 100%;
 }
 
 .quest-item:hover {
@@ -420,6 +426,7 @@ body.darkMode .skilling-bosses-content {
   border-radius: 10px;
   padding: 1rem;
   margin-bottom: 1rem;
+  width: 100%;
 }
 
 .quest-header {
@@ -468,6 +475,7 @@ body.darkMode .skilling-bosses-content {
 .quest-objectives {
   display: flex;
   flex-direction: column;
+  width: 100%;
 }
 
 .quest-objective {
@@ -480,6 +488,8 @@ body.darkMode .skilling-bosses-content {
   border-top-left-radius: 5%;
   border-top-right-radius: 5%;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  justify-content: center;
 }
 
 .objective-icon {
@@ -527,6 +537,12 @@ body.darkMode .skilling-bosses-content {
   transition: width 0.3s ease;
 }
 
+.objective-content {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
 .objective-progress .progress-text {
   font-size: 0.7rem;
   color: #7f8c8d;
@@ -537,6 +553,13 @@ body.darkMode .skilling-bosses-content {
 .quest-rewards {
   display: flex;
   flex-direction: column;
+  width: 100%;
+}
+
+.reward-content {
+  width: 100%;
+  display: flex;
+  justify-content: center;
 }
 
 .quest-reward {
@@ -548,6 +571,31 @@ body.darkMode .skilling-bosses-content {
   margin-bottom: 0.5rem;
   border-top-left-radius: 5%;
   border-top-right-radius: 5%;
+}
+.beginner-quest-item {
+  background-color: rgba(240, 248, 255, 0.1) !important;
+  border: 2px solid rgba(70, 130, 180, 0.3);
+  flex-wrap: wrap;
+  max-width: 48%;
+  min-width: 48%;
+}
+
+body.darkMode .beginner-quest-item {
+  background-color: rgba(70, 130, 180, 0.1);
+  border-color: rgba(240, 248, 255, 0.3);
+}
+
+.average-quest-item {
+  background-color: rgba(79, 90, 59, 0.212) !important;
+  border: 2px solid rgba(218, 211, 119, 0.3);
+  flex-wrap: wrap;
+  max-width: 48%;
+  min-width: 48%;
+}
+
+body.darkMode .average-quest-item {
+  background-color: rgba(218, 211, 119, 0.1);
+  border-color: rgba(79, 90, 59, 0.3);
 }
 
 .reward-icon {
@@ -602,6 +650,7 @@ body.darkMode .skilling-bosses-content {
   border-radius: 5px;
   cursor: pointer;
   transition: all 0.3s ease;
+  width: 100%;
 }
 
 .quest-claim-btn:hover {
@@ -1269,6 +1318,7 @@ body.darkMode .mini-slot-name {
 /* Player section styles */
 .player-section {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
   background-color: rgba(0, 0, 0, 0.2);
@@ -1449,58 +1499,7 @@ body.darkMode .mini-slot-name {
   margin-bottom: 10px;
   width: 100%;
 }
-.reward-tier-name {
-  font-weight: bold;
-}
 
-.reward-tier-chance {
-  font-size: 0.8em;
-  opacity: 0.8;
-  margin-left: 1rem;
-}
-
-.reward-items {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 5px;
-  padding: 10px;
-}
-
-.reward-item {
-  display: flex;
-  align-items: center;
-  background-color: rgba(255, 255, 255, 0.1);
-  border-radius: 5px;
-  padding: 5px;
-  width: calc(50% - 5px);
-}
-
-.reward-item-image {
-  width: 30px;
-  height: 30px;
-  object-fit: contain;
-  margin-right: 5px;
-}
-
-.reward-item-details {
-  display: flex;
-  flex-direction: column;
-  font-size: 0.8em;
-}
-
-.reward-item-name {
-  font-weight: bold;
-}
-
-.reward-item-quantity {
-  color: #bdc3c7;
-}
-
-@media (max-width: 768px) {
-  .reward-item {
-    width: 100%;
-  }
-}
 .upgrade-card {
   background-color: rgba(0, 0, 0, 0.2);
   min-width: 100%;
@@ -1752,4 +1751,358 @@ body.darkMode .boss-debuff-progress-text {
 
 .block {
   overflow: visible !important;
+}
+
+.boss-attack-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.boss-attack-damage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 5px;
+}
+
+.boss-attack-damage-type {
+  font-size: 0.8rem;
+  color: #7f8c8d;
+  margin-top: 1px;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.boss-attack-description {
+  font-size: 0.9rem;
+  color: #7f8c8d;
+  margin-top: 1px;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.boss-attack-cooldown {
+  font-size: 0.8rem;
+  color: #7f8c8d;
+  margin-top: 1px;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+.boss-offensive-stats h4 {
+  color: #3498db;
+  margin-bottom: 15px;
+}
+
+.next-attack.ability-item {
+  background-color: rgba(255, 255, 255, 0.1);
+  margin-bottom: 15px;
+}
+
+/* remove the hover effect */
+.next-attack.ability-item:hover {
+  transform: none !important;
+  background-color: rgba(0, 0, 0, 0.1) !important;
+  cursor: default !important;
+}
+
+.next-attack .ability-icon {
+  background-color: rgba(0, 0, 0, 0.2);
+}
+
+.next-attack .ability-name {
+  color: #e74c3c;
+}
+
+.next-attack .ability-tag {
+  background-color: #e74c3c;
+}
+
+.next-attack .ability-description {
+  font-size: 0.9em;
+  color: #bdc3c7;
+}
+
+.next-attack .ability-stats {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8em;
+  color: #95a5a6;
+}
+
+.attack-timer {
+  margin-bottom: 0.5rem;
+}
+
+#boss-attack-timer {
+  font-weight: bold;
+  color: #db311ed8;
+}
+
+.player-heal-btn {
+  background-color: #4caf86c2;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 5px;
+  margin-left: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-left: auto;
+  width: 50%;
+  margin-bottom: 0.2rem;
+}
+.player-heal-btn-icon {
+  width: 24px;
+  height: 24px;
+  margin-right: 1rem;
+  margin-left: 1rem;
+}
+.shield-bar,
+.health-bar {
+  position: relative;
+  width: 80%;
+  height: 30px;
+  background-color: rgba(0, 0, 0, 0.25); /* Semi-transparent background */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: auto;
+  z-index: 1;
+  margin-bottom: 1rem;
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
+}
+
+.shield-bar-inner,
+.health-bar-inner {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  right: 2px;
+  bottom: 2px;
+  background-color: rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+}
+
+#player-shield-bar,
+#player-health-bar {
+  height: 100%;
+  transition: width 0.3s ease-in-out;
+}
+
+#player-shield-bar {
+  background-color: #3498db;
+}
+
+#player-health-bar {
+  background-color: #2ecc71;
+}
+
+.item-amount-details {
+  position: absolute;
+  font-size: 0.7em;
+  background-color: rgba(0, 0, 0, 0.7);
+  padding: 1px 3px;
+  border-radius: 3px;
+  z-index: 1;
+}
+.player-shield {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.shield-info {
+  display: flex;
+  align-items: center;
+}
+
+.shield-note {
+  margin-left: auto;
+  opacity: 0.6;
+  color: aquamarine;
+  font-size: 0.8rem;
+  text-align: right;
+}
+.player-health-bar-container {
+  margin-bottom: -4rem;
+  min-width: 62%;
+}
+
+@media (max-width: 1133px) {
+  .player-health-bar-container {
+    margin-bottom: 0.5rem;
+    min-width: 100%;
+  }
+}
+
+.player-damage-indicator {
+  position: absolute;
+  bottom: 510px;
+  left: 220px;
+  text-shadow: 0 0 10px #000;
+  color: #df0606c4;
+  font-size: 2rem;
+  text-align: center;
+  line-height: 30px;
+  z-index: 5;
+}
+.player-damage-indicator-2 {
+  position: absolute;
+  bottom: 515px;
+  left: 230px;
+  text-shadow: 0 0 10px #000;
+  color: #df0606c4;
+  font-size: 2rem;
+  font-weight: bold;
+  text-align: center;
+  line-height: 30px;
+  z-index: 5;
+}
+.player-damage-indicator-3 {
+  position: absolute;
+  bottom: 505px;
+  left: 240px;
+  text-shadow: 0 0 10px #000;
+  color: #df0606c4;
+  font-size: 2rem;
+  text-align: center;
+  line-height: 30px;
+  z-index: 5;
+}
+.player-damage-indicator-4 {
+  position: absolute;
+  bottom: 500px;
+  left: 290px;
+  text-shadow: 0 0 10px #000;
+  color: #df0606c4;
+  font-size: 2rem;
+  text-align: center;
+  line-height: 30px;
+  z-index: 5;
+}
+.player-damage-indicator-5 {
+  position: absolute;
+  bottom: 490px;
+  left: 260px;
+  text-shadow: 0 0 10px #000;
+  color: #df0606c4;
+  font-size: 2rem;
+  text-align: center;
+  line-height: 30px;
+  z-index: 5;
+}
+.player-damage-indicator-6 {
+  bottom: 515px;
+  left: 285px;
+  position: absolute;
+  text-shadow: 0 0 10px #000;
+  color: #df0606c4;
+  font-size: 2rem;
+  text-align: center;
+  line-height: 30px;
+  z-index: 5;
+}
+.player-damage-indicator-7 {
+  bottom: 500px;
+  left: 275px;
+  position: absolute;
+  text-shadow: 0 0 10px #000;
+  color: #df0606c4;
+  font-size: 2rem;
+  text-align: center;
+  line-height: 30px;
+  z-index: 5;
+}
+
+.reward-tier-name {
+  font-weight: bold;
+}
+
+.reward-tier-chance {
+  font-size: 0.8em;
+  opacity: 0.8;
+  margin-left: 1rem;
+}
+
+.reward-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  padding: 10px;
+}
+
+.reward-item {
+  display: flex;
+  align-items: center;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 5px;
+  padding: 5px;
+  width: calc(50% - 5px);
+}
+
+.reward-item-image {
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
+  margin-right: 5px;
+}
+
+.reward-item-details {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.8em;
+}
+
+.reward-item-name {
+  font-weight: bold;
+}
+
+.reward-item-quantity {
+  color: #bdc3c7;
+}
+
+@media (max-width: 768px) {
+  .reward-item {
+    width: 100%;
+  }
+}
+
+.player-extra-stats-container {
+  opacity: 0.6;
+  font-size: 0.9rem;
+}
+
+.player-extra-stats-container div {
+  margin-bottom: 0.5rem;
+}
+
+.boss-select-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+  width: 90%;
+}
+
+.boss-select-buttons button {
+  width: 30%;
+  margin-bottom: 0.5rem;
+}
+
+.boss-select-buttons button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.boss-select-buttons button:disabled:hover {
+  transform: none;
+}
+
+.boss-select-buttons button.active {
+  background-color: #2e76a7;
+  color: white;
+  font-weight: bold;
 }

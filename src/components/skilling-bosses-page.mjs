@@ -37,6 +37,10 @@ export class SkillingBossesPageUIComponent extends SkillingBossesUIComponent {
           battleUiModule.initializeAbilitySlots();
           battleUiModule.updateAbilityProgressUI();
           battleUiModule.updateBattleStatsUI();
+          battleUiModule.updatePlayerExtraStats();
+          battleUiModule.updatePlayerShieldBar();
+          battleUiModule.updatePlayerHealthBar();
+
           game.skillingBosses.updatePlayerBossStats();
         } else if (sectionName === "abilities") {
           //abilitiesUiModule.buildAbilitiesList(this.manager);

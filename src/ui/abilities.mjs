@@ -15,7 +15,11 @@ export async function init(ctx) {
       skillingBossesAbilitiesComponent.mount(abilitiesContainer);
       skillingBossesAbilitiesComponent.show();
     }
-    buildAbilitiesList(ctx);
+    if (game.skillingBosses.currentlyTrainingSkill === null) {
+      buildAbilitiesList(ctx);
+    } else {
+      buildAbilitiesList(ctx, game.skillingBosses.currentlyTrainingSkill);
+    }
     updateEquippedAbilitiesDisplay();
   } catch (error) {
     console.error("Error during Abilities initialization:", error);
@@ -25,7 +29,6 @@ export async function init(ctx) {
 
 export async function buildAbilitiesList(ctx, filteredSkill = "all") {
   try {
-    console.log("Building abilities list for", filteredSkill);
     const container = document.getElementById("abilities-list");
     container.innerHTML = `
       <div class="abilities-filter-container">
@@ -99,6 +102,11 @@ export async function buildAbilitiesList(ctx, filteredSkill = "all") {
         }" data-filter="melvorD:Astrology">
           <img src="https://cdn2-main.melvor.net/assets/media/skills/astrology/astrology.png" alt="Astrology">
         </button>
+        <button class="ability-filter-btn ${
+          filteredSkill === "melvorD:Runecrafting" ? "active" : ""
+        }" data-filter="melvorD:Runecrafting">
+          <img src="https://cdn2-main.melvor.net/assets/media/skills/runecrafting/runecrafting.png" alt="Runecrafting">
+        </button>
       </div>
     `;
 
@@ -109,7 +117,6 @@ export async function buildAbilitiesList(ctx, filteredSkill = "all") {
         event.currentTarget.classList.add("active");
 
         const filter = event.currentTarget.dataset.filter;
-        console.log(`Filtering for ${filter}`);
         buildAbilitiesList(ctx, filter);
       });
     });
@@ -263,7 +270,6 @@ async function equipAbility(ctx, ability, slot) {
   if (
     progressCheckers.checkSkillLevel(game, ability.skill, ability.level) !== 1
   ) {
-    console.log("Player does not meet the level requirement for this ability.");
     return;
   }
 
@@ -280,7 +286,6 @@ async function equipAbility(ctx, ability, slot) {
   }
   // If trying to equip to the same slot, do nothing
   else {
-    console.log("Ability is already in this slot.");
     return;
   }
 

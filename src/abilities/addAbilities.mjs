@@ -10,7 +10,6 @@ export async function init(ctx) {
 
 function initializeAbilities(ctx, models, activationFuncs) {
   try {
-    // Define your abilities here
     // Woodcutting
     const ability1 = new models.Ability(
       1,
@@ -36,7 +35,7 @@ function initializeAbilities(ctx, models, activationFuncs) {
       [
         (ability, game) =>
           activationFuncs.dealSkillLevelAsDamage(ability, game, 0.5),
-      ] // This ability has a higher level than ability1, // TODO:: ADD EFFECT
+      ]
     );
 
     const ability3 = new models.Ability(
@@ -51,7 +50,7 @@ function initializeAbilities(ctx, models, activationFuncs) {
       [
         (ability, game) =>
           activationFuncs.dealSkillLevelAsDamage(ability, game, 2),
-      ] // TODO:: ADD EFFECT
+      ]
     );
     // Mining
 
@@ -97,7 +96,6 @@ function initializeAbilities(ctx, models, activationFuncs) {
       ]
     );
     // Fishing
-
     const ability7 = new models.Ability(
       7,
       "Hook",
