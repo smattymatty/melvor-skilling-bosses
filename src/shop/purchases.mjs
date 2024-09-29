@@ -35,6 +35,12 @@ function addGenericPurchases(ctx) {
     addLuckyLevelsTiers(ctx);
     // Shield Charger
     addShieldCharger(ctx);
+    // Hater
+    addHater(ctx);
+    // Duck Attack
+    addDuckAttack(ctx);
+    // Buff Shielder
+    addBuffShielder(ctx);
   } catch (error) {
     console.error("Error adding generic purchases:", error);
   }
@@ -46,6 +52,8 @@ function addGatheringPurchases(ctx) {
     addTier2Rollers(ctx);
     addTier3Rollers(ctx);
     addTier4Rollers(ctx);
+    addEfficientSkillingPurchases(ctx);
+    addEfficientBossingPurchases(ctx);
   } catch (error) {
     console.error("Error adding gathering purchases:", error);
   }
@@ -1308,8 +1316,8 @@ function addLuckyLevelsTiers(ctx) {
             cost: 0,
           },
           items: [
-            { id: "smattyBosses:bossCoin", quantity: 27000 },
-            { id: "smattyBosses:genericSoul", quantity: 270 },
+            { id: "smattyBosses:bossCoin", quantity: 12000 },
+            { id: "smattyBosses:genericSoul", quantity: 120 },
             { id: "melvorF:Mastery_Token_Crafting", quantity: 10 },
             { id: "melvorD:Mastery_Token_Smithing", quantity: 10 },
             { id: "melvorF:Mastery_Token_Fletching", quantity: 10 },
@@ -1356,7 +1364,7 @@ function addLuckyLevelsTiers(ctx) {
         contains: {
           items: [],
           modifiers: {
-            "smattyBosses:luckyLevels_4": 20,
+            "smattyBosses:luckyLevels_4": 5,
           },
         },
         cost: {
@@ -1368,7 +1376,14 @@ function addLuckyLevelsTiers(ctx) {
             type: "Fixed",
             cost: 0,
           },
-          items: [{ id: "smattyBosses:impossibleItem", quantity: 1 }],
+          items: [
+            { id: "smattyBosses:bossCoin", quantity: 20000 },
+            { id: "smattyBosses:genericSoul", quantity: 200 },
+            { id: "melvorF:Mastery_Token_Runecrafting", quantity: 10 },
+            { id: "melvorF:Mastery_Token_Summoning", quantity: 10 },
+            { id: "melvorF:Mastery_Token_Astrology", quantity: 10 },
+          ],
+
           raidCoins: {
             type: "Fixed",
             cost: 0,
@@ -1401,6 +1416,120 @@ function addLuckyLevelsTiers(ctx) {
       });
     });
     luckyLevels4.add();
+
+    const luckyLevels5 = ctx.gameData.buildPackage((p) => {
+      p.shopPurchases.add({
+        id: "luckyLevels5",
+        media:
+          "https://cdn2-main.melvor.net/assets/media/main/statistics_header.png",
+        category: "smattyBosses:SkillingBossesGeneric",
+        contains: {
+          items: [],
+          modifiers: {
+            "smattyBosses:luckyLevels_5": 5,
+          },
+        },
+        cost: {
+          gp: {
+            type: "Fixed",
+            cost: 0,
+          },
+          slayerCoins: {
+            type: "Fixed",
+            cost: 0,
+          },
+          items: [
+            { id: "smattyBosses:bossCoin", quantity: 40000 },
+            { id: "smattyBosses:genericSoul", quantity: 400 },
+            { id: "melvorF:Mastery_Token_Thieving", quantity: 10 },
+            { id: "melvorF:Mastery_Token_Agility", quantity: 10 },
+          ],
+          raidCoins: {
+            type: "Fixed",
+            cost: 0,
+          },
+        },
+        allowQuantityPurchase: false,
+        unlockRequirements: [
+          {
+            type: "ShopPurchase",
+            purchaseID: "smattyBosses:luckyLevels4",
+            count: 1,
+          },
+        ],
+        purchaseRequirements: [],
+        defaultBuyLimit: 1,
+        buyLimitOverrides: [],
+        showBuyLimit: false,
+        customName: "Lucky Levels V",
+        customDescription: `
+        <div class="upgrade-card" data-upgrade="luckyLevels5">
+          <div class="upgrade-effect">
+            <h4 class="effect-title">When an ability checks your skill level:</h4>
+            <p class="effect-description">Randomly add 0-25 to the check.</p>
+            <p class="current-upgrade-level-text">Applies before percent damage boosts.</p>
+          </div>
+          <div class="current-upgrade-level">
+            <p class="current-upgrade-level-text">Current: 0 - 20 added levels</p>
+          </div>
+          `,
+      });
+    });
+    luckyLevels5.add();
+    const luckyLevels6 = ctx.gameData.buildPackage((p) => {
+      p.shopPurchases.add({
+        id: "luckyLevels6",
+        media:
+          "https://cdn2-main.melvor.net/assets/media/main/statistics_header.png",
+        category: "smattyBosses:SkillingBossesGeneric",
+        contains: {
+          items: [],
+          modifiers: {
+            "smattyBosses:luckyLevels_6": 5,
+          },
+        },
+        cost: {
+          gp: {
+            type: "Fixed",
+            cost: 0,
+          },
+          slayerCoins: {
+            type: "Fixed",
+            cost: 0,
+          },
+          items: [{ id: "smattyBosses:impossibleItem", quantity: 1 }],
+          raidCoins: {
+            type: "Fixed",
+            cost: 0,
+          },
+        },
+        allowQuantityPurchase: false,
+        unlockRequirements: [
+          {
+            type: "ShopPurchase",
+            purchaseID: "smattyBosses:luckyLevels5",
+            count: 1,
+          },
+        ],
+        purchaseRequirements: [],
+        defaultBuyLimit: 1,
+        buyLimitOverrides: [],
+        showBuyLimit: false,
+        customName: "Lucky Levels VI",
+        customDescription: `
+        <div class="upgrade-card" data-upgrade="luckyLevels6">
+          <div class="upgrade-effect">
+            <h4 class="effect-title">When an ability checks your skill level:</h4>
+            <p class="effect-description">Randomly add 0-30 to the check.</p>
+            <p class="current-upgrade-level-text">Applies before percent damage boosts.</p>
+          </div>
+          <div class="current-upgrade-level">
+            <p class="current-upgrade-level-text">Current: 0 - 25 added levels</p>
+          </div>
+          `,
+      });
+    });
+    luckyLevels6.add();
   } catch (error) {
     console.error("Error adding generic purchases:", error);
   }
@@ -1427,7 +1556,7 @@ function addShieldCharger(ctx) {
         <div class="upgrade-card" data-upgrade="shieldCharger${tier}">
           <div class="upgrade-effect">
             <h4 class="effect-title">When your third ability is used:</h4>
-            <p class="effect-description">Regnerate ${upgradeAmmount} shield.</p>
+            <p class="effect-description">Regenerate ${upgradeAmmount} shield.</p>
           
             </div><div class="current-upgrade-level">
             <p class="current-upgrade-level-text">Current: ${currentAmount} shield</p>
@@ -1461,7 +1590,7 @@ function addShieldCharger(ctx) {
           },
           items: [
             { id: "smattyBosses:bossCoin", quantity: 5000 },
-            { id: "smattyBosses:skillingSupplies", quantity: 100 },
+            { id: "smattyBosses:genericSoul", quantity: 50 },
             { id: "melvorF:Leather_Gloves", quantity: 100 },
             { id: "melvorD:Steel_Gloves", quantity: 100 },
           ],
@@ -1504,9 +1633,9 @@ function addShieldCharger(ctx) {
           },
           items: [
             { id: "smattyBosses:bossCoin", quantity: 10000 },
-            { id: "smattyBosses:skillingSupplies", quantity: 200 },
-            { id: "melvorF:Hard_Leather_Gloves", quantity: 200 },
-            { id: "melvorD:Mithril_Gloves", quantity: 200 },
+            { id: "smattyBosses:genericSoul", quantity: 100 },
+            { id: "melvorF:Hard_Leather_Gloves", quantity: 100 },
+            { id: "melvorD:Mithril_Gloves", quantity: 100 },
           ],
           raidCoins: {
             type: "Fixed",
@@ -1553,9 +1682,9 @@ function addShieldCharger(ctx) {
           },
           items: [
             { id: "smattyBosses:bossCoin", quantity: 15000 },
-            { id: "smattyBosses:skillingSupplies", quantity: 300 },
-            { id: "melvorD:Green_Dhide_Vambraces", quantity: 300 },
-            { id: "melvorD:Adamant_Gloves", quantity: 300 },
+            { id: "smattyBosses:genericSoul", quantity: 150 },
+            { id: "melvorD:Green_Dhide_Vambraces", quantity: 150 },
+            { id: "melvorD:Adamant_Gloves", quantity: 150 },
           ],
           raidCoins: {
             type: "Fixed",
@@ -1600,7 +1729,12 @@ function addShieldCharger(ctx) {
             type: "Fixed",
             cost: 0,
           },
-          items: [{ id: "smattyBosses:impossibleItem", quantity: 1 }],
+          items: [
+            { id: "smattyBosses:bossCoin", quantity: 40000 },
+            { id: "smattyBosses:genericSoul", quantity: 300 },
+            { id: "melvorD:Blue_Dhide_Vambraces", quantity: 200 },
+            { id: "melvorD:Rune_Gloves", quantity: 200 },
+          ],
           raidCoins: {
             type: "Fixed",
             cost: 0,
@@ -1623,7 +1757,886 @@ function addShieldCharger(ctx) {
       });
     });
     shieldCharger4.add();
+    const shieldCharger5 = ctx.gameData.buildPackage((p) => {
+      p.shopPurchases.add({
+        id: "shieldCharger5",
+        media:
+          "https://cdn2-main.melvor.net/assets/media/skills/combat/defence.png",
+        category: "smattyBosses:SkillingBossesGeneric",
+        contains: {
+          items: [],
+          modifiers: {
+            "smattyBosses:shieldCharger_5": 1,
+          },
+        },
+        cost: {
+          gp: {
+            type: "Fixed",
+            cost: 0,
+          },
+          slayerCoins: {
+            type: "Fixed",
+            cost: 0,
+          },
+          items: [{ id: "smattyBosses:impossibleItem", quantity: 1 }],
+          raidCoins: {
+            type: "Fixed",
+            cost: 0,
+          },
+        },
+        allowQuantityPurchase: false,
+        unlockRequirements: [
+          {
+            type: "ShopPurchase",
+            purchaseID: "smattyBosses:shieldCharger4",
+            count: 1,
+          },
+        ],
+        purchaseRequirements: [],
+        defaultBuyLimit: 1,
+        buyLimitOverrides: [],
+        showBuyLimit: false,
+        customName: "Shield Charger V",
+        customDescription: generateDescription("5"),
+      });
+    });
+    shieldCharger5.add();
   } catch (error) {
     console.error("Error adding shield charger purchases:", error);
+  }
+}
+
+function addEfficientSkillingPurchases(ctx) {
+  function buildDescription(current, next) {
+    return `
+        <div class="upgrade-card shop-tier-2-upgrade-card" data-upgrade="efficientSkillingGatherer">
+          <div class="upgrade-effect">
+            <h4 class="effect-title">When training a Gathering Skill that matches the Ability:</h4>
+            <p class="effect-description">Gain +${next} skill-ticks.</p>
+            <p class="current-upgrade-level-text">Applies only to tier-2+ Bosses.</p>
+            </div>
+          <div class="current-upgrade-level">
+            <p class="current-upgrade-level-text">Current: +${current} skill-ticks</p>
+          </div>
+        </div>
+      `;
+  }
+  try {
+    const efficientSkilling1 = ctx.gameData.buildPackage((p) => {
+      p.shopPurchases.add({
+        id: "efficientSkillingGathering1",
+        media:
+          "https://cdn2-main.melvor.net/assets/media/skills/combat/attack.png",
+        category: "smattyBosses:SkillingBossesGathering",
+        contains: {
+          items: [],
+          modifiers: {
+            "smattyBosses:efficientSkillingGatherer": 1,
+          },
+        },
+        cost: {
+          gp: {
+            type: "Fixed",
+            cost: 0,
+          },
+          slayerCoins: {
+            type: "Fixed",
+            cost: 0,
+          },
+          items: [
+            { id: "smattyBosses:bossCoin", quantity: 10000 },
+            { id: "smattyBosses:gathererSoul", quantity: 100 },
+            { id: "melvorD:Mastery_Token_Woodcutting", quantity: 30 },
+            { id: "melvorD:Mastery_Token_Fishing", quantity: 30 },
+            { id: "melvorD:Mastery_Token_Mining", quantity: 30 },
+            { id: "smattyBosses:forestHeart", quantity: 3 },
+            { id: "smattyBosses:aquaticHeart", quantity: 3 },
+            { id: "smattyBosses:stoneHeart", quantity: 3 },
+          ],
+          raidCoins: {
+            type: "Fixed",
+            cost: 0,
+          },
+        },
+        allowQuantityPurchase: false,
+        unlockRequirements: [],
+        purchaseRequirements: [],
+        defaultBuyLimit: 1,
+        buyLimitOverrides: [],
+        showBuyLimit: false,
+        customName: "Efficient Skilling I",
+        customDescription: buildDescription(1, 2),
+      });
+    });
+    efficientSkilling1.add();
+
+    const efficientSkilling2 = ctx.gameData.buildPackage((p) => {
+      p.shopPurchases.add({
+        id: "efficientSkillingGathering2",
+        media:
+          "https://cdn2-main.melvor.net/assets/media/skills/combat/attack.png",
+        category: "smattyBosses:SkillingBossesGathering",
+        contains: {
+          items: [],
+          modifiers: {
+            "smattyBosses:efficientSkillingGatherer_2": 1,
+          },
+        },
+        cost: {
+          gp: {
+            type: "Fixed",
+            cost: 0,
+          },
+          slayerCoins: {
+            type: "Fixed",
+            cost: 0,
+          },
+          items: [{ id: "smattyBosses:impossibleItem", quantity: 1 }],
+          raidCoins: {
+            type: "Fixed",
+            cost: 0,
+          },
+        },
+        allowQuantityPurchase: false,
+        unlockRequirements: [
+          {
+            type: "ShopPurchase",
+            purchaseID: "smattyBosses:efficientSkillingGathering1",
+            count: 1,
+          },
+        ],
+        purchaseRequirements: [],
+        defaultBuyLimit: 1,
+        buyLimitOverrides: [],
+        showBuyLimit: false,
+        customName: "Efficient Skilling II",
+        customDescription: buildDescription(2, 3),
+      });
+    });
+    efficientSkilling2.add();
+  } catch (error) {
+    console.error("Error adding efficient skilling purchases:", error);
+  }
+}
+
+function addEfficientBossingPurchases(ctx) {
+  function buildDescription(current, next) {
+    return `
+        <div class="upgrade-card shop-tier-2-upgrade-card" data-upgrade="efficientBossingGatherer">
+          <div class="upgrade-effect">
+            <h4 class="effect-title">When training a Gathering Skill that matches the Boss:</h4>
+            <p class="effect-description">Gain +${next} skill-ticks.</p>
+            <p class="current-upgrade-level-text">Applies only to tier-2+ Bosses.</p>
+            </div>
+          <div class="current-upgrade-level">
+            <p class="current-upgrade-level-text">Current: +${current} skill-ticks</p>
+          </div>
+        </div>
+      `;
+  }
+
+  try {
+    const efficientBossing1 = ctx.gameData.buildPackage((p) => {
+      p.shopPurchases.add({
+        id: "efficientBossingGathering1",
+        media:
+          "https://cdn2-main.melvor.net/assets/media/skills/combat/strength.png",
+        category: "smattyBosses:SkillingBossesGathering",
+        contains: {
+          items: [],
+          modifiers: {
+            "smattyBosses:efficientBossingGatherer": 1,
+          },
+        },
+        cost: {
+          gp: {
+            type: "Fixed",
+            cost: 0,
+          },
+          slayerCoins: {
+            type: "Fixed",
+            cost: 0,
+          },
+          items: [
+            { id: "smattyBosses:bossCoin", quantity: 10000 },
+            { id: "smattyBosses:gathererSoul", quantity: 100 },
+            { id: "melvorD:Mastery_Token_Woodcutting", quantity: 30 },
+            { id: "melvorD:Mastery_Token_Fishing", quantity: 30 },
+            { id: "melvorD:Mastery_Token_Mining", quantity: 30 },
+            { id: "smattyBosses:forestHeart", quantity: 3 },
+            { id: "smattyBosses:aquaticHeart", quantity: 3 },
+            { id: "smattyBosses:stoneHeart", quantity: 3 },
+          ],
+          raidCoins: {
+            type: "Fixed",
+            cost: 0,
+          },
+        },
+        allowQuantityPurchase: false,
+        unlockRequirements: [],
+        purchaseRequirements: [],
+        defaultBuyLimit: 1,
+        buyLimitOverrides: [],
+        showBuyLimit: false,
+        customName: "Efficient Bossing I",
+        customDescription: buildDescription(1, 2),
+      });
+    });
+    efficientBossing1.add();
+
+    const efficientBossing2 = ctx.gameData.buildPackage((p) => {
+      p.shopPurchases.add({
+        id: "efficientBossingGathering2",
+        media:
+          "https://cdn2-main.melvor.net/assets/media/skills/combat/strength.png",
+        category: "smattyBosses:SkillingBossesGathering",
+        contains: {
+          items: [],
+          modifiers: {
+            "smattyBosses:efficientBossingGatherer_2": 1,
+          },
+        },
+        cost: {
+          gp: {
+            type: "Fixed",
+            cost: 0,
+          },
+          slayerCoins: {
+            type: "Fixed",
+            cost: 0,
+          },
+          items: [{ id: "smattyBosses:impossibleItem", quantity: 1 }],
+          raidCoins: {
+            type: "Fixed",
+            cost: 0,
+          },
+        },
+
+        allowQuantityPurchase: false,
+        unlockRequirements: [
+          {
+            type: "ShopPurchase",
+            purchaseID: "smattyBosses:efficientBossingGathering1",
+            count: 1,
+          },
+        ],
+        purchaseRequirements: [],
+        defaultBuyLimit: 1,
+        buyLimitOverrides: [],
+        showBuyLimit: false,
+        customName: "Efficient Bossing II",
+        customDescription: buildDescription(2, 3),
+      });
+    });
+    efficientBossing2.add();
+  } catch (error) {
+    console.error("Error adding efficient bossing purchases:", error);
+  }
+}
+
+function addHater(ctx) {
+  function buildDescription(current, next) {
+    return `
+        <div class="upgrade-card shop-tier-2-upgrade-card" data-upgrade="hater">
+          <div class="upgrade-effect">
+            <h4 class="effect-title">While Fighting a tier2+ Boss:</h4>
+            <p class="effect-description">Your abilities deal ${next} % more damage.</p>
+            <p class="current-upgrade-level-text">Applies only to tier-2+ Bosses.</p>
+            </div>
+          <div class="current-upgrade-level">
+            <p class="current-upgrade-level-text">Current: ${current} % damage increase</p>
+          </div>
+        </div>
+      `;
+  }
+  try {
+    const hater1 = ctx.gameData.buildPackage((p) => {
+      p.shopPurchases.add({
+        id: "hater1",
+        media:
+          "https://cdn2-main.melvor.net/assets/media/skills/combat/attack.png",
+        category: "smattyBosses:SkillingBossesGeneric",
+        contains: {
+          items: [],
+          modifiers: {
+            "smattyBosses:hater": 1,
+          },
+        },
+        cost: {
+          gp: {
+            type: "Fixed",
+            cost: 25000,
+          },
+          slayerCoins: {
+            type: "Fixed",
+            cost: 0,
+          },
+          items: [
+            { id: "smattyBosses:bossCoin", quantity: 5000 },
+            { id: "smattyBosses:genericSoul", quantity: 25 },
+            //{ id: "melvorD:Mastery_Token_Woodcutting", quantity: 10 },
+            //{ id: "melvorD:Mastery_Token_Fishing", quantity: 10 },
+            //{ id: "melvorD:Mastery_Token_Mining", quantity: 10 },
+          ],
+          raidCoins: {
+            type: "Fixed",
+            cost: 0,
+          },
+        },
+        allowQuantityPurchase: false,
+        unlockRequirements: [],
+        purchaseRequirements: [],
+        defaultBuyLimit: 1,
+        buyLimitOverrides: [],
+        showBuyLimit: false,
+        customName: "Boss Hater I",
+        customDescription: buildDescription(0, 5),
+      });
+    });
+    hater1.add();
+
+    const hater2 = ctx.gameData.buildPackage((p) => {
+      p.shopPurchases.add({
+        id: "hater2",
+        media:
+          "https://cdn2-main.melvor.net/assets/media/skills/combat/attack.png",
+        category: "smattyBosses:SkillingBossesGeneric",
+        contains: {
+          items: [],
+          modifiers: {
+            "smattyBosses:hater_2": 1,
+          },
+        },
+        cost: {
+          gp: {
+            type: "Fixed",
+            cost: 50000,
+          },
+          slayerCoins: {
+            type: "Fixed",
+            cost: 0,
+          },
+          items: [
+            { id: "smattyBosses:bossCoin", quantity: 10000 },
+            { id: "smattyBosses:genericSoul", quantity: 50 },
+            //{ id: "melvorD:Mastery_Token_Woodcutting", quantity: 10 },
+            //{ id: "melvorD:Mastery_Token_Fishing", quantity: 10 },
+            //{ id: "melvorD:Mastery_Token_Mining", quantity: 10 },
+          ],
+          raidCoins: {
+            type: "Fixed",
+            cost: 0,
+          },
+        },
+        allowQuantityPurchase: false,
+        unlockRequirements: [
+          {
+            type: "ShopPurchase",
+            purchaseID: "smattyBosses:hater1",
+            count: 1,
+          },
+        ],
+        purchaseRequirements: [],
+        defaultBuyLimit: 1,
+        buyLimitOverrides: [],
+        showBuyLimit: false,
+        customName: "Boss Hater II",
+        customDescription: buildDescription(5, 10),
+      });
+    });
+    hater2.add();
+
+    const hater3 = ctx.gameData.buildPackage((p) => {
+      p.shopPurchases.add({
+        id: "hater3",
+        media:
+          "https://cdn2-main.melvor.net/assets/media/skills/combat/attack.png",
+        category: "smattyBosses:SkillingBossesGeneric",
+        contains: {
+          items: [],
+          modifiers: {
+            "smattyBosses:hater_3": 1,
+          },
+        },
+        cost: {
+          gp: { type: "Fixed", cost: 100000 },
+          slayerCoins: { type: "Fixed", cost: 0 },
+          items: [
+            { id: "smattyBosses:bossCoin", quantity: 20000 },
+            { id: "smattyBosses:genericSoul", quantity: 100 },
+          ],
+          raidCoins: { type: "Fixed", cost: 0 },
+        },
+        allowQuantityPurchase: false,
+        unlockRequirements: [
+          {
+            type: "ShopPurchase",
+            purchaseID: "smattyBosses:hater2",
+            count: 1,
+          },
+        ],
+        purchaseRequirements: [],
+        defaultBuyLimit: 1,
+        buyLimitOverrides: [],
+        showBuyLimit: false,
+        customName: "Boss Hater III",
+        customDescription: buildDescription(10, 15),
+      });
+    });
+    hater3.add();
+
+    const hater4 = ctx.gameData.buildPackage((p) => {
+      p.shopPurchases.add({
+        id: "hater4",
+        media:
+          "https://cdn2-main.melvor.net/assets/media/skills/combat/attack.png",
+        category: "smattyBosses:SkillingBossesGeneric",
+        contains: {
+          items: [],
+          modifiers: {
+            "smattyBosses:hater_4": 1,
+          },
+        },
+        cost: {
+          gp: { type: "Fixed", cost: 0 },
+          slayerCoins: { type: "Fixed", cost: 0 },
+          items: [{ id: "smattyBosses:impossibleItem", quantity: 1 }],
+          raidCoins: { type: "Fixed", cost: 0 },
+        },
+        allowQuantityPurchase: false,
+        unlockRequirements: [
+          {
+            type: "ShopPurchase",
+            purchaseID: "smattyBosses:hater3",
+            count: 1,
+          },
+        ],
+        purchaseRequirements: [],
+        defaultBuyLimit: 1,
+        buyLimitOverrides: [],
+        showBuyLimit: false,
+        customName: "Boss Hater IV",
+        customDescription: buildDescription(15, 20),
+      });
+    });
+    hater4.add();
+  } catch (error) {
+    console.error("Error adding hater purchases:", error);
+  }
+}
+
+function addDuckAttack(ctx) {
+  function buildDescription(current, next) {
+    return `
+        <div class="upgrade-card shop-tier-2-upgrade-card" data-upgrade="duckAttack">
+          <div class="upgrade-effect">
+            <h4 class="effect-title">When a battle is initiated against a Tier 2+ Boss:</h4>
+            <p class="effect-description">The boss loses ${next} attack power.</p>
+            <p class="current-upgrade-level-text">Applies only to tier-2+ Bosses.</p>
+            </div>
+          <div class="current-upgrade-level">
+            <p class="current-upgrade-level-text">Current: ${current} % damage increase</p>
+          </div>
+        </div>
+      `;
+  }
+  try {
+    const duckAttack1 = ctx.gameData.buildPackage((p) => {
+      p.shopPurchases.add({
+        id: "duckAttack1",
+        media:
+          "https://cdn2-main.melvor.net/assets/media/skills/combat/attack.png",
+        category: "smattyBosses:SkillingBossesGeneric",
+        contains: {
+          items: [],
+          modifiers: {
+            "smattyBosses:duckAttack": 1,
+          },
+        },
+        cost: {
+          gp: {
+            type: "Fixed",
+            cost: 0,
+          },
+          slayerCoins: {
+            type: "Fixed",
+            cost: 0,
+          },
+          items: [
+            { id: "smattyBosses:bossCoin", quantity: 9000 },
+            { id: "melvorD:Mithril_Sword", quantity: 50 },
+            { id: "smattyBosses:genericSoul", quantity: 50 },
+          ],
+          raidCoins: {
+            type: "Fixed",
+            cost: 0,
+          },
+        },
+        allowQuantityPurchase: false,
+        unlockRequirements: [],
+        purchaseRequirements: [],
+        defaultBuyLimit: 1,
+        buyLimitOverrides: [],
+        showBuyLimit: false,
+        customName: "Duck Attack I",
+        customDescription: buildDescription(0, 1),
+      });
+    });
+    duckAttack1.add();
+
+    const duckAttack2 = ctx.gameData.buildPackage((p) => {
+      p.shopPurchases.add({
+        id: "duckAttack2",
+        media:
+          "https://cdn2-main.melvor.net/assets/media/skills/combat/attack.png",
+        category: "smattyBosses:SkillingBossesGeneric",
+        contains: {
+          items: [],
+          modifiers: {
+            "smattyBosses:duckAttack_2": 1,
+          },
+        },
+        cost: {
+          gp: { type: "Fixed", cost: 0 },
+          slayerCoins: { type: "Fixed", cost: 0 },
+          items: [
+            { id: "smattyBosses:bossCoin", quantity: 18000 },
+            { id: "melvorD:Adamant_Sword", quantity: 100 },
+            { id: "smattyBosses:genericSoul", quantity: 100 },
+          ],
+          raidCoins: { type: "Fixed", cost: 0 },
+        },
+        allowQuantityPurchase: false,
+        unlockRequirements: [
+          {
+            type: "ShopPurchase",
+            purchaseID: "smattyBosses:duckAttack1",
+            count: 1,
+          },
+        ],
+        purchaseRequirements: [],
+        defaultBuyLimit: 1,
+        buyLimitOverrides: [],
+        showBuyLimit: false,
+        customName: "Duck Attack II",
+        customDescription: buildDescription(1, 2),
+      });
+    });
+    duckAttack2.add();
+
+    const duckAttack3 = ctx.gameData.buildPackage((p) => {
+      p.shopPurchases.add({
+        id: "duckAttack3",
+        media:
+          "https://cdn2-main.melvor.net/assets/media/skills/combat/attack.png",
+        category: "smattyBosses:SkillingBossesGeneric",
+        contains: {
+          items: [],
+          modifiers: {
+            "smattyBosses:duckAttack_3": 1,
+          },
+        },
+        cost: {
+          gp: { type: "Fixed", cost: 0 },
+          slayerCoins: { type: "Fixed", cost: 0 },
+          items: [
+            { id: "smattyBosses:bossCoin", quantity: 27000 },
+            { id: "melvorD:Rune_Sword", quantity: 200 },
+            { id: "smattyBosses:genericSoul", quantity: 200 },
+          ],
+          raidCoins: { type: "Fixed", cost: 0 },
+        },
+        allowQuantityPurchase: false,
+        unlockRequirements: [
+          {
+            type: "ShopPurchase",
+            purchaseID: "smattyBosses:duckAttack2",
+            count: 1,
+          },
+        ],
+        purchaseRequirements: [],
+        defaultBuyLimit: 1,
+        buyLimitOverrides: [],
+        showBuyLimit: false,
+        customName: "Duck Attack III",
+        customDescription: buildDescription(2, 3),
+      });
+    });
+    duckAttack3.add();
+
+    const duckAttack4 = ctx.gameData.buildPackage((p) => {
+      p.shopPurchases.add({
+        id: "duckAttack4",
+        media:
+          "https://cdn2-main.melvor.net/assets/media/skills/combat/attack.png",
+        category: "smattyBosses:SkillingBossesGeneric",
+        contains: {
+          items: [],
+          modifiers: {
+            "smattyBosses:duckAttack_4": 1,
+          },
+        },
+        cost: {
+          gp: { type: "Fixed", cost: 0 },
+          slayerCoins: { type: "Fixed", cost: 0 },
+          items: [{ id: "smattyBosses:impossibleItem", quantity: 1 }],
+          raidCoins: { type: "Fixed", cost: 0 },
+        },
+        allowQuantityPurchase: false,
+        unlockRequirements: [
+          {
+            type: "ShopPurchase",
+            purchaseID: "smattyBosses:duckAttack3",
+            count: 1,
+          },
+        ],
+        purchaseRequirements: [],
+        defaultBuyLimit: 1,
+        buyLimitOverrides: [],
+        showBuyLimit: false,
+        customName: "Duck Attack IV",
+        customDescription: buildDescription(3, 4),
+      });
+    });
+    duckAttack4.add();
+  } catch (error) {
+    console.error("Error adding duck attack purchases:", error);
+  }
+}
+
+function addBuffShielder(ctx) {
+  function buildDescription(current, next) {
+    return `
+        <div class="upgrade-card shop-tier-2-upgrade-card" data-upgrade="buffShielder">
+          <div class="upgrade-effect">
+            <h4 class="effect-title">When a Boss gains a buff:</h4>
+            <p class="effect-description">Gain +${next} shield.</p>
+            <p class="current-upgrade-level-text">Applies only to tier-2+ Bosses.</p>
+            </div>
+          <div class="current-upgrade-level">
+            <p class="current-upgrade-level-text">Current: ${current} shield</p>
+          </div>
+        </div>
+      `;
+  }
+  try {
+    const buffShielder1 = ctx.gameData.buildPackage((p) => {
+      p.shopPurchases.add({
+        id: "buffShielder1",
+        media:
+          "https://cdn2-main.melvor.net/assets/media/skills/combat/defence.png",
+        category: "smattyBosses:SkillingBossesGeneric",
+        contains: {
+          items: [],
+          modifiers: {
+            "smattyBosses:buffShielder": 1,
+          },
+        },
+        cost: {
+          gp: {
+            type: "Fixed",
+            cost: 0,
+          },
+          slayerCoins: {
+            type: "Fixed",
+            cost: 0,
+          },
+          items: [
+            { id: "smattyBosses:bossCoin", quantity: 5000 },
+            { id: "smattyBosses:genericSoul", quantity: 25 },
+            { id: "melvorF:Green_Dhide_Shield", quantity: 25 },
+          ],
+          raidCoins: {
+            type: "Fixed",
+            cost: 0,
+          },
+        },
+        allowQuantityPurchase: false,
+        unlockRequirements: [],
+        purchaseRequirements: [],
+        defaultBuyLimit: 1,
+        buyLimitOverrides: [],
+        showBuyLimit: false,
+        customName: "Buff Shielder I",
+        customDescription: buildDescription(0, 1),
+      });
+    });
+    buffShielder1.add();
+
+    const buffShielder2 = ctx.gameData.buildPackage((p) => {
+      p.shopPurchases.add({
+        id: "buffShielder2",
+        media:
+          "https://cdn2-main.melvor.net/assets/media/skills/combat/defence.png",
+        category: "smattyBosses:SkillingBossesGeneric",
+        contains: {
+          items: [],
+          modifiers: {
+            "smattyBosses:buffShielder_2": 1,
+          },
+        },
+        cost: {
+          gp: {
+            type: "Fixed",
+            cost: 0,
+          },
+          slayerCoins: {
+            type: "Fixed",
+            cost: 0,
+          },
+          items: [
+            { id: "smattyBosses:bossCoin", quantity: 10000 },
+            { id: "smattyBosses:genericSoul", quantity: 50 },
+            { id: "melvorF:Blue_Dhide_Shield", quantity: 50 },
+          ],
+          raidCoins: {
+            type: "Fixed",
+            cost: 0,
+          },
+        },
+        allowQuantityPurchase: false,
+        unlockRequirements: [
+          {
+            type: "ShopPurchase",
+            purchaseID: "smattyBosses:buffShielder1",
+            count: 1,
+          },
+        ],
+        purchaseRequirements: [],
+        defaultBuyLimit: 1,
+        buyLimitOverrides: [],
+        showBuyLimit: false,
+        customName: "Buff Shielder II",
+        customDescription: buildDescription(1, 2),
+      });
+    });
+    buffShielder2.add();
+
+    const buffShielder3 = ctx.gameData.buildPackage((p) => {
+      p.shopPurchases.add({
+        id: "buffShielder3",
+        media:
+          "https://cdn2-main.melvor.net/assets/media/skills/combat/defence.png",
+        category: "smattyBosses:SkillingBossesGeneric",
+        contains: {
+          items: [],
+          modifiers: {
+            "smattyBosses:buffShielder_3": 1,
+          },
+        },
+        cost: {
+          gp: {
+            type: "Fixed",
+            cost: 0,
+          },
+          slayerCoins: {
+            type: "Fixed",
+            cost: 0,
+          },
+          items: [
+            { id: "smattyBosses:bossCoin", quantity: 20000 },
+            { id: "smattyBosses:genericSoul", quantity: 100 },
+            { id: "melvorF:Red_Dhide_Shield", quantity: 100 },
+          ],
+          raidCoins: {
+            type: "Fixed",
+            cost: 0,
+          },
+        },
+        allowQuantityPurchase: false,
+        unlockRequirements: [
+          {
+            type: "ShopPurchase",
+            purchaseID: "smattyBosses:buffShielder2",
+            count: 1,
+          },
+        ],
+        purchaseRequirements: [],
+        defaultBuyLimit: 1,
+        buyLimitOverrides: [],
+        showBuyLimit: false,
+        customName: "Buff Shielder III",
+        customDescription: buildDescription(2, 3),
+      });
+    });
+    buffShielder3.add();
+
+    const buffShielder4 = ctx.gameData.buildPackage((p) => {
+      p.shopPurchases.add({
+        id: "buffShielder4",
+        media:
+          "https://cdn2-main.melvor.net/assets/media/skills/combat/defence.png",
+        category: "smattyBosses:SkillingBossesGeneric",
+        contains: {
+          items: [],
+          modifiers: {
+            "smattyBosses:buffShielder_4": 1,
+          },
+        },
+        cost: {
+          gp: { type: "Fixed", cost: 0 },
+          slayerCoins: { type: "Fixed", cost: 0 },
+          items: [
+            { id: "smattyBosses:bossCoin", quantity: 40000 },
+            { id: "smattyBosses:genericSoul", quantity: 200 },
+            { id: "melvorF:Black_Dhide_Shield", quantity: 200 },
+          ],
+          raidCoins: { type: "Fixed", cost: 0 },
+        },
+        allowQuantityPurchase: false,
+        unlockRequirements: [
+          {
+            type: "ShopPurchase",
+            purchaseID: "smattyBosses:buffShielder3",
+            count: 1,
+          },
+        ],
+        purchaseRequirements: [],
+        defaultBuyLimit: 1,
+        buyLimitOverrides: [],
+        showBuyLimit: false,
+        customName: "Buff Shielder IV",
+        customDescription: buildDescription(3, 4),
+      });
+    });
+    buffShielder4.add();
+
+    const buffShielder5 = ctx.gameData.buildPackage((p) => {
+      p.shopPurchases.add({
+        id: "buffShielder5",
+        media:
+          "https://cdn2-main.melvor.net/assets/media/skills/combat/defence.png",
+        category: "smattyBosses:SkillingBossesGeneric",
+        contains: {
+          items: [],
+          modifiers: {
+            "smattyBosses:buffShielder_5": 1,
+          },
+        },
+        cost: {
+          gp: { type: "Fixed", cost: 0 },
+          slayerCoins: { type: "Fixed", cost: 0 },
+          items: [{ id: "smattyBosses:impossibleItem", quantity: 1 }],
+          raidCoins: { type: "Fixed", cost: 0 },
+        },
+        allowQuantityPurchase: false,
+        unlockRequirements: [
+          {
+            type: "ShopPurchase",
+            purchaseID: "smattyBosses:buffShielder4",
+            count: 1,
+          },
+        ],
+        purchaseRequirements: [],
+        defaultBuyLimit: 1,
+        buyLimitOverrides: [],
+        showBuyLimit: false,
+        customName: "Buff Shielder V",
+        customDescription: buildDescription(4, 5),
+      });
+    });
+    buffShielder5.add();
+  } catch (error) {
+    console.error("Error adding buff shielder purchases:", error);
   }
 }

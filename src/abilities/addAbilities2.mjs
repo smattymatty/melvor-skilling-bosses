@@ -21,7 +21,7 @@ function initializeAbilities(ctx, models, activationFuncs) {
       43,
       "Sap Tap",
       `Deal Half your woodcutting level as physical damage to the target. +5 flat damage before reduction.
-      <p>40% to stun for 3 battle ticks.</p>`,
+      <p>40% to stun for 2 battle ticks.</p>`,
       "https://cdn2-main.melvor.net/assets/media/skills/woodcutting/woodcutting.png",
       "melvorD:Woodcutting",
       ["Quick Attack", "Physical", "Stun"],
@@ -30,7 +30,7 @@ function initializeAbilities(ctx, models, activationFuncs) {
       [
         (ability, game) =>
           activationFuncs.dealSkillLevelAsDamage(ability, game, 0.5, 5),
-        (ability, game) => activationFuncs.chanceToStun(game, ability, 0.4, 3),
+        (ability, game) => activationFuncs.chanceToStun(game, ability, 0.4, 2),
       ]
     );
     const ability44 = new models.Ability(
@@ -66,7 +66,7 @@ function initializeAbilities(ctx, models, activationFuncs) {
       46,
       "Boulder Bash",
       `Deal your mining level as physical damage to the target. +10 flat damage before reduction.
-      <p>50% to stun for 6 battle ticks.</p>
+      <p>50% to stun for 4 battle ticks.</p>
         `,
       "https://cdn2-main.melvor.net/assets/media/skills/mining/mining.png",
       "melvorD:Mining",
@@ -76,7 +76,7 @@ function initializeAbilities(ctx, models, activationFuncs) {
       [
         (ability, game) =>
           activationFuncs.dealSkillLevelAsDamage(ability, game, 1, 10),
-        (ability, game) => activationFuncs.chanceToStun(game, ability, 0.5, 6),
+        (ability, game) => activationFuncs.chanceToStun(game, ability, 0.5, 4),
       ]
     );
     const ability47 = new models.Ability(
@@ -112,7 +112,7 @@ function initializeAbilities(ctx, models, activationFuncs) {
       49,
       "Anchor Slam",
       `Deal Double your fishing level as physical damage to the target. +15 flat damage before reduction.
-      <p>60% to stun for 8 battle ticks.</p> 
+      <p>60% to stun for 6 battle ticks.</p> 
       
         `,
       "https://cdn2-main.melvor.net/assets/media/skills/fishing/fishing.png",
@@ -123,7 +123,7 @@ function initializeAbilities(ctx, models, activationFuncs) {
       [
         (ability, game) =>
           activationFuncs.dealSkillLevelAsDamage(ability, game, 2, 15),
-        (ability, game) => activationFuncs.chanceToStun(game, ability, 0.6, 8),
+        (ability, game) => activationFuncs.chanceToStun(game, ability, 0.6, 6),
       ]
     );
     const ability50 = new models.Ability(
@@ -557,7 +557,7 @@ function initializeAbilities(ctx, models, activationFuncs) {
       "https://cdn2-main.melvor.net/assets/media/skills/summoning/summoning.png",
       "melvorD:Summoning",
       ["Quick Attack", "Magic", "Debuff"],
-      BASE_COOLDOWN / 2 + 2,
+      BASE_COOLDOWN / 2 - 2,
       40,
       [
         (ability, game) =>

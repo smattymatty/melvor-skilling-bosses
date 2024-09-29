@@ -13,7 +13,6 @@ async function initializeMainQuests(
   rewardFuncs
 ) {
   const itemImagesHelper = await ctx.loadModule("src/helpers/itemImages.mjs");
-  // Define your main quests here
   const mainQuest1 = new questModels.Quest(
     "Wake Up, Skiller!",
     "Prepare yourself for the challenges ahead.",
@@ -41,6 +40,7 @@ async function initializeMainQuests(
               "melvorD:Thieving",
               "melvorD:Summoning",
               "melvorD:Astrology",
+              "melvorD:Runecrafting",
             ],
             20
           )
@@ -344,23 +344,23 @@ async function initializeMainQuests(
     8 // mainQuestNumber
   );
   const mainQuest10 = new questModels.Quest(
-    "Wait for more content!",
-    "Coming soon...",
+    "The Next Step",
+    "Defeat a boss 50 times!",
     "Main",
     "https://cdn2-main.melvor.net/assets/media/skills/combat/combat.png",
     [
       new questModels.Objective(
-        "Coming Soon",
-        "Coming soon...",
+        "Defeat a Boss 30 Times",
+        "Defeat any single boss 30 times.",
         "https://www.svgrepo.com/show/200452/skull.svg",
-        (game) => progressCheckers.checkTotalTypesOfBossesKilled(game, 10)
+        (game) => progressCheckers.checkAnyBossKills(game, 50)
       ),
     ],
     [
       new questModels.Reward(
-        "Coming Soon",
-        "Coming soon...",
-        "https://cdn2-main.melvor.net/assets/media/main/bank_header.png",
+        "Unlock Tier 2 Bosses",
+        "Tier 2 Bosses are much harder to defeat, but they are also much more rewarding.",
+        "https://www.svgrepo.com/show/200452/skull.svg",
         (game) => rewardFuncs.nextMainQuest(game, ctx)
       ),
     ],
@@ -368,8 +368,188 @@ async function initializeMainQuests(
     true, // isMainQuest
     9 // mainQuestNumber
   );
+  const mainQuest11 = new questModels.Quest(
+    "Are you Strong Enough?",
+    "Defeat a Tier 2 Boss.",
+    "Main",
+    "https://cdn2-main.melvor.net/assets/media/skills/combat/combat.png",
+    [
+      new questModels.Objective(
+        "Defeat a Tier 2 Boss",
+        "Defeat a Tier 2 Boss.",
+        "https://www.svgrepo.com/show/200452/skull.svg",
+        (game) => progressCheckers.checkTotalTier2BossKills(game, 1)
+      ),
+    ],
+    [
+      new questModels.Reward(
+        "Proceed to the next quest",
+        "",
+        "https://cdn2-main.melvor.net/assets/media/main/bank_header.png",
+        (game) => rewardFuncs.nextMainQuest(game, ctx)
+      ),
+    ],
+    [],
+    true, // isMainQuest
+    10 // mainQuestNumber
+  );
+  const mainQuest12 = new questModels.Quest(
+    "Wait for more content!",
+    "...",
+    "Main",
+    "https://cdn2-main.melvor.net/assets/media/skills/combat/combat.png",
+    [
+      new questModels.Objective(
+        "wait for more content!",
+        "...",
+        "https://www.svgrepo.com/show/200452/skull.svg",
+        (game) => progressCheckers.checkMultipleTier2BossesWithKills(game, 2, 5)
+      ),
+    ],
+    [
+      new questModels.Reward(
+        "Progress",
+        "Prepare for what's next.",
+        "https://www.svgrepo.com/show/513272/book-closed.svg",
+        (game) => rewardFuncs.nextMainQuest(game, ctx)
+      ),
+    ],
+    [],
+    true, // isMainQuest
+    11 // mainQuestNumber
+  );
 
-  // Add the main quests to the SkillingBosses instance
+  const mainQuest13 = new questModels.Quest(
+    "Tier 2 Conqueror",
+    "Defeat any three different Tier 2 bosses 10 times each.",
+    "Main",
+    "https://cdn2-main.melvor.net/assets/media/skills/combat/combat.png",
+    [
+      new questModels.Objective(
+        "Defeat Three Tier 2 Bosses 10 Times Each",
+        "Defeat any three different Tier 2 bosses 10 times each.",
+        "https://www.svgrepo.com/show/200452/skull.svg",
+        (game) =>
+          progressCheckers.checkMultipleTier2BossesWithKills(game, 3, 10)
+      ),
+    ],
+    [
+      new questModels.Reward(
+        "30 Generic Souls",
+        "More souls for more upgrades.",
+        itemImagesHelper.getImageUrlByItemID(ctx, "smattyBosses:genericSoul"),
+        (game) => rewardFuncs.addGenericSouls(game, ctx, 30)
+      ),
+      new questModels.Reward(
+        "Progress",
+        "Prepare for what's next.",
+        "https://cdn2-main.melvor.net/assets/media/main/bank_header.png",
+        (game) => rewardFuncs.nextMainQuest(game, ctx)
+      ),
+    ],
+    [],
+    true, // isMainQuest
+    12 // mainQuestNumber
+  );
+
+  const mainQuest14 = new questModels.Quest(
+    "Tier 2 Master",
+    "Defeat any four different Tier 2 bosses 15 times each.",
+    "Main",
+    "https://cdn2-main.melvor.net/assets/media/skills/combat/combat.png",
+    [
+      new questModels.Objective(
+        "Defeat Four Tier 2 Bosses 15 Times Each",
+        "Defeat any four different Tier 2 bosses 15 times each.",
+        "https://www.svgrepo.com/show/200452/skull.svg",
+        (game) =>
+          progressCheckers.checkMultipleTier2BossesWithKills(game, 4, 15)
+      ),
+    ],
+    [
+      new questModels.Reward(
+        "50 Generic Souls",
+        "A hefty amount of souls for powerful upgrades.",
+        itemImagesHelper.getImageUrlByItemID(ctx, "smattyBosses:genericSoul"),
+        (game) => rewardFuncs.addGenericSouls(game, ctx, 50)
+      ),
+      new questModels.Reward(
+        "Bank Slot Token",
+        "Another one for your growing inventory.",
+        "https://cdn2-main.melvor.net/assets/media/main/bank_header.png",
+        (game) => rewardFuncs.addBankSlotTokenToBank(game, ctx)
+      ),
+      new questModels.Reward(
+        "Progress",
+        "Get ready for new challenges.",
+        "https://cdn2-main.melvor.net/assets/media/main/bank_header.png",
+        (game) => rewardFuncs.nextMainQuest(game, ctx)
+      ),
+    ],
+    [],
+    true, // isMainQuest
+    13 // mainQuestNumber
+  );
+
+  const mainQuest15 = new questModels.Quest(
+    "Tier 2 Legend",
+    "Defeat any five different Tier 2 bosses 20 times each.",
+    "Main",
+    "https://cdn2-main.melvor.net/assets/media/skills/combat/combat.png",
+    [
+      new questModels.Objective(
+        "Defeat Five Tier 2 Bosses 20 Times Each",
+        "Defeat any five different Tier 2 bosses 20 times each.",
+        "https://www.svgrepo.com/show/200452/skull.svg",
+        (game) =>
+          progressCheckers.checkMultipleTier2BossesWithKills(game, 5, 20)
+      ),
+    ],
+    [
+      new questModels.Reward(
+        "200 Generic Souls",
+        "An abundant supply of souls for the toughest upgrades.",
+        itemImagesHelper.getImageUrlByItemID(ctx, "smattyBosses:genericSoul"),
+        (game) => rewardFuncs.addGenericSouls(game, ctx, 100)
+      ),
+      new questModels.Reward(
+        "Progress to Tier 3 Bosses",
+        "Prepare for the ultimate challenge.",
+        "https://www.svgrepo.com/show/200452/skull.svg",
+        (game) => rewardFuncs.nextMainQuest(game, ctx)
+      ),
+    ],
+    [],
+    true, // isMainQuest
+    14 // mainQuestNumber
+  );
+
+  const mainQuest16 = new questModels.Quest(
+    "Tier 3 Initiate",
+    "Defeat a Tier 3 Boss.",
+    "Main",
+    "https://cdn2-main.melvor.net/assets/media/skills/combat/combat.png",
+    [
+      new questModels.Objective(
+        "Defeat a Tier 3 Boss",
+        "Defeat any Tier 3 Boss.",
+        "https://www.svgrepo.com/show/200452/skull.svg",
+        (game) => progressCheckers.checkTotalTier3BossKills(game, 1)
+      ),
+    ],
+    [
+      new questModels.Reward(
+        "Wait for more content!",
+        "Coming soon...",
+        "https://cdn2-main.melvor.net/assets/media/main/bank_header.png",
+        (game) => rewardFuncs.nextMainQuest(game, ctx)
+      ),
+    ],
+    [],
+    true, // isMainQuest
+    15 // mainQuestNumber
+  );
+
   game.skillingBosses.addQuest(mainQuest1);
   game.skillingBosses.addQuest(mainQuest2);
   game.skillingBosses.addQuest(mainQuest3);
@@ -380,8 +560,10 @@ async function initializeMainQuests(
   game.skillingBosses.addQuest(mainQuest8);
   game.skillingBosses.addQuest(mainQuest9);
   game.skillingBosses.addQuest(mainQuest10);
+  game.skillingBosses.addQuest(mainQuest11);
+  game.skillingBosses.addQuest(mainQuest12);
+  game.skillingBosses.addQuest(mainQuest13);
 
-  // Start the first main quest
   game.skillingBosses.startQuest(0);
   // this is overwritten by storage if it exists
 }

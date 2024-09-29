@@ -360,3 +360,78 @@ export function checkThiefTheChef(game, amount) {
     return 0;
   }
 }
+
+export function getMineTheForge(game) {
+  if (game.skillingBosses.ExtraPlayerStats.mineTheForge > 0) {
+    return 1;
+  } else {
+    return 0;
+  }
+}
+
+export function getClimbTheTree(game) {
+  if (game.skillingBosses.ExtraPlayerStats.climbTheTree > 0) {
+    return 1;
+  } else {
+    return 0;
+  }
+}
+
+export function getSmithTheLeather(game) {
+  if (game.skillingBosses.ExtraPlayerStats.smithTheLeather > 0) {
+    return 1;
+  } else {
+    return 0;
+  }
+}
+
+export function checkTotalTier2BossKills(game, amount) {
+  try {
+    let totalKills = 0;
+    // bossKillsArray is an array of arrays where each sub-array contains [totalKills, fastestKill]
+    const bossKillsArray = game.skillingBosses.bossKillsArray;
+    // start at index 14 because the first 14 bosses are tier 1 bosses
+    for (let i = 14; i < 27; i++) {
+      const bossKills = bossKillsArray[i];
+      if (bossKills.length > 0) {
+        totalKills += bossKills[0];
+      }
+    }
+    if (totalKills >= amount) {
+      return 1;
+    } else {
+      return amount / totalKills;
+    }
+  } catch (error) {
+    console.error("Error checking for tier 2 boss kills:", error);
+  }
+}
+
+export function checkMultipleTier2BossesWithKills(game, types, amount) {
+  try {
+    let count = 0;
+    const bossKillsArray = game.skillingBosses.bossKillsArray;
+    // Tier 2 bosses are from index 14 to 26
+    for (let i = 14; i <= 26; i++) {
+      const bossKills = bossKillsArray[i];
+      if (bossKills && bossKills.length > 0 && bossKills[0] >= amount) {
+        count++;
+      }
+    }
+
+    if (count >= types) {
+      return 1;
+    } else {
+      return count / types;
+    }
+  } catch (error) {
+    console.error(
+      "Error checking for multiple Tier 2 bosses with kills:",
+      error
+    );
+    return 0;
+  }
+}
+export function checkTotalTier3BossKills(game, amount) {
+  return 0;
+}

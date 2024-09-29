@@ -13,7 +13,7 @@ function addImpossibleItem(ctx) {
       p.items.add({
         itemType: "Item",
         id: "impossibleItem",
-        name: "This skill is impossible to obtain ... For now.",
+        name: "This is impossible to obtain ... For now.",
         category: "Misc",
         type: "Item",
         media: "https://www.svgrepo.com/show/177780/padlock-lock.svg",

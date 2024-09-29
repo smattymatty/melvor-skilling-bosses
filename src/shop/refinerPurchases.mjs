@@ -5,6 +5,8 @@ export async function init(ctx) {
     addTier2Rollers(ctx);
     addTier3Rollers(ctx);
     addTier4Rollers(ctx);
+    addEfficientSkillingPurchases(ctx);
+    addEfficientBossingPurchases(ctx);
   } catch (error) {
     console.error("Error initializing refiner purchases:", error);
   }
@@ -645,5 +647,233 @@ function addTier4Rollers(ctx) {
     toxinRoller4.add();
   } catch (error) {
     console.error("Error adding refiner purchases:", error);
+  }
+}
+
+function addEfficientSkillingPurchases(ctx) {
+  function buildDescription(current, next) {
+    return `
+        <div class="upgrade-card shop-tier-2-upgrade-card" data-upgrade="efficientSkillingRefiner">
+          <div class="upgrade-effect">
+            <h4 class="effect-title">When training a Refining Skill that matches the Ability:</h4>
+            <p class="effect-description">Gain +${next} skill-ticks.</p>
+            <p class="current-upgrade-level-text">Applies only to tier-2+ Bosses.</p>
+            </div>
+          <div class="current-upgrade-level">
+            <p class="current-upgrade-level-text">Current: +${current} skill-ticks</p>
+          </div>
+        </div>
+      `;
+  }
+  try {
+    const efficientSkilling1 = ctx.gameData.buildPackage((p) => {
+      p.shopPurchases.add({
+        id: "efficientSkillingRefiner1",
+        media:
+          "https://cdn2-main.melvor.net/assets/media/skills/combat/attack.png",
+        category: "smattyBosses:SkillingBossesRefining",
+        contains: {
+          items: [],
+          modifiers: {
+            "smattyBosses:efficientSkillingRefiner": 1,
+          },
+        },
+        cost: {
+          gp: {
+            type: "Fixed",
+            cost: 0,
+          },
+          slayerCoins: {
+            type: "Fixed",
+            cost: 0,
+          },
+          items: [
+            { id: "smattyBosses:bossCoin", quantity: 10000 },
+            { id: "smattyBosses:refinerSoul", quantity: 100 },
+            { id: "melvorD:Mastery_Token_Cooking", quantity: 30 },
+            { id: "melvorD:Mastery_Token_Firemaking", quantity: 30 },
+            { id: "melvorF:Mastery_Token_Herblore", quantity: 30 },
+            { id: "smattyBosses:chefHeart", quantity: 3 },
+            { id: "smattyBosses:plagueHeart", quantity: 3 },
+            { id: "smattyBosses:blazingHeart", quantity: 3 },
+          ],
+          raidCoins: {
+            type: "Fixed",
+            cost: 0,
+          },
+        },
+        allowQuantityPurchase: false,
+        unlockRequirements: [],
+        purchaseRequirements: [],
+        defaultBuyLimit: 1,
+        buyLimitOverrides: [],
+        showBuyLimit: false,
+        customName: "Efficient Skilling I",
+        customDescription: buildDescription(1, 2),
+      });
+    });
+    efficientSkilling1.add();
+
+    const efficientSkilling2 = ctx.gameData.buildPackage((p) => {
+      p.shopPurchases.add({
+        id: "efficientSkillingRefiner2",
+        media:
+          "https://cdn2-main.melvor.net/assets/media/skills/combat/attack.png",
+        category: "smattyBosses:SkillingBossesRefining",
+        contains: {
+          items: [],
+          modifiers: {
+            "smattyBosses:efficientSkillingRefiner_2": 1,
+          },
+        },
+        cost: {
+          gp: {
+            type: "Fixed",
+            cost: 0,
+          },
+          slayerCoins: {
+            type: "Fixed",
+            cost: 0,
+          },
+          items: [{ id: "smattyBosses:impossibleItem", quantity: 1 }],
+          raidCoins: {
+            type: "Fixed",
+            cost: 0,
+          },
+        },
+        allowQuantityPurchase: false,
+        unlockRequirements: [
+          {
+            type: "ShopPurchase",
+            purchaseID: "smattyBosses:efficientSkillingRefiner1",
+            count: 1,
+          },
+        ],
+        purchaseRequirements: [],
+        defaultBuyLimit: 1,
+        buyLimitOverrides: [],
+        showBuyLimit: false,
+        customName: "Efficient Skilling II",
+        customDescription: buildDescription(2, 3),
+      });
+    });
+    efficientSkilling2.add();
+  } catch (error) {
+    console.error("Error adding efficient skilling purchases:", error);
+  }
+}
+
+function addEfficientBossingPurchases(ctx) {
+  function buildDescription(current, next) {
+    return `
+        <div class="upgrade-card shop-tier-2-upgrade-card" data-upgrade="efficientBossingRefiner">
+          <div class="upgrade-effect">
+            <h4 class="effect-title">When training a Refining Skill that matches the Boss:</h4>
+            <p class="effect-description">Gain +${next} skill-ticks.</p>
+            <p class="current-upgrade-level-text">Applies only to tier-2+ Bosses.</p>
+            </div>
+          <div class="current-upgrade-level">
+            <p class="current-upgrade-level-text">Current: +${current} skill-ticks</p>
+          </div>
+        </div>
+      `;
+  }
+
+  try {
+    const efficientBossing1 = ctx.gameData.buildPackage((p) => {
+      p.shopPurchases.add({
+        id: "efficientBossingRefiner1",
+        media:
+          "https://cdn2-main.melvor.net/assets/media/skills/combat/strength.png",
+        category: "smattyBosses:SkillingBossesRefining",
+        contains: {
+          items: [],
+          modifiers: {
+            "smattyBosses:efficientBossingRefiner": 1,
+          },
+        },
+        cost: {
+          gp: {
+            type: "Fixed",
+            cost: 0,
+          },
+          slayerCoins: {
+            type: "Fixed",
+            cost: 0,
+          },
+          items: [
+            { id: "smattyBosses:bossCoin", quantity: 10000 },
+            { id: "smattyBosses:refinerSoul", quantity: 100 },
+            { id: "melvorD:Mastery_Token_Cooking", quantity: 30 },
+            { id: "melvorD:Mastery_Token_Firemaking", quantity: 30 },
+            { id: "melvorF:Mastery_Token_Herblore", quantity: 30 },
+            { id: "smattyBosses:chefHeart", quantity: 3 },
+            { id: "smattyBosses:plagueHeart", quantity: 3 },
+            { id: "smattyBosses:blazingHeart", quantity: 3 },
+          ],
+          raidCoins: {
+            type: "Fixed",
+            cost: 0,
+          },
+        },
+        allowQuantityPurchase: false,
+        unlockRequirements: [],
+        purchaseRequirements: [],
+        defaultBuyLimit: 1,
+        buyLimitOverrides: [],
+        showBuyLimit: false,
+        customName: "Efficient Bossing I",
+        customDescription: buildDescription(1, 2),
+      });
+    });
+    efficientBossing1.add();
+
+    const efficientBossing2 = ctx.gameData.buildPackage((p) => {
+      p.shopPurchases.add({
+        id: "efficientBossingRefiner2",
+        media:
+          "https://cdn2-main.melvor.net/assets/media/skills/combat/strength.png",
+        category: "smattyBosses:SkillingBossesRefining",
+        contains: {
+          items: [],
+          modifiers: {
+            "smattyBosses:efficientBossingRefiner_2": 1,
+          },
+        },
+        cost: {
+          gp: {
+            type: "Fixed",
+            cost: 0,
+          },
+          slayerCoins: {
+            type: "Fixed",
+            cost: 0,
+          },
+          items: [{ id: "smattyBosses:impossibleItem", quantity: 1 }],
+          raidCoins: {
+            type: "Fixed",
+            cost: 0,
+          },
+        },
+
+        allowQuantityPurchase: false,
+        unlockRequirements: [
+          {
+            type: "ShopPurchase",
+            purchaseID: "smattyBosses:efficientBossingRefiner1",
+            count: 1,
+          },
+        ],
+        purchaseRequirements: [],
+        defaultBuyLimit: 1,
+        buyLimitOverrides: [],
+        showBuyLimit: false,
+        customName: "Efficient Bossing II",
+        customDescription: buildDescription(2, 3),
+      });
+    });
+    efficientBossing2.add();
+  } catch (error) {
+    console.error("Error adding efficient bossing purchases:", error);
   }
 }

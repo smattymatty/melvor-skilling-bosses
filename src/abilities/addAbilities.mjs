@@ -424,7 +424,7 @@ function initializeAbilities(ctx, models, activationFuncs) {
       "https://cdn2-main.melvor.net/assets/media/skills/summoning/summoning.png",
       "melvorD:Summoning",
       ["Basic Attack", "Magic"],
-      BASE_COOLDOWN, // Cooldown in ticks
+      BASE_COOLDOWN - 4, // Cooldown in ticks
       20, // Required level
       [(ability, game) => activationFuncs.dealSkillLevelAsDamage(ability, game)]
     );
@@ -435,7 +435,7 @@ function initializeAbilities(ctx, models, activationFuncs) {
       "https://cdn2-main.melvor.net/assets/media/skills/summoning/summoning.png",
       "melvorD:Summoning",
       ["Quick Attack", "Magic"],
-      BASE_COOLDOWN / 2, // Cooldown in ticks
+      BASE_COOLDOWN / 2 - 4, // Cooldown in ticks
       20, // Required level
       [
         (ability, game) =>
@@ -449,7 +449,7 @@ function initializeAbilities(ctx, models, activationFuncs) {
       "https://cdn2-main.melvor.net/assets/media/skills/summoning/summoning.png",
       "melvorD:Summoning",
       ["Strong Attack", "Magic"],
-      BASE_COOLDOWN * 2, // Cooldown in ticks
+      BASE_COOLDOWN * 2 - 4, // Cooldown in ticks
       20, // Required level
       [
         (ability, game) =>

@@ -45,6 +45,29 @@ function addArtisanModifiers(ctx) {
         },
       ],
     });
+
+    // Efficient Skilling (Artisan)
+    upgradeHelpers.createModifier(ctx, game, {
+      namespace: "smattyBosses",
+      id: "efficientSkillingArtisan",
+      tiers: 2,
+      descriptions: [
+        {
+          text: "When an Artisan Skill matches your Ability, you get an additional skill-tick against tier-2+ Bosses.",
+        },
+      ],
+    });
+    // Efficient Bossing (Artisan)
+    upgradeHelpers.createModifier(ctx, game, {
+      namespace: "smattyBosses",
+      id: "efficientBossingArtisan",
+      tiers: 2,
+      descriptions: [
+        {
+          text: "When an Artisan Skill matches the Boss you are fighting, you get an additional skill-tick against tier-2+ Bosses.",
+        },
+      ],
+    });
   } catch (error) {
     console.error("Error adding artisan modifiers:", error);
   }

@@ -40,7 +40,7 @@ export async function init(ctx) {
     setSupplyAmount();
     updatePlayerHealthBar();
     updatePlayerShieldBar();
-    buildBossSelectionList(ctx);
+    updateBossSelectionList(ctx, "tier1");
     updateBossDisplay(ctx);
     updateBossAttackUI();
     updatePlayerExtraStats();
@@ -71,45 +71,44 @@ export function setSupplyAmount() {
 }
 
 export function repairCoreWithSkillingSupplies() {
+  const HEAL_PER_SUPPLY = 3;
+  const DEFAULT_SUPPLIES_TO_USE = 10;
+
   const amountOfSupplies = setSupplyAmount();
-  const healAmount = Math.ceil(game.skillingBosses.playerCoreMaxHP * 0.1); // 10% of max HP
-  const suppliesNeeded = healAmount; // 1 supply heals 1 HP
-  if (game.skillingBosses.playerCoreHP >= game.skillingBosses.playerCoreMaxHP) {
+  const playerCurrentHP = game.skillingBosses.playerCoreHP;
+  const playerMaxHP = game.skillingBosses.playerCoreMaxHP;
+  const hpNeeded = playerMaxHP - playerCurrentHP;
+
+  if (playerCurrentHP >= playerMaxHP) {
     // TODO: UI warning for full core
     return;
   }
+
   if (amountOfSupplies === 0) {
     // TODO: UI warning for no supplies
     return;
-  } else if (amountOfSupplies >= suppliesNeeded) {
-    game.skillingBosses.healTarget(healAmount, "player");
-    game.skillingBosses.ExtraPlayerStats.suppliesUsed += suppliesNeeded;
-    game.skillingBosses.ctx.characterStorage.setItem(
-      "suppliesUsed",
-      game.skillingBosses.ExtraPlayerStats.suppliesUsed
-    );
-    updatePlayerHealthBar();
-    game.bank.removeItemQuantityByID(
-      "smattyBosses:skillingSupplies",
-      suppliesNeeded
-    );
-    setSupplyAmount();
-  } else {
-    // If there are some supplies, but not enough for 10%, use all available supplies
-    const availableHealAmount = suppliesNeeded;
-    game.skillingBosses.healTarget(availableHealAmount, "player");
-    game.skillingBosses.ExtraPlayerStats.suppliesUsed += availableHealAmount;
-    game.skillingBosses.ctx.characterStorage.setItem(
-      "suppliesUsed",
-      game.skillingBosses.ExtraPlayerStats.suppliesUsed
-    );
-    updatePlayerHealthBar();
-    game.bank.removeItemQuantityByID(
-      "smattyBosses:skillingSupplies",
-      availableHealAmount
-    );
-    setSupplyAmount();
   }
+  const suppliesNeededForFullHeal = Math.ceil(hpNeeded / HEAL_PER_SUPPLY);
+  const suppliesToUse = Math.min(
+    DEFAULT_SUPPLIES_TO_USE,
+    suppliesNeededForFullHeal,
+    amountOfSupplies
+  );
+  const healAmount = suppliesToUse * HEAL_PER_SUPPLY;
+  // healing
+  game.skillingBosses.healTarget(healAmount, "player");
+  game.skillingBosses.ExtraPlayerStats.suppliesUsed += suppliesToUse;
+  game.skillingBosses.ctx.characterStorage.setItem(
+    "suppliesUsed",
+    game.skillingBosses.ExtraPlayerStats.suppliesUsed
+  );
+  updatePlayerHealthBar();
+  // remove supplies from bank
+  game.bank.removeItemQuantityByID(
+    "smattyBosses:skillingSupplies",
+    suppliesToUse
+  );
+  setSupplyAmount();
 }
 
 export function createBossKillArrayAndSave() {
@@ -240,9 +239,8 @@ function closeAllDetails() {
 }
 
 function startBossFight(ctx, boss) {
-  game.skillingBosses.setActiveBoss(boss.id);
-  ctx.characterStorage.setItem("AcBss", game.skillingBosses.activeBoss.id);
   // Start the battle to initialize battle-related properties
+  game.skillingBosses.activeBoss = boss;
   game.skillingBosses.startBattle();
 
   // Initialize ability slots and update displays after starting the battle
@@ -271,27 +269,23 @@ export function actuallyUpdateBossDisplay() {
   }
   const bossName = document.getElementById("boss-name");
   if (game.skillingBosses.activeBoss) {
-    bossName.textContent = game.skillingBosses.activeBoss.name;
+    bossName.innerHTML = `<h2>${game.skillingBosses.activeBoss.name}</h2>`;
   } else {
-    bossName.textContent = "Select A Boss";
+    bossName.innerHTML = "Select A Boss";
   }
 }
 
 export function updateAbilityProgressUI() {
-  // Early return if UI is not visible
   const bossesContent = document.getElementById("skilling-bosses-container");
   if (!bossesContent || bossesContent.classList.contains("d-none")) {
-    // UI is not visible, no need to update
     return;
   }
 
   const skillLoopItems = document.querySelectorAll(".skill-loop-item");
   if (skillLoopItems.length === 0) {
-    // No skill loop items to update
     return;
   }
 
-  // Cache game data to avoid multiple property accesses
   const skillingBosses = game.skillingBosses;
   const equippedAbilities = skillingBosses.equippedAbilities;
   const activeAbilitySlot = skillingBosses.activeAbilitySlot;
@@ -300,7 +294,6 @@ export function updateAbilityProgressUI() {
   skillLoopItems.forEach((itemElement, index) => {
     const ability = equippedAbilities[index];
 
-    // Cache DOM elements to minimize queries
     const progressBar = itemElement.querySelector(
       ".skill-loop-item-progress-bar"
     );
@@ -313,19 +306,16 @@ export function updateAbilityProgressUI() {
     );
 
     if (ability) {
-      // Update ability name if changed
       if (abilityNameElement.textContent !== ability.name) {
         abilityNameElement.textContent = ability.name;
       }
 
-      // Update ability icon if changed
       if (abilityIconElement.getAttribute("src") !== ability.icon) {
         abilityIconElement.src = ability.icon;
         abilityIconElement.alt = ability.name;
       }
 
       if (index < activeAbilitySlot) {
-        // Abilities before the current slot are completed
         if (progressBar.style.width !== "100%") {
           progressBar.style.width = "100%";
         }
@@ -334,7 +324,6 @@ export function updateAbilityProgressUI() {
           progressBarText.textContent = progressText;
         }
       } else if (index === activeAbilitySlot) {
-        // Current ability slot
         const abilityCooldown = ability.cooldown;
         const timeElapsed = abilityCooldown - activeAbilityTimer;
         const progressPercentage = (timeElapsed / abilityCooldown) * 100;
@@ -349,7 +338,6 @@ export function updateAbilityProgressUI() {
           progressBarText.textContent = progressText;
         }
       } else {
-        // Abilities after the current slot are yet to activate
         if (progressBar.style.width !== "0%") {
           progressBar.style.width = "0%";
         }
@@ -359,19 +347,16 @@ export function updateAbilityProgressUI() {
         }
       }
     } else {
-      // No ability equipped in this slot
       if (abilityNameElement.textContent !== "No Ability") {
         abilityNameElement.textContent = "No Ability";
       }
 
-      // Set default icon if not already set
-      const defaultIconSrc = ""; // Replace with default image path if available
+      const defaultIconSrc = "";
       if (abilityIconElement.getAttribute("src") !== defaultIconSrc) {
         abilityIconElement.src = defaultIconSrc;
         abilityIconElement.alt = "No Ability";
       }
 
-      // Progress bar is empty
       if (progressBar.style.width !== "0%") {
         progressBar.style.width = "0%";
       }
@@ -419,7 +404,6 @@ export function updateBattleStatsUI() {
     return;
   }
 
-  // Early return if the UI is not visible
   const bossesContent = document.getElementById("skilling-bosses-container");
   if (!bossesContent || bossesContent.classList.contains("d-none")) {
     return;
@@ -427,7 +411,6 @@ export function updateBattleStatsUI() {
 
   const skillingBosses = game.skillingBosses;
 
-  // Update current combat stats UI only if there are battle ticks
   if (skillingBosses.currentBattleTicks > 0) {
     updateCurrentCombatStatsUI();
   }
@@ -475,7 +458,6 @@ export function updateBattleStatsUI() {
   const playerPhysicalResistance = skillingBosses.playerPhysicalResistance;
   const playerMagicResistance = skillingBosses.playerMagicResistance;
 
-  // Update Boss HP if changed
   const bossCurrentHPText = `${bossCurrHP} `;
   if (bossCurrentHPElement.textContent !== bossCurrentHPText) {
     bossCurrentHPElement.textContent = bossCurrentHPText;
@@ -486,7 +468,6 @@ export function updateBattleStatsUI() {
     bossMaxHPElement.textContent = bossMaxHPText;
   }
 
-  // Update Boss HP Bar if changed
   const bossHPBarWidth = `${bossHPPercentage}%`;
   if (
     bossHPBarInner.style.getPropertyValue("--hp-percentage") !== bossHPBarWidth
@@ -498,18 +479,15 @@ export function updateBattleStatsUI() {
   if (bossHPTextElement.textContent !== bossHPText) {
     bossHPTextElement.textContent = bossHPText;
   }
-  // Update Player Shield if changed
   const playerShieldText = `${playerShield}`;
   if (playerShieldElement.textContent !== playerShieldText) {
     playerShieldElement.textContent = playerShieldText;
   }
-  // Update Max Shield if changed
   const playerShieldMaxText = ` ${playerShieldMax}`;
   if (playerShieldMaxElement.textContent !== playerShieldMaxText) {
     playerShieldMaxElement.textContent = playerShieldMaxText;
   }
 
-  // Update Player Core HP if changed
   const playerCurrentHPText = `${playerCurrHP} `;
   if (playerCurrentHPElement.textContent !== playerCurrentHPText) {
     playerCurrentHPElement.textContent = playerCurrentHPText;
@@ -526,10 +504,9 @@ export function updateBattleStatsUI() {
     playerMaxHPElement.textContent = playerMaxHPText;
   }
 
-  // Update Player Shield Regen
-  const playerShieldRegenText = `${
+  const playerShieldRegenText = `${Math.floor(
     playerShieldRegenChance * 100
-  } % / ${playerShieldRegenAmount}`;
+  )} % / ${playerShieldRegenAmount}`;
   if (playerShieldRegenElement.textContent !== playerShieldRegenText) {
     playerShieldRegenElement.textContent = playerShieldRegenText;
   }
@@ -544,7 +521,6 @@ export function updateBattleStatsUI() {
     playerMagicResistanceElement.textContent = playerMagicResistanceText;
   }
 
-  // Update Boss Defensive Stats
   if (skillingBosses.activeBoss) {
     const physicalDefenseText = `${skillingBosses.activeBoss.physicalDefense} %`;
     if (bossPhysicalDefenseElement.textContent !== physicalDefenseText) {
@@ -564,7 +540,6 @@ export function updateBattleStatsUI() {
     }
   }
   let HTMLContent = ``;
-  // Update Boss Defensive Stats Info
   if (bossDefensiveStatsInfo) {
     if (skillingBosses.activeBoss) {
       if (skillingBosses.currentBattleDamageDealt > 0) {
@@ -576,7 +551,6 @@ export function updateBattleStatsUI() {
       if (skillingBosses.currentBattleBossDamageReduced > 0) {
         HTMLContent += `<div>Reduced ${skillingBosses.currentBattleBossDamageReduced} Damage</div>`;
       }
-      // apply the html content to the element
       if (bossDefensiveStatsInfo.innerHTML !== HTMLContent) {
         bossDefensiveStatsInfo.innerHTML = HTMLContent;
       }
@@ -760,6 +734,10 @@ function createEffectElement(effect, type) {
       content += `Reduces the Magic Resist of the target by ${effect[2]}`;
     } else if (effect[0] === "stuckArrow") {
       content += `On expiration, deals ${effect[2]} damage to the target`;
+    } else if (effect[0] === "bolsterAttackPower") {
+      content += `Increases Attack Power by ${effect[2]}`;
+    } else if (effect[0] === "bolsterResistance") {
+      content += `Increases Resistances by ${effect[2]}`;
     } else {
       let description = `Deals ${effect[2]} damage per tick`;
       content += description;
@@ -767,15 +745,17 @@ function createEffectElement(effect, type) {
   } else {
     content += `${game.skillingBosses.getEffectById(effect[0]).description}`;
   }
-  content += `
+
+  if (effect[1] !== 999) {
+    content += `
   </span>
   <span class="boss-${type}-progress-text">
         Removed in ${effect[1]} battle ticks
       </span>
     </div>
   `;
+  }
   effectElement.innerHTML = content;
-
   return effectElement;
 }
 
@@ -1027,15 +1007,19 @@ export function initializeTierBossSelectButtons(ctx) {
     });
   }
   tier2BossSelectButton.disabled = true;
+  if (game.skillingBosses.currentMainQuest > 9) {
+    tier2BossSelectButton.disabled = false;
+  }
   tier3BossSelectButton.disabled = true;
 }
 
 function updateBossSelectionList(ctx, tier) {
   const container = document.getElementById("boss-selection-list");
   if (!container) return;
+  let bosses = [];
   switch (tier) {
     case "tier1":
-      const bosses = getBossesByIDRange(0, 13);
+      bosses = getBossesByIDRange(0, 13);
       container.innerHTML = "";
       bosses.forEach((boss) => {
         const bossItem = createBossItem(ctx, boss);
@@ -1047,6 +1031,14 @@ function updateBossSelectionList(ctx, tier) {
       break;
     case "tier2":
       container.innerHTML = "";
+      bosses = getBossesByIDRange(14, 27);
+      bosses.forEach((boss) => {
+        const bossItem = createBossItem(ctx, boss);
+
+        container.appendChild(bossItem);
+        fillBossRewards(ctx, boss);
+        game.skillingBosses.updatePlayerBossStats();
+      });
       break;
     case "tier3":
       container.innerHTML = "";

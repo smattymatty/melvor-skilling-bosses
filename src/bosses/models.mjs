@@ -7,8 +7,8 @@ export class Boss {
     stats,
     attacks,
     rewards,
-    rewardProbabilities,
-    levelRequirement = 20
+    levelRequirement = 20,
+    rewardProbabilities
   ) {
     this.id = id;
     this.name = name;
@@ -81,6 +81,14 @@ export class Boss {
       const quantity = Math.floor(Math.random() * (max - min + 1)) + min;
       return [itemId, quantity];
     });
+  }
+
+  isTier2() {
+    return this.id >= 14 && this.id <= 27;
+  }
+
+  isTier3() {
+    return this.id >= 28 && this.id <= 41;
   }
 }
 export class BossStats {

@@ -1,3 +1,7 @@
+const { loadModule } = mod.getContext(import.meta);
+
+const settingsUIModule = await loadModule("src/ui/settings.mjs");
+
 export async function init(ctx) {
   try {
     const { SkillingBossesPageUIComponent } = await ctx.loadModule(
@@ -114,6 +118,7 @@ export async function openSkillingBossesScreen(ctx, component) {
       console.error("Error initializing Skilling Bosses screen:", error);
       throw error;
     }
+    settingsUIModule.updateUIForSettings();
     checkButtons();
     if (game.skillingBosses.currentMainQuest < 2) {
       component.showSection("quests");

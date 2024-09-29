@@ -163,8 +163,27 @@ export async function addSapphires(game, ctx, amount) {
 }
 
 export function addSwordfish(game, ctx, amount) {
+  game.bank.addItemByID("melvorD:Swordfish", amount, false, true, true, true);
+}
+
+export async function addBirdNest(game, ctx, amount) {
+  game.bank.addItemByID("melvorD:Bird_Nest", amount, false, true, true, true);
+}
+
+export async function addMithrilShields(game, ctx, amount) {
   game.bank.addItemByID(
-    "melvorD:Raw_Swordfish",
+    "melvorD:Mithril_Shield",
+    amount,
+    false,
+    true,
+    true,
+    true
+  );
+}
+
+export async function addGoldSapphireNecklaces(game, ctx, amount) {
+  game.bank.addItemByID(
+    "melvorF:Gold_Sapphire_Necklace",
     amount,
     false,
     true,

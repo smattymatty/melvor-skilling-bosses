@@ -16,7 +16,7 @@ function addGenericModifiers(ctx) {
     upgradeHelpers.createModifier(ctx, game, {
       namespace: "smattyBosses",
       id: "luckyLevels",
-      tiers: 4,
+      tiers: 7,
       descriptions: [
         {
           text: "When an ability checks your skill level, randomly add up to ${value} to the check.",
@@ -43,6 +43,39 @@ function addGenericModifiers(ctx) {
       descriptions: [
         {
           text: "When your third ability is used, regenerate ${value} shield.",
+        },
+      ],
+    });
+    // Duck Attack
+    upgradeHelpers.createModifier(ctx, game, {
+      namespace: "smattyBosses",
+      id: "duckAttack",
+      tiers: 4,
+      descriptions: [
+        {
+          text: "When a battle is initiated, reduce the boss's attack power by ${value} if it is tier2+.",
+        },
+      ],
+    });
+    // Tier 2 Hater
+    upgradeHelpers.createModifier(ctx, game, {
+      namespace: "smattyBosses",
+      id: "hater",
+      tiers: 4,
+      descriptions: [
+        {
+          text: "Deal ${value}% more damage to bosses of tier2+.",
+        },
+      ],
+    });
+    // Buff Shielder
+    upgradeHelpers.createModifier(ctx, game, {
+      namespace: "smattyBosses",
+      id: "buffShielder",
+      tiers: 5,
+      descriptions: [
+        {
+          text: "Gain +${value} shield when a boss gains a buff.",
         },
       ],
     });

@@ -2106,3 +2106,7 @@ body.darkMode .boss-debuff-progress-text {
   color: white;
   font-weight: bold;
 }
+
+.shop-tier-2-upgrade-card {
+  background-color: rgba(33, 97, 47, 0.699);
+}

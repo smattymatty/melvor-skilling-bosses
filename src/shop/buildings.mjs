@@ -34,6 +34,7 @@ function addBuildingPurchases(ctx) {
     addInnPurchases(ctx);
     addRepairShopPurchases(ctx);
     addShieldSmithPurchases(ctx);
+    addShieldRegenPurchases(ctx);
   } catch (error) {
     console.error("Error adding building purchases:", error);
   }
@@ -621,10 +622,7 @@ function addRepairShopPurchases(ctx) {
             type: "Fixed",
             cost: 0,
           },
-          items: [
-            { id: "melvorD:Iron_Bar", quantity: 25 },
-            { id: "melvorD:Leather", quantity: 25 },
-          ],
+          items: [],
           raidCoins: {
             type: "Fixed",
             cost: 0,
@@ -1326,5 +1324,141 @@ function addHardenCorePurchases(ctx) {
     });
   } catch (error) {
     console.error("Error adding harden shield purchases:", error);
+  }
+}
+
+function addShieldRegenPurchases(ctx) {
+  function buildDescription() {
+    return `
+        <div class="upgrade-card" data-upgrade="shieldRegen">
+          <div class="upgrade-effect">
+            <h4 class="effect-title">Shield Regen I</h4>
+            <p class="effect-description">+5% shield regen chance.</p>
+            </div>
+        </div>
+      `;
+  }
+  try {
+    const shieldRegen1 = ctx.gameData.buildPackage((p) => {
+      p.shopPurchases.add({
+        id: "shieldRegen1",
+        media:
+          "https://cdn2-main.melvor.net/assets/media/skills/combat/hitpoints.png",
+        category: "smattyBosses:SkillingBossesBuildings",
+        contains: {
+          items: [],
+          modifiers: {},
+        },
+        cost: {
+          gp: {
+            type: "Fixed",
+            cost: 25000,
+          },
+          slayerCoins: {
+            type: "Fixed",
+            cost: 0,
+          },
+          items: [
+            { id: "melvorF:Silver_Sapphire_Necklace", quantity: 50 },
+            { id: "melvorF:Gold_Sapphire_Necklace", quantity: 50 },
+          ],
+          raidCoins: {
+            type: "Fixed",
+            cost: 0,
+          },
+        },
+        allowQuantityPurchase: false,
+        unlockRequirements: [
+          {
+            type: "ShopPurchase",
+            purchaseID: "smattyBosses:shieldSmith",
+            count: 1,
+          },
+        ],
+        purchaseRequirements: [],
+        defaultBuyLimit: 1,
+        buyLimitOverrides: [],
+        showBuyLimit: false,
+        customName: "Shield Regen I",
+        customDescription: buildDescription(),
+      });
+    });
+    shieldRegen1.add();
+
+    const shieldRegen2 = ctx.gameData.buildPackage((p) => {
+      p.shopPurchases.add({
+        id: "shieldRegen2",
+        media:
+          "https://cdn2-main.melvor.net/assets/media/skills/combat/hitpoints.png",
+        category: "smattyBosses:SkillingBossesBuildings",
+        contains: {
+          items: [],
+          modifiers: {},
+        },
+        cost: {
+          gp: {
+            type: "Fixed",
+            cost: 50000,
+          },
+          slayerCoins: {
+            type: "Fixed",
+            cost: 0,
+          },
+          items: [
+            { id: "melvorF:Silver_Ruby_Necklace", quantity: 100 },
+            { id: "melvorF:Gold_Ruby_Necklace", quantity: 100 },
+          ],
+          raidCoins: {
+            type: "Fixed",
+            cost: 0,
+          },
+        },
+        allowQuantityPurchase: false,
+        unlockRequirements: [
+          {
+            type: "ShopPurchase",
+            purchaseID: "smattyBosses:shieldSmith2",
+            count: 1,
+          },
+          {
+            type: "ShopPurchase",
+            purchaseID: "smattyBosses:shieldRegen1",
+            count: 1,
+          },
+        ],
+        purchaseRequirements: [],
+        defaultBuyLimit: 1,
+        buyLimitOverrides: [],
+        showBuyLimit: false,
+        customName: "Shield Regen II",
+        customDescription: buildDescription(),
+      });
+    });
+    shieldRegen2.add();
+
+    function giveShieldRegen(ctx, game) {
+      // this.playerShieldRegen = [0.1, 1]; // [regenChance, regenAmount]
+      game.skillingBosses.playerShieldRegen[0] += 0.05;
+      ctx.characterStorage.setItem(
+        "PshR",
+        game.skillingBosses.playerShieldRegen
+      );
+      game.skillingBosses.needsCombatStatsUIUpdate = true;
+      game.skillingBosses.updateUIIfNeeded();
+    }
+
+    ctx.patch(Shop, "buyItemOnClick").after(function (x, purchase, confirmed) {
+      if (purchase.id === "smattyBosses:shieldRegen1") {
+        if (confirmed) {
+          giveShieldRegen(ctx, game);
+        }
+      } else if (purchase.id === "smattyBosses:shieldRegen2") {
+        if (confirmed) {
+          giveShieldRegen(ctx, game);
+        }
+      }
+    });
+  } catch (error) {
+    console.error("Error adding shield regen purchases:", error);
   }
 }

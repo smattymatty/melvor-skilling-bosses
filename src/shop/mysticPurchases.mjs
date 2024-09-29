@@ -1,57 +1,61 @@
-const { loadModule } = mod.getContext(import.meta);
-
-const itemImagesHelper = await loadModule("src/helpers/itemImages.mjs");
-
 export async function init(ctx) {
   try {
     addShopCategory(ctx);
-    addArrowRollerPurchases(ctx);
-    addIngotRollerPurchases(ctx);
-    addLeatherRollerPurchases(ctx);
+    addMysticRollers(ctx);
     addEfficientSkillingPurchases(ctx);
     addEfficientBossingPurchases(ctx);
   } catch (error) {
-    console.error("Error initializing artisan purchases:", error);
+    console.error("Error initializing mystic purchases:", error);
   }
 }
 
 function addShopCategory(ctx) {
-  const skillingBossesGeneric = ctx.gameData.buildPackage((p) => {
+  const skillingBossesMystic = ctx.gameData.buildPackage((p) => {
     p.shopCategories.add({
-      id: "SkillingBossesArtisan",
-      name: "Artisan",
-      media: "assets/items/souls/artisan-soul.svg",
+      id: "SkillingBossesMystic",
+      name: "Mystic",
+      media: "assets/items/souls/mystic-soul.svg",
     });
   });
-  skillingBossesGeneric.add();
+  skillingBossesMystic.add();
 }
-function addIngotRollerPurchases(ctx) {
+
+function addMysticRollers(ctx) {
+  try {
+    addStarRollerPurchases(ctx);
+    addWardRollerPurchases(ctx);
+    addShardRollerPurchases(ctx);
+  } catch (error) {
+    console.error("Error adding mystic rollers:", error);
+  }
+}
+
+function addShardRollerPurchases(ctx) {
   function generateDescription(nextTierChance, currentChance) {
     return `
-        <div class="upgrade-card" data-upgrade="ingotRoller1">
+        <div class="upgrade-card" data-upgrade="shardRoller">
           <div class="upgrade-effect">
-            <h4 class="effect-title">When a Smithing Ability deals damage:</h4>
-            <p class="effect-description">${nextTierChance}% chance to deal half your shield as damage.</p>
-            <p class="current-upgrade-level-text">Or 5 damage, whichever is higher.</p>
+            <h4 class="effect-title">When a Mystic Skill matches your Ability:</h4>
+            <p class="effect-description">${nextTierChance}% chance to definitely do something.</p>
+            <p class="current-upgrade-level-text">Will be implemented in the future.</p>
           </div>
-          
-        </div>
           <div class="current-upgrade-level">
             <p class="current-upgrade-level-text">Current: ${currentChance} % chance</p>
           </div>
+        </div>
       `;
   }
   try {
-    const ingotRoller1 = ctx.gameData.buildPackage((p) => {
+    const shardRoller1 = ctx.gameData.buildPackage((p) => {
       p.shopPurchases.add({
-        id: "ingotRoller1",
+        id: "shardRoller1",
         media:
-          "https://cdn2-main.melvor.net/assets/media/skills/smithing/smithing.png",
-        category: "smattyBosses:SkillingBossesArtisan",
+          "https://cdn2-main.melvor.net/assets/media/skills/summoning/summoning.png",
+        category: "smattyBosses:SkillingBossesMystic",
         contains: {
           items: [],
           modifiers: {
-            "smattyBosses:ingotRoller": 5,
+            "smattyBosses:shardRoller": 5,
           },
         },
         cost: {
@@ -64,12 +68,12 @@ function addIngotRollerPurchases(ctx) {
             cost: 0,
           },
           items: [
-            { id: "melvorD:Mastery_Token_Smithing", quantity: 10 },
+            //{ id: "melvorD:Mastery_Token_Summoning", quantity: 10 },
             { id: "smattyBosses:bossCoin", quantity: 1000 },
-            { id: "smattyBosses:genericSoul", quantity: 10 },
-            { id: "smattyBosses:artisanSoul", quantity: 10 },
-            { id: "melvorD:Steel_Bar", quantity: 100 },
-            { id: "melvorD:Silver_Bar", quantity: 100 },
+            // { id: "smattyBosses:genericSoul", quantity: 10 },
+            //{ id: "smattyBosses:mysticSoul", quantity: 10 },
+            //{ id: "melvorD:Shard", quantity: 100 },
+            //{ id: "melvorD:Shard", quantity: 100 },
           ],
           raidCoins: {
             type: "Fixed",
@@ -82,22 +86,21 @@ function addIngotRollerPurchases(ctx) {
         defaultBuyLimit: 1,
         buyLimitOverrides: [],
         showBuyLimit: false,
-        customName: "Ingot Roller I",
+        customName: "Shard Roller I",
         customDescription: generateDescription(5, 0),
       });
     });
-    ingotRoller1.add();
-
-    const ingotRoller2 = ctx.gameData.buildPackage((p) => {
+    shardRoller1.add();
+    const shardRoller2 = ctx.gameData.buildPackage((p) => {
       p.shopPurchases.add({
-        id: "ingotRoller2",
+        id: "shardRoller2",
         media:
-          "https://cdn2-main.melvor.net/assets/media/skills/smithing/smithing.png",
-        category: "smattyBosses:SkillingBossesArtisan",
+          "https://cdn2-main.melvor.net/assets/media/skills/summoning/summoning.png",
+        category: "smattyBosses:SkillingBossesMystic",
         contains: {
           items: [],
           modifiers: {
-            "smattyBosses:ingotRoller_2": 5,
+            "smattyBosses:shardRoller_2": 5,
           },
         },
         cost: {
@@ -110,12 +113,12 @@ function addIngotRollerPurchases(ctx) {
             cost: 0,
           },
           items: [
-            { id: "melvorD:Mastery_Token_Smithing", quantity: 20 },
-            { id: "smattyBosses:bossCoin", quantity: 3000 },
-            { id: "smattyBosses:genericSoul", quantity: 20 },
-            { id: "smattyBosses:artisanSoul", quantity: 30 },
-            { id: "melvorD:Mithril_Bar", quantity: 250 },
-            { id: "melvorD:Gold_Bar", quantity: 250 },
+            // { id: "melvorD:Mastery_Token_Summoning", quantity: 20 },
+            { id: "smattyBosses:impossibleItem", quantity: 1 },
+            // { id: "smattyBosses:genericSoul", quantity: 20 },
+            //{ id: "smattyBosses:mysticSoul", quantity: 30 },
+            //{ id: "melvorD:Shard", quantity: 250 },
+            //{ id: "melvorD:Shard", quantity: 250 },
           ],
           raidCoins: {
             type: "Fixed",
@@ -126,7 +129,7 @@ function addIngotRollerPurchases(ctx) {
         unlockRequirements: [
           {
             type: "ShopPurchase",
-            purchaseID: "smattyBosses:ingotRoller1",
+            purchaseID: "smattyBosses:shardRoller1",
             count: 1,
           },
         ],
@@ -134,22 +137,21 @@ function addIngotRollerPurchases(ctx) {
         defaultBuyLimit: 1,
         buyLimitOverrides: [],
         showBuyLimit: false,
-        customName: "Ingot Roller II",
+        customName: "Shard Roller II",
         customDescription: generateDescription(10, 5),
       });
     });
-    ingotRoller2.add();
-
-    const ingotRoller3 = ctx.gameData.buildPackage((p) => {
+    shardRoller2.add();
+    const shardRoller3 = ctx.gameData.buildPackage((p) => {
       p.shopPurchases.add({
-        id: "ingotRoller3",
+        id: "shardRoller3",
         media:
-          "https://cdn2-main.melvor.net/assets/media/skills/smithing/smithing.png",
-        category: "smattyBosses:SkillingBossesArtisan",
+          "https://cdn2-main.melvor.net/assets/media/skills/summoning/summoning.png",
+        category: "smattyBosses:SkillingBossesMystic",
         contains: {
           items: [],
           modifiers: {
-            "smattyBosses:ingotRoller_3": 5,
+            "smattyBosses:shardRoller_3": 5,
           },
         },
         cost: {
@@ -162,12 +164,12 @@ function addIngotRollerPurchases(ctx) {
             cost: 0,
           },
           items: [
-            { id: "melvorD:Mastery_Token_Smithing", quantity: 40 },
+            //  { id: "melvorD:Mastery_Token_Summoning", quantity: 40 },
             { id: "smattyBosses:bossCoin", quantity: 9000 },
-            { id: "smattyBosses:genericSoul", quantity: 40 },
-            { id: "smattyBosses:artisanSoul", quantity: 80 },
-            { id: "melvorD:Adamantite_Bar", quantity: 400 },
-            { id: "melvorD:Runite_Bar", quantity: 400 },
+            // { id: "smattyBosses:genericSoul", quantity: 40 },
+            //{ id: "smattyBosses:mysticSoul", quantity: 80 },
+            //{ id: "melvorD:Shard", quantity: 500 },
+            //{ id: "melvorD:Shard", quantity: 500 },
           ],
           raidCoins: {
             type: "Fixed",
@@ -178,7 +180,7 @@ function addIngotRollerPurchases(ctx) {
         unlockRequirements: [
           {
             type: "ShopPurchase",
-            purchaseID: "smattyBosses:ingotRoller2",
+            purchaseID: "smattyBosses:shardRoller1",
             count: 1,
           },
         ],
@@ -186,22 +188,21 @@ function addIngotRollerPurchases(ctx) {
         defaultBuyLimit: 1,
         buyLimitOverrides: [],
         showBuyLimit: false,
-        customName: "Ingot Roller III",
+        customName: "Shard Roller III",
         customDescription: generateDescription(15, 10),
       });
     });
-    ingotRoller3.add();
-
-    const ingotRoller4 = ctx.gameData.buildPackage((p) => {
+    shardRoller3.add();
+    const shardRoller4 = ctx.gameData.buildPackage((p) => {
       p.shopPurchases.add({
-        id: "ingotRoller4",
+        id: "shardRoller4",
         media:
-          "https://cdn2-main.melvor.net/assets/media/skills/smithing/smithing.png",
-        category: "smattyBosses:SkillingBossesArtisan",
+          "https://cdn2-main.melvor.net/assets/media/skills/summoning/summoning.png",
+        category: "smattyBosses:SkillingBossesMystic",
         contains: {
           items: [],
           modifiers: {
-            "smattyBosses:ingotRoller_4": 5,
+            "smattyBosses:shardRoller_4": 5,
           },
         },
         cost: {
@@ -223,7 +224,7 @@ function addIngotRollerPurchases(ctx) {
         unlockRequirements: [
           {
             type: "ShopPurchase",
-            purchaseID: "smattyBosses:ingotRoller3",
+            purchaseID: "smattyBosses:shardRoller3",
             count: 1,
           },
         ],
@@ -231,26 +232,24 @@ function addIngotRollerPurchases(ctx) {
         defaultBuyLimit: 1,
         buyLimitOverrides: [],
         showBuyLimit: false,
-        customName: "Ingot Roller IV",
+        customName: "Shard Roller IV",
         customDescription: generateDescription(20, 15),
       });
     });
-    ingotRoller4.add();
+    shardRoller4.add();
   } catch (error) {
-    console.error("Error adding artisan purchases:", error);
+    console.error("Error adding mystic rollers:", error);
   }
 }
 
-function addLeatherRollerPurchases(ctx) {
-  const leatherRollerImage =
-    "https://cdn2-main.melvor.net/assets/media/skills/crafting/crafting.png";
+function addStarRollerPurchases(ctx) {
   function generateDescription(nextTierChance, currentChance) {
     return `
-        <div class="upgrade-card" data-upgrade="leatherRoller1">
+        <div class="upgrade-card" data-upgrade="starRoller">
           <div class="upgrade-effect">
-            <h4 class="effect-title">When a Crafting Ability deals damage:</h4>
-            <p class="effect-description">${nextTierChance}% chance to deal half your shield as damage.</p>
-            <p class="current-upgrade-level-text">Or 5 damage, whichever is higher.</p>
+            <h4 class="effect-title">When an Astrology Ability deals damage:</h4>
+            <p class="effect-description">${nextTierChance}% chance to definitely do something.</p>
+            <p class="current-upgrade-level-text">Will be implemented in the future.</p>
           </div>
           <div class="current-upgrade-level">
             <p class="current-upgrade-level-text">Current: ${currentChance} % chance</p>
@@ -259,15 +258,16 @@ function addLeatherRollerPurchases(ctx) {
       `;
   }
   try {
-    const leatherRoller1 = ctx.gameData.buildPackage((p) => {
+    const starRoller1 = ctx.gameData.buildPackage((p) => {
       p.shopPurchases.add({
-        id: "leatherRoller1",
-        media: leatherRollerImage,
-        category: "smattyBosses:SkillingBossesArtisan",
+        id: "starRoller1",
+        media:
+          "https://cdn2-main.melvor.net/assets/media/skills/astrology/astrology.png",
+        category: "smattyBosses:SkillingBossesMystic",
         contains: {
           items: [],
           modifiers: {
-            "smattyBosses:leatherRoller": 5,
+            "smattyBosses:starRoller": 5,
           },
         },
         cost: {
@@ -280,12 +280,12 @@ function addLeatherRollerPurchases(ctx) {
             cost: 0,
           },
           items: [
-            { id: "melvorF:Mastery_Token_Crafting", quantity: 10 },
-            { id: "smattyBosses:bossCoin", quantity: 1000 },
-            { id: "smattyBosses:genericSoul", quantity: 10 },
-            { id: "smattyBosses:artisanSoul", quantity: 10 },
-            { id: "melvorD:Leather", quantity: 100 },
-            { id: "melvorD:Sapphire", quantity: 25 },
+            // { id: "melvorD:Mastery_Token_Astrology", quantity: 10 },
+            { id: "smattyBosses:impossibleItem", quantity: 1 },
+            // { id: "smattyBosses:genericSoul", quantity: 10 },
+            // { id: "smattyBosses:mysticSoul", quantity: 10 },
+            // { id: "melvorD:Stardust", quantity: 100 },
+            // { id: "melvorD:Golden_Star", quantity: 100 },
           ],
           raidCoins: {
             type: "Fixed",
@@ -298,21 +298,21 @@ function addLeatherRollerPurchases(ctx) {
         defaultBuyLimit: 1,
         buyLimitOverrides: [],
         showBuyLimit: false,
-        customName: "Leather Roller I",
+        customName: "Star Roller I",
         customDescription: generateDescription(5, 0),
       });
     });
-    leatherRoller1.add();
-
-    const leatherRoller2 = ctx.gameData.buildPackage((p) => {
+    starRoller1.add();
+    const starRoller2 = ctx.gameData.buildPackage((p) => {
       p.shopPurchases.add({
-        id: "leatherRoller2",
-        media: leatherRollerImage,
-        category: "smattyBosses:SkillingBossesArtisan",
+        id: "starRoller2",
+        media:
+          "https://cdn2-main.melvor.net/assets/media/skills/astrology/astrology.png",
+        category: "smattyBosses:SkillingBossesMystic",
         contains: {
           items: [],
           modifiers: {
-            "smattyBosses:leatherRoller_2": 5,
+            "smattyBosses:starRoller_2": 5,
           },
         },
         cost: {
@@ -325,12 +325,12 @@ function addLeatherRollerPurchases(ctx) {
             cost: 0,
           },
           items: [
-            { id: "melvorF:Mastery_Token_Crafting", quantity: 20 },
+            // { id: "melvorD:Mastery_Token_Astrology", quantity: 20 },
             { id: "smattyBosses:bossCoin", quantity: 3000 },
-            { id: "smattyBosses:genericSoul", quantity: 20 },
-            { id: "smattyBosses:artisanSoul", quantity: 30 },
-            { id: "melvorD:Green_Dragonhide", quantity: 250 },
-            { id: "melvorD:Ruby", quantity: 50 },
+            // { id: "smattyBosses:genericSoul", quantity: 20 },
+            // { id: "smattyBosses:mysticSoul", quantity: 30 },
+            // { id: "melvorD:Stardust", quantity: 250 },
+            // { id: "melvorD:Golden_Star", quantity: 250 },
           ],
           raidCoins: {
             type: "Fixed",
@@ -341,7 +341,7 @@ function addLeatherRollerPurchases(ctx) {
         unlockRequirements: [
           {
             type: "ShopPurchase",
-            purchaseID: "smattyBosses:leatherRoller1",
+            purchaseID: "smattyBosses:starRoller1",
             count: 1,
           },
         ],
@@ -349,21 +349,21 @@ function addLeatherRollerPurchases(ctx) {
         defaultBuyLimit: 1,
         buyLimitOverrides: [],
         showBuyLimit: false,
-        customName: "Leather Roller II",
+        customName: "Star Roller II",
         customDescription: generateDescription(10, 5),
       });
     });
-    leatherRoller2.add();
-
-    const leatherRoller3 = ctx.gameData.buildPackage((p) => {
+    starRoller2.add();
+    const starRoller3 = ctx.gameData.buildPackage((p) => {
       p.shopPurchases.add({
-        id: "leatherRoller3",
-        media: leatherRollerImage,
-        category: "smattyBosses:SkillingBossesArtisan",
+        id: "starRoller3",
+        media:
+          "https://cdn2-main.melvor.net/assets/media/skills/astrology/astrology.png",
+        category: "smattyBosses:SkillingBossesMystic",
         contains: {
           items: [],
           modifiers: {
-            "smattyBosses:leatherRoller_3": 5,
+            "smattyBosses:starRoller_3": 5,
           },
         },
         cost: {
@@ -376,12 +376,12 @@ function addLeatherRollerPurchases(ctx) {
             cost: 0,
           },
           items: [
-            { id: "melvorF:Mastery_Token_Crafting", quantity: 40 },
+            //{ id: "melvorD:Mastery_Token_Astrology", quantity: 40 },
             { id: "smattyBosses:bossCoin", quantity: 9000 },
-            { id: "smattyBosses:genericSoul", quantity: 40 },
-            { id: "smattyBosses:artisanSoul", quantity: 80 },
-            { id: "melvorD:Blue_Dragonhide", quantity: 400 },
-            { id: "melvorD:Red_Dragonhide", quantity: 400 },
+            // { id: "smattyBosses:genericSoul", quantity: 40 },
+            // { id: "smattyBosses:mysticSoul", quantity: 80 },
+            //{ id: "melvorD:Stardust", quantity: 500 },
+            //{ id: "melvorD:Golden_Star", quantity: 500 },
           ],
           raidCoins: {
             type: "Fixed",
@@ -392,7 +392,7 @@ function addLeatherRollerPurchases(ctx) {
         unlockRequirements: [
           {
             type: "ShopPurchase",
-            purchaseID: "smattyBosses:leatherRoller2",
+            purchaseID: "smattyBosses:starRoller2",
             count: 1,
           },
         ],
@@ -400,21 +400,21 @@ function addLeatherRollerPurchases(ctx) {
         defaultBuyLimit: 1,
         buyLimitOverrides: [],
         showBuyLimit: false,
-        customName: "Leather Roller III",
+        customName: "Star Roller III",
         customDescription: generateDescription(15, 10),
       });
     });
-    leatherRoller3.add();
-
-    const leatherRoller4 = ctx.gameData.buildPackage((p) => {
+    starRoller3.add();
+    const starRoller4 = ctx.gameData.buildPackage((p) => {
       p.shopPurchases.add({
-        id: "leatherRoller4",
-        media: leatherRollerImage,
-        category: "smattyBosses:SkillingBossesArtisan",
+        id: "starRoller4",
+        media:
+          "https://cdn2-main.melvor.net/assets/media/skills/astrology/astrology.png",
+        category: "smattyBosses:SkillingBossesMystic",
         contains: {
           items: [],
           modifiers: {
-            "smattyBosses:leatherRoller_4": 5,
+            "smattyBosses:starRoller_4": 5,
           },
         },
         cost: {
@@ -436,7 +436,7 @@ function addLeatherRollerPurchases(ctx) {
         unlockRequirements: [
           {
             type: "ShopPurchase",
-            purchaseID: "smattyBosses:leatherRoller3",
+            purchaseID: "smattyBosses:starRoller3",
             count: 1,
           },
         ],
@@ -444,24 +444,24 @@ function addLeatherRollerPurchases(ctx) {
         defaultBuyLimit: 1,
         buyLimitOverrides: [],
         showBuyLimit: false,
-        customName: "Leather Roller IV",
+        customName: "Star Roller IV",
         customDescription: generateDescription(20, 15),
       });
     });
-    leatherRoller4.add();
+    starRoller4.add();
   } catch (error) {
-    console.error("Error adding artisan purchases:", error);
+    console.error("Error adding mystic rollers:", error);
   }
 }
 
-function addArrowRollerPurchases(ctx) {
+function addWardRollerPurchases(ctx) {
   function generateDescription(nextTierChance, currentChance) {
     return `
-        <div class="upgrade-card" data-upgrade="arrowRoller1">
+        <div class="upgrade-card" data-upgrade="wardRoller">
           <div class="upgrade-effect">
-            <h4 class="effect-title">When a Fletching Ability deals damage:</h4>
-            <p class="effect-description">${nextTierChance}% chance to apply a Stuck Arrow to the target for 6 ticks.</p>
-            <p class="current-upgrade-level-text">Stuck Arrows deal 10% of the initial damage dealt on expiration.</p>
+            <h4 class="effect-title">When a Mystic Skill matches your Ability:</h4>
+            <p class="effect-description">${nextTierChance}% chance to definitely do something.</p>
+            <p class="current-upgrade-level-text">Will be implemented in the future.</p>
           </div>
           <div class="current-upgrade-level">
             <p class="current-upgrade-level-text">Current: ${currentChance} % chance</p>
@@ -470,16 +470,16 @@ function addArrowRollerPurchases(ctx) {
       `;
   }
   try {
-    const arrowRoller1 = ctx.gameData.buildPackage((p) => {
+    const wardRoller1 = ctx.gameData.buildPackage((p) => {
       p.shopPurchases.add({
-        id: "arrowRoller1",
+        id: "wardRoller1",
         media:
-          "https://cdn2-main.melvor.net/assets/media/skills/fletching/fletching.png",
-        category: "smattyBosses:SkillingBossesArtisan",
+          "https://cdn2-main.melvor.net/assets/media/skills/runecrafting/runecrafting.png",
+        category: "smattyBosses:SkillingBossesMystic",
         contains: {
           items: [],
           modifiers: {
-            "smattyBosses:arrowRoller": 5,
+            "smattyBosses:wardRoller": 5,
           },
         },
         cost: {
@@ -492,12 +492,12 @@ function addArrowRollerPurchases(ctx) {
             cost: 0,
           },
           items: [
-            { id: "melvorF:Mastery_Token_Fletching", quantity: 10 },
-            { id: "smattyBosses:bossCoin", quantity: 1000 },
-            { id: "smattyBosses:genericSoul", quantity: 10 },
-            { id: "smattyBosses:artisanSoul", quantity: 10 },
-            { id: "melvorD:Headless_Arrows", quantity: 250 },
-            { id: "melvorD:Headless_Bolts", quantity: 250 },
+            //  { id: "melvorD:Mastery_Token_Combat", quantity: 10 },
+            { id: "smattyBosses:impossibleItem", quantity: 1 },
+            // { id: "smattyBosses:genericSoul", quantity: 10 },
+            // { id: "smattyBosses:mysticSoul", quantity: 10 },
+            //  { id: "melvorD:Iron_Platebody", quantity: 100 },
+            // { id: "melvorD:Mithril_Platebody", quantity: 100 },
           ],
           raidCoins: {
             type: "Fixed",
@@ -510,22 +510,21 @@ function addArrowRollerPurchases(ctx) {
         defaultBuyLimit: 1,
         buyLimitOverrides: [],
         showBuyLimit: false,
-        customName: "Arrow Roller I",
+        customName: "Ward Roller I",
         customDescription: generateDescription(5, 0),
       });
     });
-    arrowRoller1.add();
-
-    const arrowRoller2 = ctx.gameData.buildPackage((p) => {
+    wardRoller1.add();
+    const wardRoller2 = ctx.gameData.buildPackage((p) => {
       p.shopPurchases.add({
-        id: "arrowRoller2",
+        id: "wardRoller2",
         media:
-          "https://cdn2-main.melvor.net/assets/media/skills/fletching/fletching.png",
-        category: "smattyBosses:SkillingBossesArtisan",
+          "https://cdn2-main.melvor.net/assets/media/skills/runecrafting/runecrafting.png",
+        category: "smattyBosses:SkillingBossesMystic",
         contains: {
           items: [],
           modifiers: {
-            "smattyBosses:arrowRoller_2": 5,
+            "smattyBosses:wardRoller_2": 5,
           },
         },
         cost: {
@@ -538,12 +537,12 @@ function addArrowRollerPurchases(ctx) {
             cost: 0,
           },
           items: [
-            { id: "melvorF:Mastery_Token_Fletching", quantity: 20 },
+            // { id: "melvorD:Mastery_Token_Combat", quantity: 20 },
             { id: "smattyBosses:bossCoin", quantity: 3000 },
-            { id: "smattyBosses:genericSoul", quantity: 20 },
-            { id: "smattyBosses:artisanSoul", quantity: 30 },
-            { id: "melvorF:Maple_Longbow_U", quantity: 250 },
-            { id: "melvorD:Maple_Longbow", quantity: 250 },
+            //{ id: "smattyBosses:genericSoul", quantity: 20 },
+            // { id: "smattyBosses:mysticSoul", quantity: 30 },
+            //{ id: "melvorD:Iron_Platebody", quantity: 250 },
+            //{ id: "melvorD:Mithril_Platebody", quantity: 250 },
           ],
           raidCoins: {
             type: "Fixed",
@@ -554,7 +553,7 @@ function addArrowRollerPurchases(ctx) {
         unlockRequirements: [
           {
             type: "ShopPurchase",
-            purchaseID: "smattyBosses:arrowRoller1",
+            purchaseID: "smattyBosses:wardRoller1",
             count: 1,
           },
         ],
@@ -562,22 +561,21 @@ function addArrowRollerPurchases(ctx) {
         defaultBuyLimit: 1,
         buyLimitOverrides: [],
         showBuyLimit: false,
-        customName: "Arrow Roller II",
+        customName: "Ward Roller II",
         customDescription: generateDescription(10, 5),
       });
     });
-    arrowRoller2.add();
-
-    const arrowRoller3 = ctx.gameData.buildPackage((p) => {
+    wardRoller2.add();
+    const wardRoller3 = ctx.gameData.buildPackage((p) => {
       p.shopPurchases.add({
-        id: "arrowRoller3",
+        id: "wardRoller3",
         media:
-          "https://cdn2-main.melvor.net/assets/media/skills/fletching/fletching.png",
-        category: "smattyBosses:SkillingBossesArtisan",
+          "https://cdn2-main.melvor.net/assets/media/skills/runecrafting/runecrafting.png",
+        category: "smattyBosses:SkillingBossesMystic",
         contains: {
           items: [],
           modifiers: {
-            "smattyBosses:arrowRoller_3": 5,
+            "smattyBosses:wardRoller_3": 5,
           },
         },
         cost: {
@@ -590,12 +588,12 @@ function addArrowRollerPurchases(ctx) {
             cost: 0,
           },
           items: [
-            { id: "melvorF:Mastery_Token_Fletching", quantity: 40 },
+            //  { id: "melvorD:Mastery_Token_Combat", quantity: 40 },
             { id: "smattyBosses:bossCoin", quantity: 9000 },
-            { id: "smattyBosses:genericSoul", quantity: 40 },
-            { id: "smattyBosses:artisanSoul", quantity: 80 },
-            { id: "melvorF:Magic_Longbow_U", quantity: 500 },
-            { id: "melvorD:Rune_Crossbow_Head", quantity: 500 },
+            // { id: "smattyBosses:genericSoul", quantity: 40 },
+            // { id: "smattyBosses:mysticSoul", quantity: 80 },
+            //  { id: "melvorD:Iron_Platebody", quantity: 500 },
+            //  { id: "melvorD:Mithril_Platebody", quantity: 500 },
           ],
           raidCoins: {
             type: "Fixed",
@@ -606,7 +604,7 @@ function addArrowRollerPurchases(ctx) {
         unlockRequirements: [
           {
             type: "ShopPurchase",
-            purchaseID: "smattyBosses:arrowRoller2",
+            purchaseID: "smattyBosses:wardRoller1",
             count: 1,
           },
         ],
@@ -614,22 +612,21 @@ function addArrowRollerPurchases(ctx) {
         defaultBuyLimit: 1,
         buyLimitOverrides: [],
         showBuyLimit: false,
-        customName: "Arrow Roller III",
+        customName: "Ward Roller III",
         customDescription: generateDescription(15, 10),
       });
     });
-    arrowRoller3.add();
-
-    const arrowRoller4 = ctx.gameData.buildPackage((p) => {
+    wardRoller3.add();
+    const wardRoller4 = ctx.gameData.buildPackage((p) => {
       p.shopPurchases.add({
-        id: "arrowRoller4",
+        id: "wardRoller4",
         media:
-          "https://cdn2-main.melvor.net/assets/media/skills/fletching/fletching.png",
-        category: "smattyBosses:SkillingBossesArtisan",
+          "https://cdn2-main.melvor.net/assets/media/skills/runecrafting/runecrafting.png",
+        category: "smattyBosses:SkillingBossesMystic",
         contains: {
           items: [],
           modifiers: {
-            "smattyBosses:arrowRoller_4": 5,
+            "smattyBosses:wardRoller_4": 5,
           },
         },
         cost: {
@@ -651,7 +648,7 @@ function addArrowRollerPurchases(ctx) {
         unlockRequirements: [
           {
             type: "ShopPurchase",
-            purchaseID: "smattyBosses:arrowRoller3",
+            purchaseID: "smattyBosses:wardRoller3",
             count: 1,
           },
         ],
@@ -659,42 +656,43 @@ function addArrowRollerPurchases(ctx) {
         defaultBuyLimit: 1,
         buyLimitOverrides: [],
         showBuyLimit: false,
-        customName: "Arrow Roller IV",
+        customName: "Ward Roller IV",
         customDescription: generateDescription(20, 15),
       });
     });
-    arrowRoller4.add();
+    wardRoller4.add();
   } catch (error) {
-    console.error("Error adding artisan purchases:", error);
+    console.error("Error adding mystic rollers:", error);
   }
 }
 
 function addEfficientSkillingPurchases(ctx) {
   function buildDescription(current, next) {
     return `
-        <div class="upgrade-card shop-tier-2-upgrade-card" data-upgrade="efficientSkillingArtisan">
+        <div class="upgrade-card shop-tier-2-upgrade-card" data-upgrade="efficientSkillingMystic">
           <div class="upgrade-effect">
-            <h4 class="effect-title">When training an Artisan Skill that matches the Ability:</h4>
+            <h4 class="effect-title">When training a Mystic Skill that matches the Ability:</h4>
             <p class="effect-description">Gain +${next} skill-ticks.</p>
             <p class="current-upgrade-level-text">Applies only to tier-2+ Bosses.</p>
-            </div>
+          </div>
           <div class="current-upgrade-level">
             <p class="current-upgrade-level-text">Current: +${current} skill-ticks</p>
           </div>
         </div>
+
       `;
   }
   try {
     const efficientSkilling1 = ctx.gameData.buildPackage((p) => {
       p.shopPurchases.add({
-        id: "efficientSkillingArtisan1",
+        id: "efficientSkillingMystic1",
         media:
           "https://cdn2-main.melvor.net/assets/media/skills/combat/attack.png",
-        category: "smattyBosses:SkillingBossesArtisan",
+        category: "smattyBosses:SkillingBossesMystic",
         contains: {
           items: [],
           modifiers: {
-            "smattyBosses:efficientSkillingArtisan": 1,
+            "smattyBosses:efficientSkillingMystic": 1,
           },
         },
         cost: {
@@ -708,13 +706,13 @@ function addEfficientSkillingPurchases(ctx) {
           },
           items: [
             { id: "smattyBosses:bossCoin", quantity: 10000 },
-            { id: "smattyBosses:artisanSoul", quantity: 100 },
-            { id: "melvorF:Mastery_Token_Crafting", quantity: 30 },
-            { id: "melvorF:Mastery_Token_Fletching", quantity: 30 },
-            { id: "melvorD:Mastery_Token_Smithing", quantity: 30 },
-            { id: "smattyBosses:leatherHeart", quantity: 3 },
-            { id: "smattyBosses:arrowHeart", quantity: 3 },
-            { id: "smattyBosses:forgeHeart", quantity: 3 },
+            { id: "smattyBosses:mysticSoul", quantity: 100 },
+            { id: "melvorF:Mastery_Token_Summoning", quantity: 30 },
+            { id: "melvorF:Mastery_Token_Astrology", quantity: 30 },
+            { id: "melvorF:Mastery_Token_Runecrafting", quantity: 30 },
+            { id: "smattyBosses:celestialHeart", quantity: 3 },
+            { id: "smattyBosses:ancientHeart", quantity: 3 },
+            { id: "smattyBosses:runicHeart", quantity: 3 },
           ],
           raidCoins: {
             type: "Fixed",
@@ -735,14 +733,14 @@ function addEfficientSkillingPurchases(ctx) {
 
     const efficientSkilling2 = ctx.gameData.buildPackage((p) => {
       p.shopPurchases.add({
-        id: "efficientSkillingArtisan2",
+        id: "efficientSkillingMystic2",
         media:
           "https://cdn2-main.melvor.net/assets/media/skills/combat/attack.png",
-        category: "smattyBosses:SkillingBossesArtisan",
+        category: "smattyBosses:SkillingBossesMystic",
         contains: {
           items: [],
           modifiers: {
-            "smattyBosses:efficientSkillingArtisan_2": 1,
+            "smattyBosses:efficientSkillingMystic_2": 1,
           },
         },
         cost: {
@@ -764,7 +762,7 @@ function addEfficientSkillingPurchases(ctx) {
         unlockRequirements: [
           {
             type: "ShopPurchase",
-            purchaseID: "smattyBosses:efficientSkillingArtisan1",
+            purchaseID: "smattyBosses:efficientSkillingMystic1",
             count: 1,
           },
         ],
@@ -785,12 +783,12 @@ function addEfficientSkillingPurchases(ctx) {
 function addEfficientBossingPurchases(ctx) {
   function buildDescription(current, next) {
     return `
-        <div class="upgrade-card shop-tier-2-upgrade-card" data-upgrade="efficientBossingArtisan">
+        <div class="upgrade-card shop-tier-2-upgrade-card" data-upgrade="efficientBossingMystic">
           <div class="upgrade-effect">
-            <h4 class="effect-title">When training a Artisan Skill that matches the Boss:</h4>
+            <h4 class="effect-title">When training a Mystic Skill that matches the Boss:</h4>
             <p class="effect-description">Gain +${next} skill-ticks.</p>
             <p class="current-upgrade-level-text">Applies only to tier-2+ Bosses.</p>
-            </div>
+          </div>
           <div class="current-upgrade-level">
             <p class="current-upgrade-level-text">Current: +${current} skill-ticks</p>
           </div>
@@ -801,14 +799,14 @@ function addEfficientBossingPurchases(ctx) {
   try {
     const efficientBossing1 = ctx.gameData.buildPackage((p) => {
       p.shopPurchases.add({
-        id: "efficientBossingArtisan1",
+        id: "efficientBossingMystic1",
         media:
           "https://cdn2-main.melvor.net/assets/media/skills/combat/strength.png",
-        category: "smattyBosses:SkillingBossesArtisan",
+        category: "smattyBosses:SkillingBossesMystic",
         contains: {
           items: [],
           modifiers: {
-            "smattyBosses:efficientBossingArtisan": 1,
+            "smattyBosses:efficientBossingMystic": 1,
           },
         },
         cost: {
@@ -822,13 +820,13 @@ function addEfficientBossingPurchases(ctx) {
           },
           items: [
             { id: "smattyBosses:bossCoin", quantity: 10000 },
-            { id: "smattyBosses:artisanSoul", quantity: 100 },
-            { id: "melvorF:Mastery_Token_Crafting", quantity: 30 },
-            { id: "melvorF:Mastery_Token_Fletching", quantity: 30 },
-            { id: "melvorD:Mastery_Token_Smithing", quantity: 30 },
-            { id: "smattyBosses:leatherHeart", quantity: 3 },
-            { id: "smattyBosses:arrowHeart", quantity: 3 },
-            { id: "smattyBosses:forgeHeart", quantity: 3 },
+            { id: "smattyBosses:mysticSoul", quantity: 100 },
+            { id: "melvorF:Mastery_Token_Summoning", quantity: 30 },
+            { id: "melvorF:Mastery_Token_Astrology", quantity: 30 },
+            { id: "melvorF:Mastery_Token_Runecrafting", quantity: 30 },
+            { id: "smattyBosses:celestialHeart", quantity: 3 },
+            { id: "smattyBosses:ancientHeart", quantity: 3 },
+            { id: "smattyBosses:runicHeart", quantity: 3 },
           ],
           raidCoins: {
             type: "Fixed",
@@ -849,14 +847,14 @@ function addEfficientBossingPurchases(ctx) {
 
     const efficientBossing2 = ctx.gameData.buildPackage((p) => {
       p.shopPurchases.add({
-        id: "efficientBossingArtisan2",
+        id: "efficientBossingMystic2",
         media:
           "https://cdn2-main.melvor.net/assets/media/skills/combat/strength.png",
-        category: "smattyBosses:SkillingBossesArtisan",
+        category: "smattyBosses:SkillingBossesMystic",
         contains: {
           items: [],
           modifiers: {
-            "smattyBosses:efficientBossingArtisan_2": 1,
+            "smattyBosses:efficientBossingMystic_2": 1,
           },
         },
         cost: {
@@ -879,7 +877,7 @@ function addEfficientBossingPurchases(ctx) {
         unlockRequirements: [
           {
             type: "ShopPurchase",
-            purchaseID: "smattyBosses:efficientBossingArtisan1",
+            purchaseID: "smattyBosses:efficientBossingMystic1",
             count: 1,
           },
         ],

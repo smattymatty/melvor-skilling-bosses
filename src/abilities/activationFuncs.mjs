@@ -52,6 +52,18 @@ export function updateModifierCache(game) {
     getModifierValue(game, "smattyBosses:arrowRoller")
   );
   modifierCache.set(
+    "smattyBosses:starRoller",
+    getModifierValue(game, "smattyBosses:starRoller")
+  );
+  modifierCache.set(
+    "smattyBosses:wardRoller",
+    getModifierValue(game, "smattyBosses:wardRoller")
+  );
+  modifierCache.set(
+    "smattyBosses:shardRoller",
+    getModifierValue(game, "smattyBosses:shardRoller")
+  );
+  modifierCache.set(
     "smattyBosses:moneyRoller",
     getModifierValue(game, "smattyBosses:moneyRoller")
   );
@@ -59,6 +71,59 @@ export function updateModifierCache(game) {
     "smattyBosses:speedRoller",
     getModifierValue(game, "smattyBosses:speedRoller")
   );
+  modifierCache.set(
+    "smattyBosses:efficientSkillingShifty",
+    getModifierValue(game, "smattyBosses:efficientSkillingShifty")
+  );
+  modifierCache.set(
+    "smattyBosses:efficientBossingShifty",
+    getModifierValue(game, "smattyBosses:efficientBossingShifty")
+  );
+  modifierCache.set(
+    "smattyBosses:efficientSkillingRefiner",
+    getModifierValue(game, "smattyBosses:efficientSkillingRefiner")
+  );
+  modifierCache.set(
+    "smattyBosses:efficientBossingRefiner",
+    getModifierValue(game, "smattyBosses:efficientBossingRefiner")
+  );
+  modifierCache.set(
+    "smattyBosses:efficientSkillingArtisan",
+    getModifierValue(game, "smattyBosses:efficientSkillingArtisan")
+  );
+  modifierCache.set(
+    "smattyBosses:efficientBossingArtisan",
+    getModifierValue(game, "smattyBosses:efficientBossingArtisan")
+  );
+  modifierCache.set(
+    "smattyBosses:efficientSkillingMystic",
+    getModifierValue(game, "smattyBosses:efficientSkillingMystic")
+  );
+  modifierCache.set(
+    "smattyBosses:efficientBossingMystic",
+    getModifierValue(game, "smattyBosses:efficientBossingMystic")
+  );
+  modifierCache.set(
+    "smattyBosses:efficientSkillingGatherer",
+    getModifierValue(game, "smattyBosses:efficientSkillingGatherer")
+  );
+  modifierCache.set(
+    "smattyBosses:efficientBossingGatherer",
+    getModifierValue(game, "smattyBosses:efficientBossingGatherer")
+  );
+  modifierCache.set(
+    "smattyBosses:duckAttack",
+    getModifierValue(game, "smattyBosses:duckAttack")
+  );
+  modifierCache.set(
+    "smattyBosses:hater",
+    getModifierValue(game, "smattyBosses:hater")
+  );
+  modifierCache.set(
+    "smattyBosses:buffShielder",
+    getModifierValue(game, "smattyBosses:buffShielder")
+  );
+
   game.skillingBosses.modCache = modifierCache;
 }
 
@@ -72,6 +137,9 @@ const skillRollerMap = {
   "melvorD:Smithing": "smattyBosses:ingotRoller",
   "melvorD:Crafting": "smattyBosses:leatherRoller",
   "melvorD:Fletching": "smattyBosses:arrowRoller",
+  "melvorD:Astrology": "smattyBosses:starRoller",
+  "melvorD:Runecrafting": "smattyBosses:wardRoller",
+  "melvorD:Summoning": "smattyBosses:shardRoller",
   "melvorD:Thieving": "smattyBosses:moneyRoller",
   "melvorD:Agility": "smattyBosses:speedRoller",
 };
@@ -124,7 +192,8 @@ export function dealSkillLevelAsDamage(
       baseDamage *= 1 + percentBoost / 100;
     }
     const realBaseDamage = baseDamage + flatBonus;
-    const finalDamage = Math.floor(realBaseDamage - reduction);
+    let finalDamage = Math.floor(realBaseDamage - reduction);
+
     game.skillingBosses.currentBattleBossDamageReduced += reduction;
     game.skillingBosses.takeDamage(finalDamage, "boss");
     // check if it has a debuff effect
@@ -158,6 +227,10 @@ function checkPercentDamageBoosts(game, ability) {
       percentBoost += Math.random() * rollerValue;
     }
   }
+  const haterModifier = getModifierValue(game, "smattyBosses:hater");
+  if (haterModifier > 0 && game.skillingBosses.activeBoss.isTier2()) {
+    percentBoost += haterModifier * 5;
+  }
   // TODO : more percent bonuses
   return percentBoost;
 }
@@ -189,6 +262,7 @@ function checkDebuffOnDamage(game, ability, initialDamage) {
   checkRefinementRollers(game, ability, initialDamage);
   checkArtisanRollers(game, ability, initialDamage);
   checkShiftyRollers(game, ability, initialDamage);
+  checkMysticRollers(game, ability, initialDamage);
 }
 
 function checkShiftyRollers(game, ability, initialDamage) {
@@ -281,6 +355,66 @@ function checkArtisanRollers(game, ability, initialDamage) {
       }
     }
   }
+}
+
+function checkMysticRollers(game, ability, initialDamage) {
+  const validSkills = [
+    "melvorD:Astrology",
+    "melvorD:Runecrafting",
+    "melvorD:Summoning",
+  ];
+  if (!validSkills.includes(ability.skill)) {
+    return;
+  }
+  const rollerModifier = skillRollerMap[ability.skill];
+  if (rollerModifier) {
+    const rollerValue = game.skillingBosses.modCache.get(rollerModifier);
+    if (rollerValue > 0) {
+      const randomChance = Math.random() * 100;
+      if (randomChance <= rollerValue) {
+        switch (ability.skill) {
+          case "melvorD:Astrology":
+            applyStarEffect(game, ability, initialDamage, 6);
+            break;
+          case "melvorD:Runecrafting":
+            applyWardEffect(game, ability, initialDamage, 6);
+            break;
+          case "melvorD:Summoning":
+            applyShardEffect(game, ability, initialDamage, 6);
+            break;
+        }
+      }
+    }
+  }
+}
+
+function applyStarEffect(
+  game,
+  ability,
+  initialDamage,
+  starDuration = 6,
+  starDamagePercent = 0.02
+) {
+  console.log("Applying star effect");
+}
+
+function applyWardEffect(game, ability, value, wardDuration = 6) {
+  console.log("Applying ward effect");
+  game.skillingBosses.applyEffectToBoss("ward", wardDuration, value);
+  game.skillingBosses.lastSkillExtraText.push(
+    `applied a ward of ${value} shield for ${wardDuration} ticks`
+  );
+  game.skillingBosses.updateLastAttackInfoUI();
+}
+
+function applyShardEffect(
+  game,
+  ability,
+  initialDamage,
+  shardDuration = 6,
+  shardDamagePercent = 0.02
+) {
+  console.log("Applying shard effect");
 }
 
 export function applyBurnEffect(

@@ -60,7 +60,7 @@ function addThievingCrates(ctx) {
             weight: 8,
           },
           {
-            itemID: "mmelvorF:Crate_Of_Basic_Supplies",
+            itemID: "melvorF:Crate_Of_Basic_Supplies",
             minQuantity: 1,
             maxQuantity: 2,
             weight: 5,
@@ -134,7 +134,7 @@ function addThievingCrates(ctx) {
             weight: 7,
           },
           {
-            itemID: "melvorD:Cherry_Seed",
+            itemID: "melvorD:Cherry_Seeds",
             minQuantity: 1,
             maxQuantity: 2,
             weight: 6,
@@ -158,7 +158,7 @@ function addThievingCrates(ctx) {
             weight: 4,
           },
           {
-            itemID: "melvorD:Carrot_Seed",
+            itemID: "melvorD:Carrot_Seeds",
             minQuantity: 1,
             maxQuantity: 2,
             weight: 3,
@@ -250,7 +250,7 @@ function addThievingCrates(ctx) {
             weight: 4,
           },
           {
-            itemID: "melvorD:melvorF:Stack_Of_Bones",
+            itemID: "melvorF:Stack_Of_Bones",
             minQuantity: 1,
             maxQuantity: 1,
             weight: 3,

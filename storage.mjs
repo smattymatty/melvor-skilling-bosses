@@ -8,6 +8,7 @@ export function init(ctx) {
   fillPlayerLoot(ctx);
   fillBossAttackInfo(ctx);
   fillPlayerStats(ctx);
+  fillSettings(ctx);
   //fillBossStats(ctx);
   fillExtraPlayerStats(ctx);
   console.log("Storage initialized");
@@ -57,7 +58,8 @@ function fillCurrentBoss(ctx) {
   if (currentBossId !== null && currentBossId !== undefined) {
     const boss = game.skillingBosses.getBossById(currentBossId);
     if (boss) {
-      game.skillingBosses.setActiveBoss(boss.id);
+      game.skillingBosses.activeBoss = boss;
+      game.skillingBosses.bossMaxHP = boss.maxHP;
     } else {
       console.warn(`Boss with ID ${currentBossId} not found`);
     }
@@ -65,11 +67,11 @@ function fillCurrentBoss(ctx) {
 }
 
 function fillBattleInfo(ctx) {
+  const currentBossAttackPower = ctx.characterStorage.getItem("Batp");
   const currentBattleTicks = ctx.characterStorage.getItem("Crbt");
   const activeAbilitySlot = ctx.characterStorage.getItem("ASlt");
   const playerCoreHP = ctx.characterStorage.getItem("PcHP");
   const bossCurrHP = ctx.characterStorage.getItem("BcHP");
-  const bossAttackTimer = ctx.characterStorage.getItem("Bcat");
   const activeAbilityTimer = ctx.characterStorage.getItem("Acat");
   const currentBattleAbilitiesUsed = ctx.characterStorage.getItem("Cabu");
   const currentBattleDamageDealt = ctx.characterStorage.getItem("Cdd");
@@ -79,11 +81,29 @@ function fillBattleInfo(ctx) {
   const lastSkillTickAmounts = ctx.characterStorage.getItem("SltA");
   const discardedTicks = ctx.characterStorage.getItem("Dst");
   const bossCurrentDebuffs = ctx.characterStorage.getItem("BsDb");
+  const bossCurrentBuffs = ctx.characterStorage.getItem("BsBb");
   const currentBattleDebuffDamageDealt = ctx.characterStorage.getItem("BctDb");
   const bossStatChanges = ctx.characterStorage.getItem("BstC");
   const abilitySkillsThisBattle = ctx.characterStorage.getItem("AsTb");
-
-  if (abilitySkillsThisBattle) {
+  if (bossCurrentBuffs) {
+    game.skillingBosses.bossCurrentBuffs = bossCurrentBuffs;
+    console.log("Boss current buffs loaded from storage:", bossCurrentBuffs);
+  } else {
+    console.log("No boss current buffs found in storage");
+  }
+  if (currentBossAttackPower !== null && currentBossAttackPower !== undefined) {
+    game.skillingBosses.activeBoss.attackPower = currentBossAttackPower;
+    console.log(
+      "Current boss attack power loaded from storage:",
+      currentBossAttackPower
+    );
+  } else {
+    console.log("No current boss attack power found in storage");
+  }
+  if (
+    abilitySkillsThisBattle !== null &&
+    abilitySkillsThisBattle !== undefined
+  ) {
     game.skillingBosses.abilitySkillsThisBattle = abilitySkillsThisBattle;
     console.log(
       "Ability skills this battle loaded from storage:",
@@ -155,12 +175,6 @@ function fillBattleInfo(ctx) {
   } else {
     console.log("No boss core HP found in storage");
   }
-  if (bossAttackTimer) {
-    game.skillingBosses.bossAttackTimer = bossAttackTimer;
-    console.log("Boss attack timer loaded from storage:", bossAttackTimer);
-  } else {
-    console.log("No boss attack timer found in storage");
-  }
   if (activeAbilityTimer) {
     game.skillingBosses.activeAbilityTimer = activeAbilityTimer;
     console.log(
@@ -225,7 +239,7 @@ function fillBattleInfo(ctx) {
     console.log("No paused battle ticks found in storage");
   }
   const playerShield = ctx.characterStorage.getItem("Psh");
-  if (playerShield) {
+  if (playerShield !== null && playerShield !== undefined) {
     game.skillingBosses.playerShield = playerShield;
     console.log("Player shield loaded from storage:", playerShield);
   } else {
@@ -267,33 +281,21 @@ function fillBattleInfo(ctx) {
 function fillBossKillsArray(ctx) {
   try {
     const bossKillsArray = ctx.characterStorage.getItem("BctR");
-    console.log("Filling boss kills array from storage");
-    console.log(bossKillsArray);
     if (bossKillsArray) {
       // bossKillsArray is an array of arrays where each sub-array contains [totalKills, fastestKill]
       bossKillsArray.forEach((bossData, index) => {
         const boss = game.skillingBosses.getBossById(index); // Get boss by its index (ID)
-        console.log("boss,", boss);
-        console.log("bossData,", bossData);
-        console.log("index,", index);
         if (boss) {
           const [totalKills, fastestKill] = bossData;
 
           boss.kills = totalKills || 0;
           boss.tickRecord = fastestKill || 0;
-
-          console.log(
-            `Boss ID ${boss.id} - Kills: ${boss.kills}, Fastest Kill: ${boss.tickRecord}`
-          );
         } else {
           console.warn(`No boss found for ID ${index}`);
         }
       });
 
       game.skillingBosses.bossKillsArray = bossKillsArray;
-      console.log("Boss kills array loaded from storage:", bossKillsArray);
-    } else {
-      console.log("No boss kills array found in storage");
     }
   } catch (error) {
     console.error("Error filling boss kills array from storage:", error);
@@ -303,13 +305,8 @@ function fillBossKillsArray(ctx) {
 function fillPlayerLoot(ctx) {
   try {
     const playerLoot = ctx.characterStorage.getItem("Plt");
-    console.log("Filling player loot from storage");
-    console.log(playerLoot);
     if (playerLoot) {
       game.skillingBosses.playerLoot = playerLoot;
-      console.log("Player loot loaded from storage:", playerLoot);
-    } else {
-      console.log("No player loot found in storage");
     }
   } catch (error) {
     console.error("Error filling player loot from storage:", error);
@@ -326,10 +323,16 @@ function fillBossAttackInfo(ctx) {
       game.skillingBosses.bossAbilitiesUsed = bossAbilitiesUsed;
     }
 
-    if (bossNextAttackIndex) {
+    if (bossNextAttackIndex !== null && bossNextAttackIndex !== undefined) {
       game.skillingBosses.bossNextAttackIndex = bossNextAttackIndex;
+      console.log(
+        "Boss next attack index loaded from storage:",
+        bossNextAttackIndex
+      );
+    } else {
+      console.log("No boss next attack index found in storage");
     }
-    if (bossAttackTimer) {
+    if (bossAttackTimer !== null && bossAttackTimer !== undefined) {
       game.skillingBosses.bossAttackTimer = bossAttackTimer;
     }
   } catch (error) {
@@ -507,5 +510,14 @@ function getFastestBossKill(ctx) {
     return fastestBossKill;
   } else {
     return 0;
+  }
+}
+
+function fillSettings(ctx) {
+  const ignoreSummoningWhileSkilling =
+    ctx.characterStorage.getItem("IsSummoningIgnored");
+  if (ignoreSummoningWhileSkilling) {
+    game.skillingBosses.ignoreSummoningWhileSkilling =
+      ignoreSummoningWhileSkilling;
   }
 }

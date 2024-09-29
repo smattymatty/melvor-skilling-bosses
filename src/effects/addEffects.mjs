@@ -4,6 +4,7 @@ export async function init(ctx) {
   try {
     const effectsModels = await loadModule("src/effects/models.mjs");
     addDebuffEffects(ctx, effectsModels);
+    addBolsterBuffs(ctx, effectsModels);
   } catch (error) {
     console.error("Error initializing effects:", error);
   }
@@ -153,7 +154,82 @@ function addDebuffEffects(ctx, models) {
       }
     );
     game.skillingBosses.addEffect(stuckArrowEffect);
+
+    const wardEffect = new models.Effect(
+      "ward",
+      "Ward",
+      "Upon expiration, player gains ${value} shield.",
+      8,
+      "onApply",
+      (boss, effectData) => {},
+      "onTick",
+      (boss, effectData) => {},
+      "onClear",
+      (boss, effectData) => {
+        const [, , value] = effectData;
+        game.skillingBosses.restoreShield(value, "player");
+        game.skillingBosses.needsCombatStatsUIUpdate = true;
+        game.skillingBosses.updateUIIfNeeded();
+      }
+    );
+    game.skillingBosses.addEffect(wardEffect);
   } catch (error) {
     console.error("Error adding debuff effects:", error);
+  }
+}
+
+function addBolsterBuffs(ctx, models) {
+  try {
+    const bolsterAttackPowerEffect = new models.Effect(
+      "bolsterAttackPower",
+      "Bolster Attack",
+      "I",
+      8,
+      "onApply",
+      (boss, effectData) => {
+        const [, , value] = effectData;
+        boss.attackPower += value;
+      },
+      "onTick",
+      (boss, effectData) => {
+        const [, , value] = effectData;
+      },
+      "onClear",
+      (boss, effectData) => {
+        const [, , value] = effectData;
+        boss.attackPower -= value;
+        game.skillingBosses.needsBossEffectsUIUpdate = true;
+        game.skillingBosses.updateUIIfNeeded();
+      }
+    );
+    game.skillingBosses.addEffect(bolsterAttackPowerEffect);
+
+    const bolsterResistanceEffect = new models.Effect(
+      "bolsterResistance",
+      "Bolster Resists",
+      "Increase Resistance by ${value}%",
+      8,
+      "onApply",
+      (boss, effectData) => {
+        const [, , value] = effectData;
+        boss.physicalDefense += value;
+        boss.magicDefense += value;
+      },
+      "onTick",
+      (boss, effectData) => {
+        const [, , value] = effectData;
+      },
+      "onClear",
+      (boss, effectData) => {
+        const [, , value] = effectData;
+        boss.physicalDefense -= value;
+        boss.magicDefense -= value;
+        game.skillingBosses.needsBossEffectsUIUpdate = true;
+        game.skillingBosses.updateUIIfNeeded();
+      }
+    );
+    game.skillingBosses.addEffect(bolsterResistanceEffect);
+  } catch (error) {
+    console.error("Error adding buff effects:", error);
   }
 }

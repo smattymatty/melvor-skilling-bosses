@@ -70,13 +70,15 @@ export class SkillingBosses {
     this.effects = new Map();
     this.bossStatChanges = []; // [[stat, change, duration], ...]
     // Format: [effectId, remainingDuration, damagePerTick, totalDamage]
-    this.bossCurrentBuffs = new Array(); // [[id, duration, damage, totalDamage], [id, duration, damage, totalDamage], ...]
+    this.bossCurrentBuffs = new Array(); // [[id, duration, value], [id, duration, value], ...]
     this.bossCurrentDebuffs = new Array(); // [[id, duration, stacks, damage, totalDamage], [id, duration, stacks, damage, totalDamage], ...]
     this.currentlyTrainingSkill = null;
     this.bossStunDuration = 0; // if above 1, attacks won't tick and this will decrement
     // extra, for quest tracking
     this.ExtraPlayerStats = new ExtraPlayerStats();
     this.abilitySkillsThisBattle = [];
+    // settings
+    this.ignoreSummoningWhileSkilling = true;
   }
   addEffect(effect) {
     this.effects.set(effect.id, effect);
@@ -114,12 +116,13 @@ export class SkillingBosses {
     }
   }
 
-  setActiveBoss(bossId) {
+  resetActiveBoss(bossId) {
     this.activeBoss = this.bosses.get(bossId);
     // reset the global battle stats
     this.bossCurrHP = this.activeBoss.currentHP;
     this.bossMaxHP = this.activeBoss.maxHP;
     this.currentBattleTicks = 0;
+    this.bossNextAttackIndex = 0;
     this.currentBattleAbilitiesUsed = 0;
     this.currentBattleDamageDealt = 0;
     this.currentBattleBossDamageDamageDealt = 0;
@@ -129,6 +132,10 @@ export class SkillingBosses {
     this.lastSkillDamageDealt = 0;
     this.bossAbilitiesUsed = 0;
     this.clearEffects();
+    this.activeBoss.attackPower = this.activeBoss.stats.attackPower;
+    this.ctx.characterStorage.setItem("Batp", this.activeBoss.attackPower);
+    this.activeBoss.physicalDefense = this.activeBoss.stats.physicalDefense;
+    this.activeBoss.magicDefense = this.activeBoss.stats.magicDefense;
     this.ctx.characterStorage.setItem("AcBss", this.activeBoss.id);
     // reset player ability
     this.activeAbilitySlot = 0;
@@ -137,6 +144,7 @@ export class SkillingBosses {
     this.ctx.characterStorage.setItem("Acat", this.activeAbilityTimer);
     this.abilitySkillsThisBattle = [];
     this.ctx.characterStorage.setItem("AsTb", this.abilitySkillsThisBattle);
+    this.ctx.characterStorage.setItem("Bna", this.bossNextAttackIndex);
     // check modifiers for stat changes
     const duckDefence = activationFuncs.getModifierValue(
       this.game,
@@ -151,6 +159,17 @@ export class SkillingBosses {
         0,
         this.activeBoss.stats.magicDefense - duckDefence
       );
+    }
+    if (this.activeBoss.isTier2()) {
+      const duckAttack = activationFuncs.getModifierValue(
+        this.game,
+        "smattyBosses:duckAttack"
+      );
+      if (duckAttack > 0) {
+        this.activeBoss.attackPower =
+          this.activeBoss.stats.attackPower - duckAttack;
+        this.ctx.characterStorage.setItem("Batp", this.activeBoss.attackPower);
+      }
     }
     this.needsCombatStatsUIUpdate = true;
     this.needsAbilityUIUpdate = true;
@@ -181,6 +200,26 @@ export class SkillingBosses {
     this.ctx.characterStorage.setItem("BsDb", this.bossCurrentDebuffs);
   }
 
+  applyBuffToBoss(effectId, duration, value = 1) {
+    const effect = this.getEffectById(effectId);
+    if (effect) {
+      const effectData = [effectId, duration, value, 0];
+      this.bossCurrentBuffs.push(effectData);
+      effect.activationFunc(this.activeBoss, effectData);
+      // check if buffShielder is active
+      const buffShielderValue = activationFuncs.getModifierValue(
+        this.game,
+        "smattyBosses:buffShielder"
+      );
+      if (buffShielderValue > 0) {
+        this.restoreShield(buffShielderValue, "player");
+      }
+    }
+    this.needsBossEffectsUIUpdate = true;
+    this.updateUIIfNeeded();
+    this.ctx.characterStorage.setItem("BsBb", this.bossCurrentBuffs);
+  }
+
   tickEffects() {
     const effectsToRemove = [];
 
@@ -191,22 +230,50 @@ export class SkillingBosses {
       if (effect) {
         if (effect.tickEvent === "onTick") {
           effect.tickFunc(this.activeBoss, effectData);
+          effectData[1]--;
         }
-        effectData[1]--; // Decrease duration
+        // Decrease duration
 
         if (effectData[1] <= 0) {
           effect.clearFunc(this.activeBoss, effectData);
           effectsToRemove.push(index);
         } else {
-          this.needsBossEffectsUIUpdate = true; // Effect tick may affect combat stats
+          this.needsBossEffectsUIUpdate = true;
         }
       }
+      this.ctx.characterStorage.setItem("Batp", this.currentBossAttackPower);
     });
     // Remove effects after iteration to avoid modifying the array during iteration
     for (let i = effectsToRemove.length - 1; i >= 0; i--) {
       this.bossCurrentDebuffs.splice(effectsToRemove[i], 1);
     }
+    const buffsToRemove = [];
+    this.bossCurrentBuffs.forEach((effectData, index) => {
+      const [effectId, duration] = effectData;
+      const effect = this.effects.get(effectId);
+
+      if (effect) {
+        if (effect.tickEvent === "onTick") {
+          effect.tickFunc(this.activeBoss, effectData);
+          effectData[1]--;
+        }
+        // Decrease duration
+
+        if (effectData[1] <= 0) {
+          effect.clearFunc(this.activeBoss, effectData);
+          buffsToRemove.push(index);
+        } else {
+          this.needsBossEffectsUIUpdate = true;
+        }
+      }
+    });
+    // Remove effects after iteration to avoid modifying the array during iteration
+    for (let i = buffsToRemove.length - 1; i >= 0; i--) {
+      this.bossCurrentBuffs.splice(buffsToRemove[i], 1);
+    }
+
     this.ctx.characterStorage.setItem("BsDb", this.bossCurrentDebuffs);
+    this.ctx.characterStorage.setItem("BsBb", this.bossCurrentBuffs);
     this.updateUIIfNeeded();
   }
 
@@ -317,8 +384,9 @@ export class SkillingBosses {
     try {
       const boss = this.activeBoss;
       this.resetPlayerDefensiveTrackers();
-      // setActiveBoss makes sure the stats are reset (hp, buffs, etc )
-      this.setActiveBoss(this.activeBoss.id);
+      // resetActiveBoss makes sure the stats are reset (hp, buffs, etc )
+      this.resetActiveBoss(boss.id);
+
       if (boss && this.playerCoreHP > 0) {
         // Initialize ability activation
         for (let i = 0; i < this.equippedAbilities.length; i++) {
@@ -412,7 +480,6 @@ export class SkillingBosses {
       this.bossStunDuration--;
     }
     this.ctx.characterStorage.setItem("Bat", this.bossAttackTimer);
-    this.ctx.characterStorage.setItem("Bna", this.bossNextAttackIndex);
     this.bossAttackNeedsUIUpdate = true;
     let nextAttack = this.getBossAttack();
     if (nextAttack === null) {
@@ -544,17 +611,35 @@ export class SkillingBosses {
     }
   }
   executeBossAttack(attack) {
-    let damage = this.activeBoss.attackPower * attack.damageModifier;
-    if (attack.type === "Magic") {
-      damage -= damage * (1 / this.playerMagicResistance);
-    } else if (attack.type === "Physical") {
-      damage -= damage * (1 / this.playerPhysicalResistance);
+    if (attack.damageModifier > 0) {
+      let damage = this.activeBoss.attackPower * attack.damageModifier;
+      if (attack.type === "Magic") {
+        damage -= damage * (1 / this.playerMagicResistance);
+      } else if (attack.type === "Physical") {
+        damage -= damage * (1 / this.playerPhysicalResistance);
+      }
+      this.takeDamage(damage, "player");
     }
-    this.takeDamage(damage, "player");
+    if (attack.name === "Bolster") {
+      // tier 2 bosses
+      // randomly heal the boss 30 HP
+      const healAmount = 30;
+      this.healTarget(healAmount, "boss");
+      this.needsCombatStatsUIUpdate = true;
+      const options = ["attack power", "resistance"];
+      const option = options[Math.floor(Math.random() * options.length)];
+      if (option === "attack power") {
+        this.applyBuffToBoss("bolsterAttackPower", 64, 2);
+      } else if (option === "resistance") {
+        this.applyBuffToBoss("bolsterResistance", 64, 2);
+      }
+    }
+    this.ctx.characterStorage.setItem("Batp", this.currentBossAttackPower);
     this.bossAbilitiesUsed++;
     this.ctx.characterStorage.setItem("BaU", this.bossAbilitiesUsed);
     this.needsQuestUIUpdate = true;
     this.bossAttackNeedsUIUpdate = true;
+    this.updateUIIfNeeded();
   }
 
   updateBossAttack() {
@@ -574,6 +659,8 @@ export class SkillingBosses {
       }
       const nextAttack = this.activeBoss.attacks[this.bossNextAttackIndex];
       this.bossAttackTimer = nextAttack.cooldown;
+      this.ctx.characterStorage.setItem("Bna", this.bossNextAttackIndex);
+      this.ctx.characterStorage.setItem("Bat", this.bossAttackTimer);
       this.bossAttackNeedsUIUpdate = true;
     } catch (error) {
       console.error("Error updating boss attack:", error);
@@ -864,9 +951,16 @@ export class SkillingBosses {
   }
 
   clearEffects() {
+    for (let i = 0; i < this.bossCurrentBuffs.length; i++) {
+      this.getEffectById(this.bossCurrentBuffs[i][0]).clearFunc(
+        this.activeBoss,
+        this.bossCurrentBuffs[i]
+      );
+    }
     this.bossCurrentBuffs = [];
     this.bossCurrentDebuffs = [];
     this.ctx.characterStorage.setItem("BsDb", this.bossCurrentDebuffs);
+    this.ctx.characterStorage.setItem("BsBb", this.bossCurrentBuffs);
     this.needsBossEffectsUIUpdate = true;
     this.updateUIIfNeeded();
   }
@@ -901,10 +995,17 @@ export class SkillingBosses {
       this.healTarget(10, "player");
       this.currentBattleTicks = null;
       this.activeBoss = null;
+      this.ctx.characterStorage.setItem("AcBss", null);
+      this.bossCurrentBuffs = [];
+      this.bossCurrentDebuffs = [];
+      this.ctx.characterStorage.setItem("BsDb", this.bossCurrentDebuffs);
+      this.ctx.characterStorage.setItem("BsBb", this.bossCurrentBuffs);
+
       battlesUIModule.updateCurrentCombatStatsUI();
       battlesUIModule.actuallyUpdateBossDisplay();
     }
     this.currentBattleTicks = 0;
+    this.ctx.characterStorage.setItem("Crbt", 0);
     this.currentBattleBossHealed = 0;
     this.currentBattleDamageDealt = 0;
     this.currentBattleBossDamageReduced = 0;
@@ -930,6 +1031,27 @@ export class SkillingBosses {
       ) {
         if (boss.skill === "Cooking") {
           this.ExtraPlayerStats.thiefTheChef = 1;
+        }
+      } else if (
+        abilitySkill === "melvorD:Agility" &&
+        this.currentBattleTicks < 150
+      ) {
+        if (boss.skill === "Woodcutting") {
+          this.ExtraPlayerStats.climbTheTree = 1;
+        }
+      } else if (
+        abilitySkill === "melvorD:Mining" &&
+        this.currentBattleTicks < 150
+      ) {
+        if (boss.skill === "Smithing") {
+          this.ExtraPlayerStats.mineTheForge = 1;
+        }
+      } else if (
+        abilitySkill === "melvorD:Smithing" &&
+        this.currentBattleTicks < 150
+      ) {
+        if (boss.skill === "Crafting") {
+          this.ExtraPlayerStats.smithTheLeather = 1;
         }
       }
     }

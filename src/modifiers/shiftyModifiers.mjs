@@ -35,6 +35,29 @@ function addShiftyModifiers(ctx) {
         },
       ],
     });
+
+    // Efficient Skilling (Shifty)
+    upgradeHelpers.createModifier(ctx, game, {
+      namespace: "smattyBosses",
+      id: "efficientSkillingShifty",
+      tiers: 2,
+      descriptions: [
+        {
+          text: "When a Shifty Skill matches your Ability, you get an additional skill-tick against tier-2+ Bosses.",
+        },
+      ],
+    });
+    // Efficient Bossing (Shifty)
+    upgradeHelpers.createModifier(ctx, game, {
+      namespace: "smattyBosses",
+      id: "efficientBossingShifty",
+      tiers: 2,
+      descriptions: [
+        {
+          text: "When a Shifting Skill matches the Boss you are fighting, you get an additional skill-tick against tier-2+ Bosses.",
+        },
+      ],
+    });
   } catch (error) {
     console.error("Error adding shifty modifiers:", error);
   }

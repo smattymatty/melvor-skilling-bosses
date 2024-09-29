@@ -47,6 +47,29 @@ function addGathererModifiers(ctx) {
         },
       ],
     });
+
+    // Efficient Skilling (Gatherer)
+    upgradeHelpers.createModifier(ctx, game, {
+      namespace: "smattyBosses",
+      id: "efficientSkillingGatherer",
+      tiers: 2,
+      descriptions: [
+        {
+          text: "When a Gatherer Skill matches your Ability, you get an additional skill-tick against tier-2+ Bosses.",
+        },
+      ],
+    });
+    // Efficient Bossing (Gatherer)
+    upgradeHelpers.createModifier(ctx, game, {
+      namespace: "smattyBosses",
+      id: "efficientBossingGatherer",
+      tiers: 2,
+      descriptions: [
+        {
+          text: "When a Gathering Skill matches the Boss you are fighting, you get an additional skill-tick against tier-2+ Bosses.",
+        },
+      ],
+    });
   } catch (error) {
     console.error("Error adding gatherer modifiers:", error);
   }
